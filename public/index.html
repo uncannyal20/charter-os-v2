@@ -777,6 +777,7 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
             📂 Import Backup
           </label>
           <div style="font-size:11px;color:var(--text3);align-self:center">Tip: Export regularly to avoid data loss</div>
+          <button class="btn btn-ghost btn-sm" onclick="clearCharter()" style="margin-left:auto;color:var(--red);border-color:rgba(255,92,92,0.3)" title="Reset all charter data for your team">🗑 Clear Charter</button>
         </div>
       </div>
 
@@ -1691,44 +1692,158 @@ const AVATAR_COLORS = [
   ['#ff5c5c','rgba(255,92,92,0.2)'],['#2dd4bf','rgba(45,212,191,0.2)'],
 ];
 
+// ── Per-team sample data ─────────────────────────────────────────
+const SAMPLE_DATA = {
+  'team-a': {
+    charterName: 'HDB Maintenance & Estate Services Digital Transformation',
+    members: [
+      { id:1, name:'David Lee',    role:'Product Owner',        email:'david.lee@hdb.gov.sg',    dept:'Product Office', resp:'Product strategy, stakeholder alignment, backlog ownership', initials:'DL', color:'#4f7cff', bg:'rgba(79,124,255,0.2)' },
+      { id:2, name:'Cindy Tan',    role:'Product Manager',      email:'cindy.tan@hdb.gov.sg',    dept:'Product Office', resp:'Roadmap, user research, acceptance criteria', initials:'CT', color:'#1fd68a', bg:'rgba(31,214,138,0.2)' },
+      { id:3, name:'Max Koh',      role:'Product Manager',      email:'max.koh@hdb.gov.sg',      dept:'Product Office', resp:'Feature streams, user stories, sprint coordination', initials:'MK', color:'#f5a623', bg:'rgba(245,166,35,0.2)' },
+      { id:4, name:'Mohd Jamal',   role:'Tech Lead',            email:'mohd.jamal@hdb.gov.sg',   dept:'Engineering',    resp:'Architecture, AI/ML pipeline, technical feasibility', initials:'MJ', color:'#b06cfb', bg:'rgba(176,108,251,0.2)' },
+      { id:5, name:'Jerald Koh',   role:'Senior Developer',     email:'jerald.koh@hdb.gov.sg',   dept:'Engineering',    resp:'Core feature development, code reviews, tech debt', initials:'JK', color:'#ff5c5c', bg:'rgba(255,92,92,0.2)' },
+      { id:6, name:'Rachel Wong',  role:'UX/UI Designer',       email:'rachel.wong@hdb.gov.sg',  dept:'Design',         resp:'UX strategy, wireframes, usability testing', initials:'RW', color:'#2dd4bf', bg:'rgba(45,212,191,0.2)' },
+      { id:7, name:'Siti Farhana', role:'UX/UI Designer',       email:'siti.farhana@hdb.gov.sg', dept:'Design',         resp:'Interface design, design system, dev handoff', initials:'SF', color:'#f5a623', bg:'rgba(245,166,35,0.2)' },
+      { id:8, name:'Eric Teoh',    role:'Full-Stack Developer', email:'eric.teoh@hdb.gov.sg',    dept:'Engineering',    resp:'Frontend & backend implementation, AI integrations', initials:'ET', color:'#4f7cff', bg:'rgba(79,124,255,0.2)' },
+    ],
+    meetings: [
+      { id:101, name:'Daily Standup',       freq:'Daily',       day:'Mon-Fri', dur:'15 min',  purpose:'Progress updates, blockers, team sync' },
+      { id:102, name:'Product Review',       freq:'2x per week', day:'Tue, Thu', dur:'1 hour',  purpose:'Feature review, backlog refinement, acceptance criteria' },
+      { id:103, name:'UX Design Review',     freq:'2x per week', day:'Mon, Wed', dur:'1 hour',  purpose:'Design critique, prototype walkthroughs, UX decisions' },
+      { id:104, name:'Tech & Architecture',  freq:'2x per week', day:'Wed, Fri', dur:'1 hour',  purpose:'Architecture decisions, code review, technical risk' },
+      { id:105, name:'Sprint Planning',      freq:'Fortnightly', day:'Monday',   dur:'2 hours', purpose:'Sprint goal setting, story pointing, capacity planning' },
+      { id:106, name:'Stakeholder Showcase', freq:'Fortnightly', day:'Friday',   dur:'1 hour',  purpose:'Demo to HDB stakeholders, feedback collection' },
+    ]
+  },
+  'team-b': {
+    charterName: 'Resident Feedback & Engagement Platform',
+    members: [
+      { id:1, name:'Grace Lim',     role:'Product Owner',        email:'grace.lim@hdb.gov.sg',    dept:'Product Office', resp:'Product vision, stakeholder management, programme governance', initials:'GL', color:'#1fd68a', bg:'rgba(31,214,138,0.2)' },
+      { id:2, name:'Priya Nair',    role:'Product Manager',      email:'priya.nair@hdb.gov.sg',   dept:'Product Office', resp:'Resident research, feature prioritisation, roadmap', initials:'PN', color:'#4f7cff', bg:'rgba(79,124,255,0.2)' },
+      { id:3, name:'Wei Liang Ong', role:'Product Manager',      email:'weiliang.ong@hdb.gov.sg', dept:'Product Office', resp:'TC engagement, user stories, sprint delivery', initials:'WO', color:'#f5a623', bg:'rgba(245,166,35,0.2)' },
+      { id:4, name:'Faizal Hassan', role:'Tech Lead',            email:'faizal.hassan@hdb.gov.sg',dept:'Engineering',    resp:'NLP architecture, API design, AI/ML infrastructure', initials:'FH', color:'#b06cfb', bg:'rgba(176,108,251,0.2)' },
+      { id:5, name:'Amanda Seah',   role:'Senior Developer',     email:'amanda.seah@hdb.gov.sg',  dept:'Engineering',    resp:'Backend services, WhatsApp integration, data pipelines', initials:'AS', color:'#ff5c5c', bg:'rgba(255,92,92,0.2)' },
+      { id:6, name:'Jason Yeo',     role:'UX/UI Designer',       email:'jason.yeo@hdb.gov.sg',    dept:'Design',         resp:'Community UX, accessibility design, elderly interface', initials:'JY', color:'#2dd4bf', bg:'rgba(45,212,191,0.2)' },
+      { id:7, name:'Nurul Ain',     role:'Community Specialist', email:'nurul.ain@hdb.gov.sg',    dept:'Engagement',     resp:'Resident co-design, PA liaison, grassroots integration', initials:'NA', color:'#f5a623', bg:'rgba(245,166,35,0.2)' },
+      { id:8, name:'Kevin Chew',    role:'Full-Stack Developer', email:'kevin.chew@hdb.gov.sg',   dept:'Engineering',    resp:'Frontend development, multilingual UI, TC dashboard', initials:'KC', color:'#1fd68a', bg:'rgba(31,214,138,0.2)' },
+    ],
+    meetings: [
+      { id:201, name:'Daily Standup',            freq:'Daily',       day:'Mon-Fri',  dur:'15 min',  purpose:'Progress updates, blockers, team alignment' },
+      { id:202, name:'Resident Research Review', freq:'Weekly',      day:'Tuesday',  dur:'1 hour',  purpose:'Review resident insights, update personas, research synthesis' },
+      { id:203, name:'Product & Design Review',  freq:'2x per week', day:'Mon, Wed', dur:'1 hour',  purpose:'Feature review, UX critique, accessibility checks' },
+      { id:204, name:'TC Engagement Sync',       freq:'Weekly',      day:'Thursday', dur:'45 min',  purpose:'Town Council feedback, pilot coordination, adoption blockers' },
+      { id:205, name:'Sprint Planning',          freq:'Fortnightly', day:'Monday',   dur:'2 hours', purpose:'Sprint goals, story pointing, capacity planning' },
+      { id:206, name:'Stakeholder Showcase',     freq:'Fortnightly', day:'Friday',   dur:'1 hour',  purpose:'Demo to HDB Community Division and TC managers' },
+    ]
+  },
+  'team-c': {
+    charterName: 'Municipal Smart Sensor & IoT Network Platform',
+    members: [
+      { id:1, name:'Bernard Tan', role:'Product Owner',    email:'bernard.tan@hdb.gov.sg', dept:'Product Office', resp:'Product strategy, Smart Nation alignment, executive reporting', initials:'BT', color:'#2dd4bf', bg:'rgba(45,212,191,0.2)' },
+      { id:2, name:'Liying Chen', role:'Product Manager',  email:'liying.chen@hdb.gov.sg', dept:'Product Office', resp:'IoT product roadmap, sensor vendor management', initials:'LC', color:'#4f7cff', bg:'rgba(79,124,255,0.2)' },
+      { id:3, name:'Ravi Kumar',  role:'Tech Lead',        email:'ravi.kumar@hdb.gov.sg',  dept:'Engineering',    resp:'IoT architecture, data ingestion pipeline, edge computing', initials:'RK', color:'#b06cfb', bg:'rgba(176,108,251,0.2)' },
+      { id:4, name:'Sharon Ng',   role:'Data Engineer',    email:'sharon.ng@hdb.gov.sg',   dept:'Engineering',    resp:'Real-time data streams, anomaly detection models', initials:'SN', color:'#1fd68a', bg:'rgba(31,214,138,0.2)' },
+      { id:5, name:'Ali Hassan',  role:'Senior Developer', email:'ali.hassan@hdb.gov.sg',  dept:'Engineering',    resp:'Dashboard development, API design, sensor integration', initials:'AH', color:'#ff5c5c', bg:'rgba(255,92,92,0.2)' },
+      { id:6, name:'Mei Xuan',    role:'UX/UI Designer',   email:'mei.xuan@hdb.gov.sg',    dept:'Design',         resp:'Operations dashboard UX, alert interface design', initials:'MX', color:'#f5a623', bg:'rgba(245,166,35,0.2)' },
+      { id:7, name:'Thomas Loh',  role:'Full-Stack Developer', email:'thomas.loh@hdb.gov.sg', dept:'Engineering', resp:'Frontend dashboards, estate digital twin visualisation', initials:'TL', color:'#2dd4bf', bg:'rgba(45,212,191,0.2)' },
+    ],
+    meetings: [
+      { id:301, name:'Daily Standup',          freq:'Daily',       day:'Mon-Fri',   dur:'15 min',  purpose:'Progress, sensor deployment status, blockers' },
+      { id:302, name:'IoT Architecture Review',freq:'Weekly',      day:'Wednesday', dur:'1.5 hrs', purpose:'Sensor specs, data pipeline review, infrastructure decisions' },
+      { id:303, name:'Product & Data Review',  freq:'Weekly',      day:'Tuesday',   dur:'1 hour',  purpose:'Feature review, data quality checks, anomaly model review' },
+      { id:304, name:'Sprint Planning',        freq:'Fortnightly', day:'Monday',    dur:'2 hours', purpose:'Sprint goals, story pointing, deployment planning' },
+      { id:305, name:'Smart Nation Sync',      freq:'Monthly',     day:'Last Fri',  dur:'1 hour',  purpose:'PMO alignment, cross-agency data sharing, policy updates' },
+    ]
+  },
+  'team-d': {
+    charterName: 'Community Space Booking & Management System',
+    members: [
+      { id:1, name:'Pauline Goh',  role:'Product Owner',        email:'pauline.goh@hdb.gov.sg',  dept:'Product Office', resp:'Product vision, TC facility manager relationships, governance', initials:'PG', color:'#b06cfb', bg:'rgba(176,108,251,0.2)' },
+      { id:2, name:'Marcus Toh',   role:'Product Manager',      email:'marcus.toh@hdb.gov.sg',   dept:'Product Office', resp:'Booking UX, resident journey, feature delivery', initials:'MT', color:'#4f7cff', bg:'rgba(79,124,255,0.2)' },
+      { id:3, name:'Jasmine Lee',  role:'Product Manager',      email:'jasmine.lee@hdb.gov.sg',  dept:'Product Office', resp:'TC onboarding, payment integration, compliance', initials:'JL', color:'#f5a623', bg:'rgba(245,166,35,0.2)' },
+      { id:4, name:'Darren Sim',   role:'Tech Lead',            email:'darren.sim@hdb.gov.sg',   dept:'Engineering',    resp:'Booking engine architecture, payment gateway, APIs', initials:'DS', color:'#1fd68a', bg:'rgba(31,214,138,0.2)' },
+      { id:5, name:'Hui Min Tan',  role:'Senior Developer',     email:'huimin.tan@hdb.gov.sg',   dept:'Engineering',    resp:'Booking calendar, real-time availability, mobile app', initials:'HT', color:'#ff5c5c', bg:'rgba(255,92,92,0.2)' },
+      { id:6, name:'Zul Ariffin',  role:'UX/UI Designer',       email:'zul.ariffin@hdb.gov.sg',  dept:'Design',         resp:'Booking UX, facility discovery UI, accessibility', initials:'ZA', color:'#2dd4bf', bg:'rgba(45,212,191,0.2)' },
+      { id:7, name:'Dawn Chong',   role:'Full-Stack Developer', email:'dawn.chong@hdb.gov.sg',   dept:'Engineering',    resp:'Frontend booking flows, TC admin portal, notifications', initials:'DC', color:'#b06cfb', bg:'rgba(176,108,251,0.2)' },
+    ],
+    meetings: [
+      { id:401, name:'Daily Standup',            freq:'Daily',       day:'Mon-Fri',  dur:'15 min',  purpose:'Progress, blockers, booking system status' },
+      { id:402, name:'Product Review',            freq:'2x per week', day:'Tue, Thu', dur:'1 hour',  purpose:'Feature review, UX critique, acceptance criteria' },
+      { id:403, name:'TC Facility Manager Sync',  freq:'Weekly',      day:'Wednesday',dur:'45 min',  purpose:'TC feedback, facility data updates, onboarding progress' },
+      { id:404, name:'Payment & Compliance',      freq:'Fortnightly', day:'Tuesday',  dur:'1 hour',  purpose:'Payment gateway review, deposit policy, PDPA compliance' },
+      { id:405, name:'Sprint Planning',           freq:'Fortnightly', day:'Monday',   dur:'2 hours', purpose:'Sprint goals, story pointing, capacity planning' },
+      { id:406, name:'Stakeholder Demo',          freq:'Monthly',     day:'Last Fri', dur:'1 hour',  purpose:'Demo to HDB and TC management, adoption metrics review' },
+    ]
+  },
+  'team-e': {
+    charterName: 'Predictive Lift Maintenance Intelligence System',
+    members: [
+      { id:1, name:'Steven Quek',   role:'Product Owner',    email:'steven.quek@hdb.gov.sg',   dept:'Product Office', resp:'Product strategy, lift contractor relationships, HDB alignment', initials:'SQ', color:'#2dd4bf', bg:'rgba(45,212,191,0.2)' },
+      { id:2, name:'Vivian Chua',   role:'Product Manager',  email:'vivian.chua@hdb.gov.sg',   dept:'Product Office', resp:'Sensor product roadmap, predictive feature delivery', initials:'VC', color:'#4f7cff', bg:'rgba(79,124,255,0.2)' },
+      { id:3, name:'Hafiz Ibrahim', role:'Tech Lead',        email:'hafiz.ibrahim@hdb.gov.sg', dept:'Engineering',    resp:'Lift telemetry architecture, ML failure prediction models', initials:'HI', color:'#b06cfb', bg:'rgba(176,108,251,0.2)' },
+      { id:4, name:'Claudia Tan',   role:'Data Scientist',   email:'claudia.tan@hdb.gov.sg',   dept:'Engineering',    resp:'Predictive maintenance models, sensor anomaly detection', initials:'CT', color:'#1fd68a', bg:'rgba(31,214,138,0.2)' },
+      { id:5, name:'Ryan Lim',      role:'Senior Developer', email:'ryan.lim@hdb.gov.sg',      dept:'Engineering',    resp:'Sensor data ingestion, contractor dispatch system', initials:'RL', color:'#ff5c5c', bg:'rgba(255,92,92,0.2)' },
+      { id:6, name:'Adeline Yap',   role:'UX/UI Designer',   email:'adeline.yap@hdb.gov.sg',   dept:'Design',         resp:'Maintenance dashboard UX, alert notification design', initials:'AY', color:'#f5a623', bg:'rgba(245,166,35,0.2)' },
+      { id:7, name:'Jun Wei Ng',    role:'Full-Stack Developer', email:'junwei.ng@hdb.gov.sg', dept:'Engineering',    resp:'Lift monitoring dashboard, work order system, mobile app', initials:'JN', color:'#2dd4bf', bg:'rgba(45,212,191,0.2)' },
+    ],
+    meetings: [
+      { id:501, name:'Daily Standup',       freq:'Daily',       day:'Mon-Fri',   dur:'15 min',  purpose:'Progress, sensor deployment status, model performance' },
+      { id:502, name:'Data & Model Review', freq:'Weekly',      day:'Wednesday', dur:'1.5 hrs', purpose:'Model accuracy review, false positive analysis, retraining decisions' },
+      { id:503, name:'Product Review',      freq:'Weekly',      day:'Tuesday',   dur:'1 hour',  purpose:'Feature review, contractor feedback, dashboard UX' },
+      { id:504, name:'Contractor Sync',     freq:'Fortnightly', day:'Thursday',  dur:'45 min',  purpose:'Lift contractor adoption, work order feedback, field issues' },
+      { id:505, name:'Sprint Planning',     freq:'Fortnightly', day:'Monday',    dur:'2 hours', purpose:'Sprint goals, story pointing, sensor rollout planning' },
+      { id:506, name:'Steering Committee',  freq:'Monthly',     day:'Last Wed',  dur:'1 hour',  purpose:'Executive update, budget review, cross-TC lift data sharing' },
+    ]
+  }
+};
+
 function loadSampleTeam() {
   if (S.members.length > 0 || S.meetings.length > 0) {
     if (!confirm('This will replace your current team data with sample data. Continue?')) return;
   }
-
-  const colors = [
-    ['#4f7cff','rgba(79,124,255,0.2)'],['#1fd68a','rgba(31,214,138,0.2)'],
-    ['#f5a623','rgba(245,166,35,0.2)'],['#b06cfb','rgba(176,108,251,0.2)'],
-    ['#ff5c5c','rgba(255,92,92,0.2)'],['#2dd4bf','rgba(45,212,191,0.2)'],
-    ['#f5a623','rgba(245,166,35,0.2)'],['#4f7cff','rgba(79,124,255,0.2)'],
-  ];
-
-  S.members = [
-    { id:1, name:'David Lee', role:'Product Owner', email:'david.lee@hdb.gov.sg', dept:'Product Office', resp:'Product strategy, stakeholder alignment, backlog ownership', initials:'DL', color:colors[0][0], bg:colors[0][1] },
-    { id:2, name:'Cindy Tan', role:'Product Manager', email:'cindy.tan@hdb.gov.sg', dept:'Product Office', resp:'Roadmap, user research, acceptance criteria', initials:'CT', color:colors[1][0], bg:colors[1][1] },
-    { id:3, name:'Max Koh', role:'Product Manager', email:'max.koh@hdb.gov.sg', dept:'Product Office', resp:'Feature streams, user stories, sprint coordination', initials:'MK', color:colors[2][0], bg:colors[2][1] },
-    { id:4, name:'Mohd Jamal', role:'Tech Lead', email:'mohd.jamal@hdb.gov.sg', dept:'Engineering', resp:'Architecture, AI/ML pipeline, technical feasibility', initials:'MJ', color:colors[3][0], bg:colors[3][1] },
-    { id:5, name:'Jerald Koh', role:'Senior Developer', email:'jerald.koh@hdb.gov.sg', dept:'Engineering', resp:'Core feature development, code reviews, tech debt', initials:'JK', color:colors[4][0], bg:colors[4][1] },
-    { id:6, name:'Rachel Wong', role:'UX/UI Designer', email:'rachel.wong@hdb.gov.sg', dept:'Design', resp:'UX strategy, wireframes, usability testing', initials:'RW', color:colors[5][0], bg:colors[5][1] },
-    { id:7, name:'Siti Farhana', role:'UX/UI Designer', email:'siti.farhana@hdb.gov.sg', dept:'Design', resp:'Interface design, design system, dev handoff', initials:'SF', color:colors[6][0], bg:colors[6][1] },
-    { id:8, name:'Eric Teoh', role:'Full-Stack Developer', email:'eric.teoh@hdb.gov.sg', dept:'Engineering', resp:'Frontend & backend implementation, AI integrations', initials:'ET', color:colors[7][0], bg:colors[7][1] },
-  ];
-
-  S.meetings = [
-    { id:101, name:'Daily Standup', freq:'Daily', day:'Mon–Fri', dur:'15 min', purpose:'Progress updates, blockers, team sync' },
-    { id:102, name:'Product Review', freq:'2x per week', day:'Tue, Thu', dur:'1 hour', purpose:'Feature review, backlog refinement, acceptance criteria' },
-    { id:103, name:'UX Design Review', freq:'2x per week', day:'Mon, Wed', dur:'1 hour', purpose:'Design critique, prototype walkthroughs, UX decisions' },
-    { id:104, name:'Application & Tech Review', freq:'2x per week', day:'Wed, Fri', dur:'1 hour', purpose:'Architecture decisions, code review, technical risk' },
-    { id:105, name:'Sprint Planning', freq:'Fortnightly', day:'Monday', dur:'2 hours', purpose:'Sprint goal setting, story pointing, capacity planning' },
-    { id:106, name:'Stakeholder Showcase', freq:'Fortnightly', day:'Friday', dur:'1 hour', purpose:'Demo to HDB stakeholders, feedback collection' },
-  ];
-
+  const teamId = CURRENT_TEAM ? CURRENT_TEAM.id : 'team-a';
+  const data = SAMPLE_DATA[teamId] || SAMPLE_DATA['team-a'];
+  S.charterName = data.charterName;
+  const titleEl = document.getElementById('dash-charter-title');
+  if (titleEl) titleEl.textContent = S.charterName;
+  S.members  = data.members.map(m => ({...m}));
+  S.meetings = data.meetings.map(m => ({...m}));
   saveState();
   renderMembers();
   renderMeetings();
-  logActivity('Sample team data loaded — 8 members, 6 meetings', 'var(--accent)');
-  toast('Sample team loaded! Switch to TOR tab to generate the TOR.', 'success');
+  if (typeof renderAll === 'function') renderAll();
+  scheduleSave();
+  logActivity('Sample data loaded for ' + (CURRENT_TEAM ? CURRENT_TEAM.name : 'team'), 'var(--accent)');
+  toast('Sample data loaded! Go to TOR tab to generate your TOR.', 'success');
   switchTab('team', 'members');
+}
+
+async function clearCharter() {
+  if (!confirm('This will permanently clear ALL charter data for your team. This cannot be undone. Are you sure?')) return;
+  const blank = {
+    charterName: 'Untitled Charter', members: [], meetings: [], tor: null,
+    problem: { notes:'', draft:'', approved:false, file_texts:'' },
+    vision: { product_name:'', industry:'', users:'', notes:'', draft:'', approved:false, file_texts:'' },
+    kpis: { notes:'', items:[], approved:false },
+    cba: { draft:'', approved:false, benefit_values:[] },
+    roadmap: { epics:'', draft:'', approved:false },
+    activity: []
+  };
+  Object.assign(S, blank);
+  if (CURRENT_TEAM) {
+    try {
+      await fetch('/api/save-charter', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_id: CURRENT_TEAM.id, charter_name: 'Untitled Charter', state: blank,
+          progress_team:0, progress_problem:0, progress_vision:0, progress_kpis:0, progress_roadmap:0, progress_overall:0 })
+      });
+    } catch(e) { console.warn('Cloud clear failed:', e.message); }
+  }
+  saveState();
+  if (typeof renderAll === 'function') renderAll();
+  logActivity('Charter cleared and reset', 'var(--red)');
+  toast('Charter cleared. Ready to start fresh!', 'success');
+  navigate('dashboard');
 }
 
 function addMember() {
