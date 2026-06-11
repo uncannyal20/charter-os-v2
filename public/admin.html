@@ -161,6 +161,20 @@
 
   /* SECTION PILLS */
   .section-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill { position: relative; }
+  .pill-tooltip {
+    visibility: hidden; opacity: 0;
+    position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+    background: #1a1d24; color: #eceef2; font-size: 11px; font-weight: 500;
+    white-space: nowrap; border-radius: 6px; padding: 5px 9px;
+    border: 1px solid rgba(255,255,255,0.1);
+    pointer-events: none; transition: opacity 0.15s; z-index: 999;
+  }
+  .pill-tooltip::after {
+    content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 5px solid transparent; border-top-color: #1a1d24;
+  }
+  .pill:hover .pill-tooltip { visibility: visible; opacity: 1; }
   .pill {
     display: flex; align-items: center; gap: 4px;
     border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 600;
@@ -294,8 +308,7 @@
     </div>
 
     <!-- SECTION BREAKDOWN DETAIL -->
-    <div class="section-heading">📊 Section Completion by Team</div>
-    <div id="breakdown-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px"></div>
+
 
   </div>
 </main>
@@ -429,36 +442,7 @@
       }).join('');
     }
 
-    // Breakdown cards
-    const breakdownEl = document.getElementById('breakdown-cards');
-    breakdownEl.innerHTML = teams.map(t => {
-      const overall = t.progress_overall || 0;
-      const color   = progColor(overall);
-      const cells   = SECTIONS.map(s => {
-        const pct = t[`progress_${s.id}`] || 0;
-        return `<div class="breakdown-cell">
-          <div class="breakdown-icon">${s.icon}</div>
-          <div class="breakdown-label">${s.label}</div>
-          <div class="breakdown-pct" style="color:${progColor(pct)}">${pct}%</div>
-        </div>`;
-      }).join('');
 
-      return `<div style="background:var(--bg1);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <div>
-            <div style="font-weight:700;font-size:14px">${t.team_name}</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px">${t.charter_name || 'No charter yet'}</div>
-          </div>
-          <div style="font-size:22px;font-weight:800;font-family:var(--font-head);color:${color}">${overall}%</div>
-        </div>
-        <div style="margin-bottom:12px">
-          <div class="prog-bar" style="height:8px">
-            <div class="prog-fill" style="width:${overall}%;background:linear-gradient(90deg,${color},${color}99)"></div>
-          </div>
-        </div>
-        <div class="breakdown-grid">${cells}</div>
-      </div>`;
-    }).join('');
   }
 
   // ── Theme ───────────────────────────────────────────────────────
