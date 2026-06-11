@@ -1,1 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charter OS — TPO Admin Dashboard</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='url(%23g)'/><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%234f7cff'/><stop offset='1' stop-color='%236c3cff'/></linearGradient></defs><text x='16' y='23' font-family='Arial' font-weight='900' font-size='20' fill='white' text-anchor='middle'>A</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:     #0d0f14;
+    --bg1:    #111318;
+    --bg2:    #181b22;
+    --bg3:    #1e2230;
+    --border: rgba(255,255,255,0.08);
+    --text:   #eceef2;
+    --text2:  #8a90a0;
+    --text3:  #555d70;
+    --accent: #4f7cff;
+    --accent2:#6c3cff;
+    --accent-soft: rgba(79,124,255,0.12);
+    --green:  #1fd68a;
+    --green-soft: rgba(31,214,138,0.12);
+    --amber:  #f5a623;
+    --amber-soft: rgba(245,166,35,0.12);
+    --red:    #ff5c5c;
+    --red-soft: rgba(255,92,92,0.12);
+    --purple: #b06cfb;
+    --teal:   #2dd4bf;
+    --font-head: 'Nunito', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --r: 10px;
+    --r-lg: 14px;
+    --transition: all 0.18s ease;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; }
 
+  /* LOGIN */
+  #admin-gate {
+    position: fixed; inset: 0; background: #0a0b0f; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .login-box {
+    background: var(--bg1); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; padding: 40px; width: 360px; text-align: center;
+  }
+  .login-logo {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, #4f7cff, #6c3cff);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 800; color: white; margin: 0 auto 20px;
+    font-family: var(--font-head);
+  }
+  .login-title { font-family: var(--font-head); font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+  .login-sub { font-size: 12px; color: var(--text2); margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .login-input {
+    width: 100%; background: var(--bg2); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px; padding: 11px 14px; font-size: 14px; color: var(--text);
+    outline: none; margin-bottom: 12px; font-family: var(--font-body);
+  }
+  .login-btn {
+    width: 100%; background: var(--accent); color: white; border: none;
+    border-radius: 8px; padding: 11px; font-size: 14px; font-weight: 500;
+    cursor: pointer; font-family: var(--font-body); transition: var(--transition);
+  }
+  .login-btn:hover { background: #3d6ef0; }
+  .login-error { color: var(--red); font-size: 12px; margin-bottom: 10px; display: none; }
+
+  /* HEADER */
+  .header {
+    background: var(--bg1); border-bottom: 1px solid var(--border);
+    padding: 0 32px; height: 60px; display: flex; align-items: center;
+    justify-content: space-between; position: sticky; top: 0; z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-logo {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 14px; color: white; font-family: var(--font-head);
+  }
+  .header-title { font-family: var(--font-head); font-weight: 800; font-size: 16px; }
+  .header-badge {
+    background: var(--accent-soft); color: var(--accent); border-radius: 6px;
+    padding: 3px 10px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .refresh-btn {
+    background: var(--bg2); border: 1px solid var(--border); color: var(--text2);
+    border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer;
+    font-family: var(--font-body); transition: var(--transition); display: flex; align-items: center; gap: 6px;
+  }
+  .refresh-btn:hover { color: var(--text); border-color: var(--accent); }
+  .last-updated { font-size: 12px; color: var(--text3); }
+
+  /* MAIN */
+  .main { padding: 32px; max-width: 1400px; margin: 0 auto; }
+
+  /* SUMMARY CARDS */
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+  .summary-card {
+    background: var(--bg1); border: 1px solid var(--border);
+    border-radius: var(--r-lg); padding: 20px 24px;
+  }
+  .summary-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .summary-value { font-size: 28px; font-weight: 800; font-family: var(--font-head); }
+  .summary-sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+  /* SECTION HEADING */
+  .section-heading {
+    font-family: var(--font-head); font-size: 16px; font-weight: 700;
+    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+  }
+
+  /* TEAM TABLE */
+  .team-table-wrap {
+    background: var(--bg1); border: 1px solid var(--border);
+    border-radius: var(--r-lg); overflow: hidden; margin-bottom: 32px;
+  }
+  .team-table { width: 100%; border-collapse: collapse; }
+  .team-table th {
+    background: var(--bg2); padding: 12px 16px; text-align: left;
+    font-size: 11px; font-weight: 600; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    border-bottom: 1px solid var(--border);
+  }
+  .team-table td {
+    padding: 16px; border-bottom: 1px solid var(--border);
+    font-size: 13.5px; vertical-align: middle;
+  }
+  .team-table tr:last-child td { border-bottom: none; }
+  .team-table tr:hover td { background: var(--bg2); }
+  .team-name { font-weight: 600; color: var(--text); }
+  .charter-name { color: var(--text2); font-size: 12.5px; margin-top: 2px; }
+
+  /* PROGRESS BAR */
+  .prog-wrap { display: flex; align-items: center; gap: 10px; }
+  .prog-bar { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+  .prog-pct { font-size: 12px; font-weight: 700; min-width: 34px; text-align: right; }
+
+  /* SECTION PILLS */
+  .section-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill {
+    display: flex; align-items: center; gap: 4px;
+    border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 600;
+  }
+  .pill-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* STATUS BADGE */
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 600;
+  }
+
+  /* BREAKDOWN GRID */
+  .breakdown-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .breakdown-cell {
+    background: var(--bg2); border-radius: 8px; padding: 10px 12px; text-align: center;
+  }
+  .breakdown-icon { font-size: 16px; margin-bottom: 4px; }
+  .breakdown-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; line-height: 1.3; }
+  .breakdown-pct { font-size: 15px; font-weight: 800; font-family: var(--font-head); }
+
+  /* LOADING */
+  .loading { text-align: center; padding: 60px; color: var(--text3); }
+  .loading-spinner {
+    width: 32px; height: 32px; border: 3px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* EMPTY STATE */
+  .empty-row td { text-align: center; padding: 40px; color: var(--text3); }
+</style>
+</head>
+<body>
+
+<!-- ADMIN LOGIN -->
+<div id="admin-gate">
+  <div class="login-box">
+    <div class="login-logo">A</div>
+    <div class="login-title">Charter OS</div>
+    <div class="login-sub">TPO Admin Dashboard</div>
+    <input type="password" class="login-input" id="admin-pw" placeholder="Admin password"
+      onkeydown="if(event.key==='Enter')adminLogin()">
+    <div class="login-error" id="admin-error">Incorrect password.</div>
+    <button class="login-btn" onclick="adminLogin()">Access Dashboard →</button>
+    <div style="margin-top:16px;font-size:11px;color:var(--text3)">Restricted to TPO administrators only</div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div class="header-logo">C</div>
+    <div class="header-title">Charter OS</div>
+    <div class="header-badge">TPO Admin</div>
+  </div>
+  <div class="header-right">
+    <div class="last-updated" id="last-updated">—</div>
+    <button class="refresh-btn" onclick="loadData()">⟳ Refresh</button>
+    <button class="refresh-btn" style="color:var(--red);border-color:rgba(255,92,92,0.3)" onclick="adminLogout()">Sign Out</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+
+  <div id="loading-state" class="loading" style="display:none">
+    <div class="loading-spinner"></div>
+    <div>Loading charter data…</div>
+  </div>
+
+  <div id="dashboard-content" style="display:none">
+
+    <!-- SUMMARY CARDS -->
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-label">Total Teams</div>
+        <div class="summary-value" id="stat-total" style="color:var(--accent)">—</div>
+        <div class="summary-sub">Product Office teams</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Charters Started</div>
+        <div class="summary-value" id="stat-started" style="color:var(--teal)">—</div>
+        <div class="summary-sub">Teams with activity</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Avg. Completion</div>
+        <div class="summary-value" id="stat-avg" style="color:var(--amber)">—</div>
+        <div class="summary-sub">Across all teams</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Fully Complete</div>
+        <div class="summary-value" id="stat-complete" style="color:var(--green)">—</div>
+        <div class="summary-sub">Charters at 100%</div>
+      </div>
+    </div>
+
+    <!-- TEAM PROGRESS TABLE -->
+    <div class="section-heading">📋 Product Charter Progress</div>
+    <div class="team-table-wrap">
+      <table class="team-table">
+        <thead>
+          <tr>
+            <th style="width:220px">Team</th>
+            <th style="width:200px">Charter Name</th>
+            <th style="width:180px">Overall Progress</th>
+            <th>Section Breakdown</th>
+            <th style="width:130px">Last Updated</th>
+            <th style="width:100px">Status</th>
+          </tr>
+        </thead>
+        <tbody id="team-tbody">
+          <tr class="empty-row"><td colspan="6">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION BREAKDOWN DETAIL -->
+    <div class="section-heading">📊 Section Completion by Team</div>
+    <div id="breakdown-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px"></div>
+
+  </div>
+</main>
+
+<script>
+  const ADMIN_PASSWORD = 'tpoadmin2026';
+  const ADMIN_SESSION  = 'charterOS_admin_auth';
+
+  const SECTIONS = [
+    { id: 'team',    label: 'Team & TOR',    icon: '👥', color: '#4f7cff' },
+    { id: 'problem', label: 'Problem Stmt',  icon: '🎯', color: '#f5a623' },
+    { id: 'vision',  label: 'Vision',        icon: '🔭', color: '#b06cfb' },
+    { id: 'kpis',    label: 'Value',         icon: '📊', color: '#2dd4bf' },
+    { id: 'roadmap', label: 'Roadmap',       icon: '🗺️', color: '#1fd68a' }
+  ];
+
+  // ── Auth ────────────────────────────────────────────────────────
+  function adminLogin() {
+    const pw = document.getElementById('admin-pw').value;
+    if (pw === ADMIN_PASSWORD) {
+      sessionStorage.setItem(ADMIN_SESSION, 'true');
+      document.getElementById('admin-gate').style.display = 'none';
+      loadData();
+    } else {
+      document.getElementById('admin-error').style.display = 'block';
+      document.getElementById('admin-pw').value = '';
+    }
+  }
+
+  function adminLogout() {
+    sessionStorage.removeItem(ADMIN_SESSION);
+    location.reload();
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────
+  function progColor(pct) {
+    if (pct >= 80) return '#1fd68a';
+    if (pct >= 40) return '#f5a623';
+    return '#ff5c5c';
+  }
+
+  function statusBadge(pct) {
+    if (pct === 0)   return { label: 'Not Started', bg: 'rgba(255,92,92,0.1)',    color: '#ff5c5c' };
+    if (pct < 80)    return { label: 'In Progress',  bg: 'rgba(245,166,35,0.1)',  color: '#f5a623' };
+    if (pct < 100)   return { label: 'Near Complete',bg: 'rgba(45,212,191,0.1)',  color: '#2dd4bf' };
+    return             { label: 'Complete',           bg: 'rgba(31,214,138,0.12)', color: '#1fd68a' };
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleString('en-SG', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+
+  // ── Load Data ───────────────────────────────────────────────────
+  async function loadData() {
+    document.getElementById('loading-state').style.display = 'block';
+    document.getElementById('dashboard-content').style.display = 'none';
+
+    try {
+      const res = await fetch('/api/get-all');
+      if (!res.ok) throw new Error('API error ' + res.status);
+      const teams = await res.json();
+      renderDashboard(teams);
+      document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit' });
+    } catch(e) {
+      document.getElementById('loading-state').innerHTML = `<div style="color:#ff5c5c;padding:40px;text-align:center">Failed to load data: ${e.message}<br><br><button onclick="loadData()" class="refresh-btn" style="margin:0 auto">Retry</button></div>`;
+      return;
+    }
+
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('dashboard-content').style.display = 'block';
+  }
+
+  function renderDashboard(teams) {
+    // Summary stats
+    const started  = teams.filter(t => t.progress_overall > 0).length;
+    const avg      = teams.length ? Math.round(teams.reduce((s,t) => s + t.progress_overall, 0) / teams.length) : 0;
+    const complete = teams.filter(t => t.progress_overall >= 100).length;
+
+    document.getElementById('stat-total').textContent    = teams.length;
+    document.getElementById('stat-started').textContent  = started;
+    document.getElementById('stat-avg').textContent      = avg + '%';
+    document.getElementById('stat-complete').textContent = complete;
+
+    // Table
+    const tbody = document.getElementById('team-tbody');
+    if (!teams.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No teams found. Check your Supabase setup.</td></tr>';
+    } else {
+      tbody.innerHTML = teams.map(t => {
+        const overall = t.progress_overall || 0;
+        const color   = progColor(overall);
+        const badge   = statusBadge(overall);
+        const pills   = SECTIONS.map(s => {
+          const pct = t[`progress_${s.id}`] || 0;
+          return `<div class="pill" style="background:${s.color}18;color:${s.color}">
+            <div class="pill-dot" style="background:${s.color};opacity:${pct>0?1:0.3}"></div>
+            ${s.icon} ${pct}%
+          </div>`;
+        }).join('');
+
+        return `<tr>
+          <td>
+            <div class="team-name">${t.team_name}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">${t.team_id}</div>
+          </td>
+          <td>
+            <div style="font-size:13px;color:var(--text)">${t.charter_name || '—'}</div>
+          </td>
+          <td>
+            <div class="prog-wrap">
+              <div class="prog-bar">
+                <div class="prog-fill" style="width:${overall}%;background:${color}"></div>
+              </div>
+              <div class="prog-pct" style="color:${color}">${overall}%</div>
+            </div>
+          </td>
+          <td><div class="section-pills">${pills}</div></td>
+          <td style="font-size:12px;color:var(--text3)">${formatDate(t.updated_at)}</td>
+          <td>
+            <div class="status-badge" style="background:${badge.bg};color:${badge.color}">
+              ${badge.label}
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    // Breakdown cards
+    const breakdownEl = document.getElementById('breakdown-cards');
+    breakdownEl.innerHTML = teams.map(t => {
+      const overall = t.progress_overall || 0;
+      const color   = progColor(overall);
+      const cells   = SECTIONS.map(s => {
+        const pct = t[`progress_${s.id}`] || 0;
+        return `<div class="breakdown-cell">
+          <div class="breakdown-icon">${s.icon}</div>
+          <div class="breakdown-label">${s.label}</div>
+          <div class="breakdown-pct" style="color:${progColor(pct)}">${pct}%</div>
+        </div>`;
+      }).join('');
+
+      return `<div style="background:var(--bg1);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div>
+            <div style="font-weight:700;font-size:14px">${t.team_name}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">${t.charter_name || 'No charter yet'}</div>
+          </div>
+          <div style="font-size:22px;font-weight:800;font-family:var(--font-head);color:${color}">${overall}%</div>
+        </div>
+        <div style="margin-bottom:12px">
+          <div class="prog-bar" style="height:8px">
+            <div class="prog-fill" style="width:${overall}%;background:linear-gradient(90deg,${color},${color}99)"></div>
+          </div>
+        </div>
+        <div class="breakdown-grid">${cells}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Init ────────────────────────────────────────────────────────
+  if (sessionStorage.getItem(ADMIN_SESSION) === 'true') {
+    document.getElementById('admin-gate').style.display = 'none';
+    loadData();
+  }
+
+  // Auto-refresh every 60 seconds
+  setInterval(() => {
+    if (sessionStorage.getItem(ADMIN_SESSION) === 'true') loadData();
+  }, 60000);
+</script>
+</body>
+</html>
