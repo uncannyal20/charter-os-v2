@@ -108,7 +108,39 @@ body {
   position: fixed;
   top: 0; left: 0; bottom: 0;
   z-index: 100;
+  transition: width 0.25s ease, min-width 0.25s ease;
+  overflow: hidden;
 }
+.sidebar.collapsed {
+  width: 0;
+  min-width: 0;
+  border-right: none;
+}
+.sidebar-toggle {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  left: var(--sidebar-w);
+  z-index: 101;
+  width: 18px;
+  height: 48px;
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 6px 6px 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text3);
+  transition: left 0.25s ease;
+}
+.sidebar-toggle:hover { color: var(--accent); background: var(--bg2); }
+.sidebar.collapsed ~ .sidebar-toggle,
+.sidebar-toggle.collapsed { left: 0; }
+.main { transition: margin-left 0.25s ease; }
+.main.expanded { margin-left: 0 !important; }
 .sidebar-logo {
   padding: 24px 20px 20px;
   border-bottom: 1px solid var(--border);
@@ -180,6 +212,7 @@ body {
 /* ── Main content ── */
 .main {
   margin-left: var(--sidebar-w);
+  transition: margin-left 0.25s ease;
   flex: 1;
   height: 100vh;
   overflow-y: auto;
@@ -659,7 +692,31 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
     }
   }
 
-  function teamLogout() {
+  function toggleSidebar() {
+  const sidebar = document.getElementById('main-sidebar');
+  const main    = document.querySelector('.main');
+  const btn     = document.getElementById('sidebar-toggle-btn');
+  const collapsed = sidebar.classList.toggle('collapsed');
+  if (main) main.style.marginLeft = collapsed ? '0' : 'var(--sidebar-w)';
+  btn.style.left = collapsed ? '0' : 'var(--sidebar-w)';
+  btn.textContent = collapsed ? '▶' : '◀';
+  btn.title = collapsed ? 'Show sidebar' : 'Hide sidebar';
+  localStorage.setItem('charter_os_sidebar', collapsed ? 'collapsed' : 'open');
+}
+
+// Restore sidebar state on load
+document.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem('charter_os_sidebar') === 'collapsed') {
+    const sidebar = document.getElementById('main-sidebar');
+    const main    = document.querySelector('.main');
+    const btn     = document.getElementById('sidebar-toggle-btn');
+    if (sidebar) sidebar.classList.add('collapsed');
+    if (main) main.style.marginLeft = '0';
+    if (btn) { btn.style.left = '0'; btn.textContent = '▶'; btn.title = 'Show sidebar'; }
+  }
+});
+
+function teamLogout() {
     if (!confirm('Sign out of CharterOS?')) return;
     sessionStorage.removeItem(SESSION_KEY);
     location.reload();
@@ -768,7 +825,8 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
 </script>
 
 <!-- SIDEBAR -->
-<nav class="sidebar">
+<nav class="sidebar" id="main-sidebar">
+<button class="sidebar-toggle" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar">◀</button>
   <div class="sidebar-logo">
     <div class="wordmark">
       <div class="logo-mark">C</div>
@@ -1746,7 +1804,10 @@ function renderDashboard() {
 
   // Sidebar
   document.getElementById('sidebar-charter-name').textContent = S.charter_name;
-  document.getElementById('sidebar-date').textContent = 'Last saved: ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-SG', {day:'numeric',month:'short',year:'numeric'});
+  const timeStr = now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('sidebar-date').textContent = 'Last saved: ' + dateStr + ', ' + timeStr;
 
   // Update topbar ring and charter name
   const topbarName = document.getElementById('topbar-charter-name');
