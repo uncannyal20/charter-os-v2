@@ -2193,7 +2193,7 @@ async function callClaude(prompt, systemPrompt) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 3000,
+        max_tokens: 5000,
         system: systemPrompt || 'You are a senior product strategy consultant. Respond with clean, professional, structured content. No markdown fences.',
         messages: [{ role: 'user', content: prompt }]
       })
@@ -2232,7 +2232,7 @@ async function generateTOR() {
   setLoading('btn-tor', true);
   const memberList = S.members.map(m => `- ${m.name} (${m.role})${m.resp?': '+m.resp:''}`).join('\n');
   const meetingList = S.meetings.map(m => `- ${m.name}: ${m.freq}, ${m.dur}${m.day?', '+m.day:''}${m.purpose?'. Purpose: '+m.purpose:''}`).join('\n');
-  const prompt = `Generate a professional Terms of Reference (TOR) document for a Product Office team.
+  const prompt = `Generate a complete professional Terms of Reference (TOR) document for a Product Office team. You MUST include ALL 5 sections in full — do not stop early or truncate any section.
 
 Team Members:
 ${memberList}
@@ -2244,12 +2244,14 @@ Product Context: ${S.vision.product_name || 'AI-driven digital product'}
 
 Output ONLY clean HTML inner content (no DOCTYPE/html/body tags). Use <h3 style='color:#4f7cff;margin:20px 0 8px'> for section headings, <h4 style='margin:14px 0 6px'> for member names, <p> for paragraphs, <ul style='margin:6px 0 10px;padding-left:20px'><li style='margin-bottom:5px'> for bullet lists, <strong> for key terms.
 
-Generate these 5 sections:
-1. PURPOSE & MANDATE — 2 short paragraphs
+You MUST generate ALL 5 sections completely:
+1. PURPOSE & MANDATE — 2 short paragraphs explaining the team mandate
 2. TEAM ROLES & RESPONSIBILITIES — each member as <h4>, then <ul> with 4-5 bullet responsibilities
 3. WAYS OF WORKING — <ul> bullets for meeting cadence and communication norms
 4. DECISION MAKING AUTHORITY — <ul> bullets mapping decision types to roles
-5. REPORTING & ESCALATION — <ul> bullets for escalation paths`;
+5. REPORTING & ESCALATION — <ul> bullets for escalation paths, reporting lines, and issue resolution
+
+Do not stop before completing section 5. All 5 sections are mandatory.`;
 
   try {
     const result = await callClaude(prompt);
