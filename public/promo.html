@@ -374,15 +374,76 @@
   .reveal.visible { opacity: 1; transform: translateY(0); }
 
   /* ── RESPONSIVE ──────────────────────────────────────────────── */
+  /* ── MOBILE ─────────────────────────────────────────────────── */
   @media (max-width: 768px) {
+
+    /* Nav */
     nav { padding: 0 20px; }
     .nav-links { display: none; }
-    #hero, #video, #download, .features-header { padding-left: 20px; padding-right: 20px; }
+    .nav-cta { padding: 7px 14px; font-size: 13px; }
+
+    /* Hero */
+    #hero { padding: 100px 20px 60px; text-align: left; }
+    .hero-badge { font-size: 11px; }
+    .hero-title { font-size: 32px; letter-spacing: -0.01em; }
+    .hero-sub { font-size: 15px; margin: 18px 0 28px; }
+    .hero-actions { flex-direction: column; align-items: stretch; }
+    .btn-primary, .btn-ghost { justify-content: center; padding: 13px 24px; }
+    .hero-stats { gap: 24px; margin-top: 48px; }
+    .stat-val { font-size: 26px; }
+
+    /* Video */
+    #video { padding: 60px 20px; }
+    .section-title { font-size: 24px; }
+    .section-sub { font-size: 15px; margin-bottom: 28px; }
+    #video > div, .video-inner { padding: 0 !important; }
+
+    /* Features carousel */
+    #features { padding: 60px 0; }
+    .features-header { padding: 0 20px; margin-bottom: 32px; }
     .carousel-wrap { padding: 0 20px; }
-    .feature-card { grid-template-columns: 1fr; min-height: auto; padding: 28px; }
-    .feature-visual { height: 200px; }
-    .download-card { padding: 28px; }
-    footer { padding: 28px 20px; }
+    .feature-card {
+      grid-template-columns: 1fr;
+      min-height: auto;
+      padding: 28px 24px;
+      gap: 28px;
+    }
+    .feature-visual { height: 180px; order: -1; }
+    .feature-title { font-size: 22px; }
+    .feature-desc { font-size: 14px; }
+    .feature-bullets li { font-size: 13px; }
+    .carousel-nav { margin-top: 28px; }
+
+    /* Downloads */
+    #download { padding: 40px 20px 60px; }
+    #download > div { padding: 0 !important; }
+    .download-card {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 24px;
+      gap: 20px;
+    }
+    .download-icon { width: 52px; height: 52px; font-size: 22px; }
+    .download-content h3 { font-size: 16px; }
+    .download-content p { font-size: 13px; }
+    .btn-download { width: 100%; justify-content: center; padding: 13px 20px; }
+
+    /* Footer */
+    footer {
+      padding: 28px 20px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 20px;
+    }
+    .footer-links { flex-wrap: wrap; gap: 16px; }
+  }
+
+  /* ── SMALL PHONES ────────────────────────────────────────────── */
+  @media (max-width: 480px) {
+    .hero-title { font-size: 28px; }
+    .hero-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 32px; }
+    .stat { text-align: center; }
+    .feature-card { padding: 22px 18px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -457,7 +518,7 @@
     <h2 class="section-title">See CharterOS in 30 Seconds</h2>
     <p class="section-sub">Watch how a Product Office team goes from zero to a fully structured, AI-generated charter — with governance baked in at every step.</p>
   </div>
-  <div style="max-width:1100px;margin:0 auto;padding:0 48px" class="reveal">
+  <div style="max-width:1100px;margin:0 auto;padding:0 48px" class="reveal video-inner">
     <div class="video-frame" id="video-frame">
       <!-- Replace src with your actual video URL or embed code -->
       <div class="video-placeholder" id="video-placeholder">
