@@ -250,10 +250,9 @@
     return '#555d70';
   }
   function statusBadge(pct) {
-    if (pct === 0)  return { label:'Not Started', bg:'rgba(85,93,112,0.15)',   color:'#8a90a0' };
-    if (pct < 80)   return { label:'In Progress',  bg:'rgba(245,166,35,0.1)',  color:'#f5a623' };
-    if (pct < 100)  return { label:'Near Complete',bg:'rgba(45,212,191,0.1)',  color:'#2dd4bf' };
-    return            { label:'Complete',           bg:'rgba(31,214,138,0.12)',color:'#1fd68a' };
+    if (pct === 0)   return { label:'Not Started',  bg:'rgba(85,93,112,0.15)',   color:'#8a90a0' };
+    if (pct < 100)   return { label:'In Progress',  bg:'rgba(245,166,35,0.1)',   color:'#f5a623' };
+    return             { label:'Complete',           bg:'rgba(31,214,138,0.12)', color:'#1fd68a' };
   }
   function formatDate(iso) {
     if (!iso) return 'Never';
