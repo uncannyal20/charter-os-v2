@@ -269,9 +269,11 @@
     max-width: 1100px; margin: 0 auto;
     padding: 0 48px;
   }
+  .carousel-wrap { overflow: hidden; }
   .carousel {
     display: flex; gap: 24px;
     transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
   }
   .feature-card {
     flex-shrink: 0;
@@ -401,12 +403,14 @@
     /* Features carousel */
     #features { padding: 60px 0; }
     .features-header { padding: 0 20px; margin-bottom: 32px; }
-    .carousel-wrap { padding: 0 20px; }
+    .carousel-wrap { padding: 0 16px; overflow: hidden; }
+    .carousel { gap: 16px; }
     .feature-card {
       grid-template-columns: 1fr;
       min-height: auto;
-      padding: 28px 24px;
-      gap: 28px;
+      padding: 24px 20px;
+      gap: 24px;
+      width: calc(100vw - 32px);
     }
     .feature-visual { height: 180px; order: -1; }
     .feature-title { font-size: 22px; }
@@ -798,7 +802,10 @@
 
   function updateCarousel() {
     const cards = document.querySelectorAll('.feature-card');
-    carousel.style.transform = `translateX(calc(-${current * 100}% - ${current * 24}px))`;
+    // Use actual card width + gap for precise offset on all screen sizes
+    const cardW = cards[0] ? cards[0].offsetWidth : 0;
+    const gap = window.innerWidth <= 768 ? 16 : 24;
+    carousel.style.transform = `translateX(-${current * (cardW + gap)}px)`;
     dots.forEach((d,i) => d.classList.toggle('active', i === current));
     cards.forEach((c,i) => c.classList.toggle('inactive', i !== current));
     prevBtn.disabled = current === 0;
@@ -845,6 +852,9 @@
     entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
   }, { threshold: 0.1 });
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Re-calculate on resize (orientation change etc)
+  window.addEventListener('resize', () => { updateCarousel(); });
 
   // Init
   updateCarousel();
