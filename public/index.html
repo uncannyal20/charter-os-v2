@@ -3251,21 +3251,16 @@ Use consulting-grade language. Ambitious but grounded.`;
     kpis: {
       btn: 'btn-gen-kpis',
       getPrompt: () => {
-        const notes = document.getElementById('kpi-success-note').value;
-  const milestones = (S.kpis.milestones && S.kpis.milestones.length > 0)
-    ? '\n\nValue Realisation Milestones defined by the team:\n' + S.kpis.milestones.map(m => `- ${m.timeframe}: ${m.theme} — ${m.notes}`).join('\n')
-    : '';
-        const timeframe = document.getElementById('kpi-timeframe').value;
-        const objective = document.getElementById('kpi-objective').value;
+        const notesEl = document.getElementById('kpi-success-note');
+        const notes = notesEl ? notesEl.value : '';
+        const milestones = (S.kpis.milestones && S.kpis.milestones.length > 0)
+          ? '\n\nValue Realisation Milestones defined by the team:\n' + S.kpis.milestones.map(m => `- ${m.timeframe}: ${m.theme} — ${m.notes}`).join('\n')
+          : '';
         const kpiFileTexts = getFileTexts('kpis');
         S.kpis.notes = notes;
-        S.kpis.timeframe = timeframe;
-        S.kpis.objective = objective;
         return `Generate Value Realisation KPIs for a Product Charter.
 
 Product: ${S.vision.product_name || 'AI-driven digital product'}
-Primary objective: ${objective}
-Launch timeframe: ${timeframe}
 
 APPROVED PROBLEM STATEMENT:
 ${S.problem.draft ? S.problem.draft.replace(/<[^>]*>/g,'').slice(0,800) : 'Not yet defined'}
@@ -3273,7 +3268,7 @@ ${S.problem.draft ? S.problem.draft.replace(/<[^>]*>/g,'').slice(0,800) : 'Not y
 APPROVED VISION & STRATEGY:
 ${S.vision.draft ? S.vision.draft.replace(/<[^>]*>/g,'').slice(0,800) : 'Not yet defined'}
 
-Additional context from team: ${notes || '[None provided]'}
+Additional context from team: ${notes || '[None provided]'}${milestones}
 Uploaded documents: ${kpiFileTexts || '[No files uploaded]'}
 
 Based on the problem statement and vision above, generate 6-8 SMART KPIs that are directly traceable to the pain points and strategic pillars defined. Each KPI should clearly measure value realisation — not just activity. Output ONLY a valid JSON array:
