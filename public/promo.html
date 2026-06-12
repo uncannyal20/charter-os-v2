@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charter OS — AI-Powered Product Charter Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0d0f14;
+    --bg1:      #111318;
+    --bg2:      #181b22;
+    --bg3:      #1e2230;
+    --border:   rgba(255,255,255,0.08);
+    --text:     #eceef2;
+    --text2:    #8a90a0;
+    --text3:    #555d70;
+    --blue:     #4f7cff;
+    --blue2:    #6c3cff;
+    --green:    #1fd68a;
+    --amber:    #f5a623;
+    --purp:     #b06cfb;
+    --teal:     #2dd4bf;
+    --red:      #ff5c5c;
+    --font-h:   'Nunito', sans-serif;
+    --font-b:   'DM Sans', sans-serif;
+    --r:        12px;
+    --r-lg:     20px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-b);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID BACKGROUND ─────────────────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(79,124,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,124,255,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── ORBS ────────────────────────────────────────────────────── */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    z-index: 0;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  .orb-1 { width: 500px; height: 500px; background: rgba(79,124,255,0.12); top: -100px; left: -100px; animation-delay: 0s; }
+  .orb-2 { width: 400px; height: 400px; background: rgba(108,60,255,0.1);  top: 30%;   right: -80px;  animation-delay: -6s; }
+  .orb-3 { width: 350px; height: 350px; background: rgba(31,214,138,0.08); bottom: 10%; left: 20%;   animation-delay: -12s; }
+  @keyframes drift {
+    0%   { transform: translate(0,0) scale(1); }
+    100% { transform: translate(30px, 40px) scale(1.08); }
+  }
+
+  /* ── NAV ─────────────────────────────────────────────────────── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: 64px;
+    background: rgba(13,15,20,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 48px;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .nav-logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--blue), var(--blue2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-h); font-weight: 900; font-size: 16px; color: white;
+  }
+  .nav-logo-text { font-family: var(--font-h); font-weight: 800; font-size: 16px; color: var(--text); }
+  .nav-links { display: flex; align-items: center; gap: 32px; }
+  .nav-links a { color: var(--text2); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    background: var(--blue); color: white; border: none; border-radius: 8px;
+    padding: 8px 20px; font-size: 14px; font-weight: 600; font-family: var(--font-b);
+    cursor: pointer; text-decoration: none; transition: all 0.2s;
+  }
+  .nav-cta:hover { background: #3d6ef0; transform: translateY(-1px); }
+
+  /* ── SECTIONS ────────────────────────────────────────────────── */
+  section { position: relative; z-index: 1; }
+
+  /* ── HERO ────────────────────────────────────────────────────── */
+  #hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 120px 48px 80px;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(79,124,255,0.12);
+    border: 1px solid rgba(79,124,255,0.25);
+    border-radius: 100px;
+    padding: 6px 16px; font-size: 12px; font-weight: 600;
+    color: var(--blue); letter-spacing: 0.04em; text-transform: uppercase;
+    margin-bottom: 28px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--blue); }
+  .hero-title {
+    font-family: var(--font-h); font-weight: 900;
+    font-size: clamp(40px, 6vw, 76px);
+    line-height: 1.1; letter-spacing: -0.02em;
+    max-width: 900px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .hero-title span { background: linear-gradient(135deg, var(--blue), var(--purp)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero-sub {
+    font-size: 20px; color: var(--text2); line-height: 1.6;
+    max-width: 580px; margin: 24px auto 40px;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+  .hero-actions {
+    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--blue), var(--blue2));
+    color: white; border: none; border-radius: 10px;
+    padding: 14px 32px; font-size: 15px; font-weight: 600; font-family: var(--font-b);
+    cursor: pointer; text-decoration: none;
+    transition: all 0.2s; box-shadow: 0 8px 32px rgba(79,124,255,0.3);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(79,124,255,0.4); }
+  .btn-ghost {
+    background: transparent; color: var(--text2);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 32px; font-size: 15px; font-weight: 500; font-family: var(--font-b);
+    cursor: pointer; text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--blue); background: rgba(79,124,255,0.06); }
+
+  .hero-stats {
+    display: flex; gap: 48px; justify-content: center; flex-wrap: wrap;
+    margin-top: 64px;
+    animation: fadeUp 0.6s 0.4s ease both;
+  }
+  .stat { text-align: center; }
+  .stat-val { font-family: var(--font-h); font-size: 32px; font-weight: 800; }
+  .stat-lbl { font-size: 13px; color: var(--text3); margin-top: 4px; }
+
+  /* ── VIDEO SECTION ───────────────────────────────────────────── */
+  #video {
+    padding: 100px 48px;
+    max-width: 1100px; margin: 0 auto;
+  }
+  .section-eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--blue); margin-bottom: 14px;
+  }
+  .section-title {
+    font-family: var(--font-h); font-weight: 800;
+    font-size: clamp(28px, 3.5vw, 42px); line-height: 1.2;
+    margin-bottom: 16px;
+  }
+  .section-sub { font-size: 17px; color: var(--text2); line-height: 1.6; max-width: 560px; margin-bottom: 48px; }
+
+  .video-frame {
+    position: relative;
+    background: var(--bg1);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    aspect-ratio: 16/9;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+  }
+  .video-frame video, .video-frame iframe {
+    width: 100%; height: 100%; object-fit: cover; border: none;
+  }
+  .video-placeholder {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 20px;
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+  }
+  .play-btn {
+    width: 72px; height: 72px;
+    background: linear-gradient(135deg, var(--blue), var(--blue2));
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 8px 32px rgba(79,124,255,0.4);
+  }
+  .play-btn:hover { transform: scale(1.1); box-shadow: 0 12px 48px rgba(79,124,255,0.6); }
+  .play-btn svg { margin-left: 4px; }
+  .video-placeholder p { font-size: 15px; color: var(--text2); }
+  .video-label {
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(13,15,20,0.85); backdrop-filter: blur(8px);
+    border: 1px solid var(--border); border-radius: 100px;
+    padding: 6px 18px; font-size: 12px; color: var(--text2);
+    white-space: nowrap;
+  }
+
+  /* ── DOWNLOAD SECTION ────────────────────────────────────────── */
+  #download {
+    padding: 60px 48px 100px;
+    max-width: 1100px; margin: 0 auto;
+  }
+  .download-card {
+    background: linear-gradient(135deg, rgba(79,124,255,0.1) 0%, rgba(108,60,255,0.08) 100%);
+    border: 1px solid rgba(79,124,255,0.2);
+    border-radius: var(--r-lg);
+    padding: 48px 56px;
+    display: flex; align-items: center; justify-content: space-between; gap: 40px;
+    flex-wrap: wrap;
+  }
+  .download-icon {
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, var(--blue), var(--blue2));
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; flex-shrink: 0;
+  }
+  .download-content { flex: 1; min-width: 220px; }
+  .download-content h3 { font-family: var(--font-h); font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+  .download-content p { font-size: 15px; color: var(--text2); line-height: 1.5; }
+  .download-meta { display: flex; gap: 20px; margin-top: 14px; flex-wrap: wrap; }
+  .download-tag {
+    font-size: 12px; color: var(--text3);
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 3px 10px;
+  }
+  .btn-download {
+    background: white; color: #1a1d24; border: none; border-radius: 10px;
+    padding: 14px 28px; font-size: 15px; font-weight: 700; font-family: var(--font-b);
+    cursor: pointer; text-decoration: none; flex-shrink: 0;
+    display: inline-flex; align-items: center; gap: 10px;
+    transition: all 0.2s; box-shadow: 0 4px 20px rgba(255,255,255,0.15);
+  }
+  .btn-download:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(255,255,255,0.2); }
+
+  /* ── FEATURES CAROUSEL ───────────────────────────────────────── */
+  #features {
+    padding: 100px 0;
+    overflow: hidden;
+  }
+  .features-header {
+    max-width: 1100px; margin: 0 auto 56px;
+    padding: 0 48px;
+  }
+  .carousel-wrap {
+    position: relative;
+    max-width: 1100px; margin: 0 auto;
+    padding: 0 48px;
+  }
+  .carousel {
+    display: flex; gap: 24px;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .feature-card {
+    flex-shrink: 0;
+    width: calc(100% - 48px);
+    background: var(--bg1);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 48px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
+    min-height: 420px;
+    transition: opacity 0.4s;
+  }
+  .feature-card.inactive { opacity: 0.3; pointer-events: none; }
+  .feature-content {}
+  .feature-num {
+    font-family: var(--font-h); font-size: 11px; font-weight: 800;
+    color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .feature-icon-wrap {
+    width: 56px; height: 56px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; margin-bottom: 20px;
+  }
+  .feature-title {
+    font-family: var(--font-h); font-size: 30px; font-weight: 800;
+    line-height: 1.2; margin-bottom: 16px;
+  }
+  .feature-desc { font-size: 16px; color: var(--text2); line-height: 1.7; margin-bottom: 28px; }
+  .feature-bullets { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .feature-bullets li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 14px; color: var(--text2);
+  }
+  .feature-bullets li::before {
+    content: '✓'; font-size: 13px; font-weight: 700;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .feature-visual {
+    border-radius: var(--r);
+    overflow: hidden;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    height: 300px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 72px;
+    position: relative;
+  }
+  .feature-visual-inner {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px;
+  }
+  .feature-visual-label {
+    font-size: 13px; color: var(--text3); font-weight: 500;
+  }
+
+  /* Carousel nav */
+  .carousel-nav {
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; margin-top: 40px;
+  }
+  .carousel-btn {
+    width: 44px; height: 44px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text2); transition: all 0.2s; font-size: 18px;
+  }
+  .carousel-btn:hover { background: var(--bg3); border-color: var(--blue); color: var(--text); }
+  .carousel-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .carousel-dots { display: flex; gap: 8px; }
+  .carousel-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--bg3); border: 1px solid var(--border);
+    cursor: pointer; transition: all 0.3s;
+  }
+  .carousel-dot.active { background: var(--blue); border-color: var(--blue); width: 24px; border-radius: 4px; }
+
+  /* ── FOOTER ──────────────────────────────────────────────────── */
+  footer {
+    position: relative; z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 40px 48px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+  }
+  footer p { font-size: 13px; color: var(--text3); }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a { font-size: 13px; color: var(--text3); text-decoration: none; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--text2); }
+
+  /* ── ANIMATIONS ──────────────────────────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .reveal {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── RESPONSIVE ──────────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    #hero, #video, #download, .features-header { padding-left: 20px; padding-right: 20px; }
+    .carousel-wrap { padding: 0 20px; }
+    .feature-card { grid-template-columns: 1fr; min-height: auto; padding: 28px; }
+    .feature-visual { height: 200px; }
+    .download-card { padding: 28px; }
+    footer { padding: 28px 20px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .orb, .reveal, .carousel { animation: none; transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ORBS -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-icon">C</div>
+    <span class="nav-logo-text">Charter OS</span>
+  </a>
+  <div class="nav-links">
+    <a href="#video">Overview</a>
+    <a href="#download">Downloads</a>
+    <a href="#features">Features</a>
+  </div>
+  <a href="/" class="nav-cta">Launch App →</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-badge">Now Available — Product Office Teams</div>
+  <h1 class="hero-title">
+    Your Product Charter,<br><span>Drafted by AI.</span><br>Approved by You.
+  </h1>
+  <p class="hero-sub">
+    CharterOS guides Product Office teams from raw notes to a complete, structured Product Charter — with Agentic AI doing the synthesis and humans approving at every gate.
+  </p>
+  <div class="hero-actions">
+    <a href="/" class="btn-primary">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L14.5 8L8 14.5M1.5 8H14" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Start Your Charter
+    </a>
+    <a href="#video" class="btn-ghost">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 5.5L11 8L6.5 10.5V5.5Z" fill="currentColor"/></svg>
+      Watch Overview
+    </a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-val" style="color:var(--blue)">5</div>
+      <div class="stat-lbl">Charter Components</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" style="color:var(--green)">6</div>
+      <div class="stat-lbl">Agentic AI Agents</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" style="color:var(--amber)">5</div>
+      <div class="stat-lbl">Approval Gates</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" style="color:var(--purp)">100%</div>
+      <div class="stat-lbl">Human in the Loop</div>
+    </div>
+  </div>
+</section>
+
+<!-- VIDEO -->
+<section id="video">
+  <div class="features-header reveal">
+    <div class="section-eyebrow">Platform Overview</div>
+    <h2 class="section-title">See CharterOS in 30 Seconds</h2>
+    <p class="section-sub">Watch how a Product Office team goes from zero to a fully structured, AI-generated charter — with governance baked in at every step.</p>
+  </div>
+  <div style="max-width:1100px;margin:0 auto;padding:0 48px" class="reveal">
+    <div class="video-frame" id="video-frame">
+      <!-- Replace src with your actual video URL or embed code -->
+      <div class="video-placeholder" id="video-placeholder">
+        <div class="play-btn" onclick="playVideo()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M8 5.5L19 12L8 18.5V5.5Z" fill="white"/>
+          </svg>
+        </div>
+        <p>CharterOS — 30 Second Introduction</p>
+        <p style="font-size:13px;color:var(--text3)">Upload your intro video to replace this placeholder</p>
+      </div>
+      <div class="video-label">⏱ 30 sec · Product Charter Platform</div>
+    </div>
+  </div>
+</section>
+
+<!-- DOWNLOAD -->
+<section id="download">
+  <div style="max-width:1100px;margin:0 auto;padding:0 48px;display:flex;flex-direction:column;gap:16px">
+
+    <!-- PPT Card -->
+    <div class="download-card reveal">
+      <div class="download-icon">📊</div>
+      <div class="download-content">
+        <h3>CharterOS Introduction Deck</h3>
+        <p>A complete 20-slide management presentation covering the platform overview, feature walkthrough, Agentic AI architecture and benefits summary.</p>
+        <div class="download-meta">
+          <span class="download-tag">📎 PowerPoint .pptx</span>
+          <span class="download-tag">20 slides</span>
+          <span class="download-tag">Confidential — Internal Use</span>
+        </div>
+      </div>
+      <a href="/CharterOS_Introduction_Deck.pptx" download class="btn-download">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M9 2v10M5 8l4 4 4-4M3 14h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Download Deck
+      </a>
+    </div>
+
+    <!-- PDF Card -->
+    <div class="download-card reveal" style="background:linear-gradient(135deg,rgba(31,214,138,0.08) 0%,rgba(45,212,191,0.06) 100%);border-color:rgba(31,214,138,0.2)">
+      <div class="download-icon" style="background:linear-gradient(135deg,var(--green),var(--teal))">📄</div>
+      <div class="download-content">
+        <h3>CharterOS Product Brochure</h3>
+        <p>A concise 2-page brochure covering the platform's key capabilities, the 6 Agentic AI agents, visual CBA charts and Gantt timeline outputs — ideal for sharing with stakeholders.</p>
+        <div class="download-meta">
+          <span class="download-tag">📎 PDF · 2 pages</span>
+          <span class="download-tag">CBA & Gantt screenshots</span>
+          <span class="download-tag">Confidential — Internal Use</span>
+        </div>
+      </div>
+      <a href="/CharterOS_Brochure.pdf" download class="btn-download" style="background:white;color:#1a1d24">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M9 2v10M5 8l4 4 4-4M3 14h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Download Brochure
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- FEATURES CAROUSEL -->
+<section id="features">
+  <div class="features-header reveal">
+    <div class="section-eyebrow">Platform Features</div>
+    <h2 class="section-title">Everything Your Team Needs</h2>
+    <p class="section-sub">Five core capabilities that make CharterOS the most complete Product Charter tool built for Product Office teams.</p>
+  </div>
+
+  <div class="carousel-wrap">
+    <div class="carousel" id="carousel">
+
+      <!-- CARD 1: Easy to Use -->
+      <div class="feature-card" data-index="0">
+        <div class="feature-content">
+          <div class="feature-num">Feature 01 of 05</div>
+          <div class="feature-icon-wrap" style="background:rgba(79,124,255,0.15)">🎯</div>
+          <h3 class="feature-title" style="color:var(--text)">Simple, Guided<br>5-Step Workflow</h3>
+          <p class="feature-desc">No training needed. CharterOS walks your team through each charter component in order — from team setup to roadmap approval — with clear prompts at every step.</p>
+          <ul class="feature-bullets">
+            <li style="--c:var(--blue)">Dashboard shows exactly where you are and what to do next</li>
+            <li style="--c:var(--blue)">Progress rings update in real time as you complete each section</li>
+            <li style="--c:var(--blue)">Activity log tracks every action with timestamps</li>
+          </ul>
+        </div>
+        <div class="feature-visual">
+          <div class="feature-visual-inner">
+            <div style="font-size:56px">📋</div>
+            <div style="font-size:14px;font-weight:700;color:var(--blue);font-family:var(--font-h)">5-Step Charter Journey</div>
+            <div class="feature-visual-label">Dashboard · Components · Progress</div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <div style="background:rgba(79,124,255,0.15);border:1px solid rgba(79,124,255,0.3);border-radius:8px;padding:6px 14px;font-size:12px;color:var(--blue)">Team & TOR</div>
+              <div style="background:rgba(245,166,35,0.15);border:1px solid rgba(245,166,35,0.3);border-radius:8px;padding:6px 14px;font-size:12px;color:var(--amber)">Problem</div>
+              <div style="background:rgba(176,108,251,0.15);border:1px solid rgba(176,108,251,0.3);border-radius:8px;padding:6px 14px;font-size:12px;color:var(--purp)">Vision</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: UI Friendly -->
+      <div class="feature-card" data-index="1">
+        <div class="feature-content">
+          <div class="feature-num">Feature 02 of 05</div>
+          <div class="feature-icon-wrap" style="background:rgba(176,108,251,0.15)">✨</div>
+          <h3 class="feature-title" style="color:var(--text)">Clean, Modern<br>Interface</h3>
+          <p class="feature-desc">Designed to feel like a premium product tool — not a government form. Dark and light modes, collapsible sidebar, responsive layout, and real-time auto-save.</p>
+          <ul class="feature-bullets">
+            <li>Dark mode and light mode — team's choice</li>
+            <li>Collapsible sidebar for full-screen working space</li>
+            <li>Auto-saves every 3 seconds to cloud — never lose work</li>
+          </ul>
+        </div>
+        <div class="feature-visual">
+          <div class="feature-visual-inner">
+            <div style="display:flex;gap:12px;align-items:center">
+              <div style="width:48px;height:48px;background:linear-gradient(135deg,var(--blue),var(--blue2));border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;color:white;font-family:var(--font-h)">C</div>
+              <div>
+                <div style="font-size:16px;font-weight:800;font-family:var(--font-h)">Charter OS</div>
+                <div style="font-size:11px;color:var(--text3)">PRODUCT CHARTER PLATFORM</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:8px">
+              <div style="background:var(--bg3);border-radius:8px;padding:8px 16px;font-size:12px;color:var(--text2)">🌙 Dark</div>
+              <div style="background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.3);border-radius:8px;padding:8px 16px;font-size:12px;color:var(--amber)">☀️ Light</div>
+            </div>
+            <div style="font-size:12px;color:var(--text3);margin-top:8px">Last saved: 12 Jun 2026, 01:24 PM</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 3: AI Powered -->
+      <div class="feature-card" data-index="2">
+        <div class="feature-content">
+          <div class="feature-num">Feature 03 of 05</div>
+          <div class="feature-icon-wrap" style="background:rgba(31,214,138,0.15)">🤖</div>
+          <h3 class="feature-title" style="color:var(--text)">6 Agentic AI<br>Agents at Work</h3>
+          <p class="feature-desc">Each charter section has a dedicated AI agent with a specific goal. Agents read approved outputs of previous sections — so your KPIs are always traceable to your Vision, and your Vision always references your Problem.</p>
+          <ul class="feature-bullets">
+            <li>TOR Drafter, Problem Analyst, Vision Strategist</li>
+            <li>KPI Recommender, CBA Analyst, Roadmap Architect</li>
+            <li>Context carry-forward — agents build on each other</li>
+          </ul>
+        </div>
+        <div class="feature-visual">
+          <div class="feature-visual-inner" style="gap:8px">
+            <div style="font-size:13px;font-weight:700;color:var(--text3);letter-spacing:0.06em;margin-bottom:4px">AGENT CONTEXT CHAIN</div>
+            <div style="display:flex;flex-direction:column;gap:4px;width:200px">
+              <div style="background:rgba(79,124,255,0.15);border:1px solid rgba(79,124,255,0.25);border-radius:8px;padding:6px 12px;font-size:11px;color:var(--blue);font-weight:600">01 TOR Drafter</div>
+              <div style="text-align:center;font-size:10px;color:var(--text3)">↓ approved</div>
+              <div style="background:rgba(245,166,35,0.15);border:1px solid rgba(245,166,35,0.25);border-radius:8px;padding:6px 12px;font-size:11px;color:var(--amber);font-weight:600">02 Problem Analyst</div>
+              <div style="text-align:center;font-size:10px;color:var(--text3)">↓ reads context</div>
+              <div style="background:rgba(176,108,251,0.15);border:1px solid rgba(176,108,251,0.25);border-radius:8px;padding:6px 12px;font-size:11px;color:var(--purp);font-weight:600">03 Vision Strategist</div>
+              <div style="text-align:center;font-size:10px;color:var(--text3)">↓ reads context</div>
+              <div style="background:rgba(45,212,191,0.15);border:1px solid rgba(45,212,191,0.25);border-radius:8px;padding:6px 12px;font-size:11px;color:var(--teal);font-weight:600">04 KPI Recommender</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 4: Bring Your Own Files -->
+      <div class="feature-card" data-index="3">
+        <div class="feature-content">
+          <div class="feature-num">Feature 04 of 05</div>
+          <div class="feature-icon-wrap" style="background:rgba(245,166,35,0.15)">📂</div>
+          <h3 class="feature-title" style="color:var(--text)">Bring Your<br>Own Documents</h3>
+          <p class="feature-desc">No blank slate. Upload the documents your team already has — meeting notes, interview transcripts, research findings, strategy papers, Excel business cases — and the AI synthesises across all of them.</p>
+          <ul class="feature-bullets">
+            <li>TXT, DOC, DOCX — meeting notes and transcripts</li>
+            <li>XLSX, CSV — CBA models and benefit estimates</li>
+            <li>PDF — research reports and board submissions</li>
+            <li>Paste raw notes directly — no formatting needed</li>
+          </ul>
+        </div>
+        <div class="feature-visual">
+          <div class="feature-visual-inner" style="gap:10px">
+            <div style="font-size:36px">📁</div>
+            <div style="display:flex;flex-direction:column;gap:6px;width:240px">
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:10px">
+                <span style="font-size:14px">📝</span>
+                <div>
+                  <div style="font-size:11px;font-weight:600">stakeholder_notes.docx</div>
+                  <div style="font-size:10px;color:var(--text3)">42KB · Read ✓</div>
+                </div>
+              </div>
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:10px">
+                <span style="font-size:14px">📊</span>
+                <div>
+                  <div style="font-size:11px;font-weight:600">CBA_estimates.xlsx</div>
+                  <div style="font-size:10px;color:var(--text3)">18KB · Read ✓</div>
+                </div>
+              </div>
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:10px">
+                <span style="font-size:14px">📄</span>
+                <div>
+                  <div style="font-size:11px;font-weight:600">strategic_analysis.pdf</div>
+                  <div style="font-size:10px;color:var(--text3)">2.1MB · Read ✓</div>
+                </div>
+              </div>
+            </div>
+            <div style="background:rgba(31,214,138,0.1);border:1px solid rgba(31,214,138,0.2);border-radius:8px;padding:6px 14px;font-size:11px;color:var(--green);font-weight:600">✓ 3 files read — AI ready to generate</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 5: Export Outputs -->
+      <div class="feature-card" data-index="4">
+        <div class="feature-content">
+          <div class="feature-num">Feature 05 of 05</div>
+          <div class="feature-icon-wrap" style="background:rgba(45,212,191,0.15)">📤</div>
+          <h3 class="feature-title" style="color:var(--text)">Export Finalised<br>Outputs</h3>
+          <p class="feature-desc">Once your charter is complete and approved, export it in multiple formats. Full PDF charter document, management presentation slides, HTML copy, or JSON backup — ready for any audience.</p>
+          <ul class="feature-bullets">
+            <li>Export PDF — full charter with Gantt chart and CBA charts</li>
+            <li>Generate Slides — 10-slide management presentation deck</li>
+            <li>Download CBA Excel — full cost-benefit model for finance</li>
+            <li>JSON backup — restore or share charter state anytime</li>
+          </ul>
+        </div>
+        <div class="feature-visual">
+          <div class="feature-visual-inner" style="gap:10px">
+            <div style="font-size:13px;font-weight:700;color:var(--text3);letter-spacing:0.06em;margin-bottom:4px">EXPORT OPTIONS</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:240px">
+              <div style="background:rgba(79,124,255,0.12);border:1px solid rgba(79,124,255,0.2);border-radius:10px;padding:12px;text-align:center">
+                <div style="font-size:22px">📄</div>
+                <div style="font-size:11px;color:var(--blue);font-weight:600;margin-top:4px">Export PDF</div>
+              </div>
+              <div style="background:rgba(176,108,251,0.12);border:1px solid rgba(176,108,251,0.2);border-radius:10px;padding:12px;text-align:center">
+                <div style="font-size:22px">📊</div>
+                <div style="font-size:11px;color:var(--purp);font-weight:600;margin-top:4px">Generate Slides</div>
+              </div>
+              <div style="background:rgba(45,212,191,0.12);border:1px solid rgba(45,212,191,0.2);border-radius:10px;padding:12px;text-align:center">
+                <div style="font-size:22px">💾</div>
+                <div style="font-size:11px;color:var(--teal);font-weight:600;margin-top:4px">CBA Excel</div>
+              </div>
+              <div style="background:rgba(31,214,138,0.12);border:1px solid rgba(31,214,138,0.2);border-radius:10px;padding:12px;text-align:center">
+                <div style="font-size:22px">📋</div>
+                <div style="font-size:11px;color:var(--green);font-weight:600;margin-top:4px">HTML Copy</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.carousel -->
+
+    <!-- Nav -->
+    <div class="carousel-nav">
+      <button class="carousel-btn" id="prev-btn" onclick="carouselPrev()" disabled>←</button>
+      <div class="carousel-dots" id="carousel-dots">
+        <div class="carousel-dot active" onclick="goToSlide(0)"></div>
+        <div class="carousel-dot" onclick="goToSlide(1)"></div>
+        <div class="carousel-dot" onclick="goToSlide(2)"></div>
+        <div class="carousel-dot" onclick="goToSlide(3)"></div>
+        <div class="carousel-dot" onclick="goToSlide(4)"></div>
+      </div>
+      <button class="carousel-btn" id="next-btn" onclick="carouselNext()">→</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="nav-logo" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <div class="nav-logo-icon" style="width:28px;height:28px;font-size:13px">C</div>
+      <span class="nav-logo-text" style="font-size:14px">Charter OS</span>
+    </div>
+    <p>AI-Powered Product Charter Platform · Confidential — Internal Use Only</p>
+  </div>
+  <div class="footer-links">
+    <a href="/">Launch App</a>
+    <a href="/admin">Admin Portal</a>
+    <a href="#download">Downloads</a>
+  </div>
+</footer>
+
+<script>
+  // ── CAROUSEL ────────────────────────────────────────────────────
+  let current = 0;
+  const total = 5;
+  const carousel = document.getElementById('carousel');
+  const dots = document.querySelectorAll('.carousel-dot');
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+
+  function updateCarousel() {
+    const cards = document.querySelectorAll('.feature-card');
+    carousel.style.transform = `translateX(calc(-${current * 100}% - ${current * 24}px))`;
+    dots.forEach((d,i) => d.classList.toggle('active', i === current));
+    cards.forEach((c,i) => c.classList.toggle('inactive', i !== current));
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+  }
+
+  function carouselNext() { if (current < total-1) { current++; updateCarousel(); } }
+  function carouselPrev() { if (current > 0) { current--; updateCarousel(); } }
+  function goToSlide(n) { current = n; updateCarousel(); }
+
+  // Keyboard nav
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') carouselNext();
+    if (e.key === 'ArrowLeft') carouselPrev();
+  });
+
+  // Touch swipe
+  let touchX = null;
+  carousel.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+  carousel.addEventListener('touchend', e => {
+    if (!touchX) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50) { dx < 0 ? carouselNext() : carouselPrev(); }
+    touchX = null;
+  });
+
+  // Auto-advance every 6s
+  let autoTimer = setInterval(carouselNext, 6000);
+  carousel.addEventListener('mouseenter', () => clearInterval(autoTimer));
+  carousel.addEventListener('mouseleave', () => {
+    clearInterval(autoTimer);
+    autoTimer = setInterval(() => { if (current < total-1) carouselNext(); else { current=0; updateCarousel(); } }, 6000);
+  });
+
+  // ── VIDEO ───────────────────────────────────────────────────────
+  function playVideo() {
+    // Replace with your actual video embed
+    // e.g. YouTube: document.getElementById('video-frame').innerHTML = '<iframe src="https://www.youtube.com/embed/YOUR_ID?autoplay=1" ...>'
+    alert('Add your video URL in the promo.html file.\n\nReplace the playVideo() function with your actual video embed (YouTube, Vimeo, or direct .mp4 link).');
+  }
+
+  // ── SCROLL REVEAL ───────────────────────────────────────────────
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Init
+  updateCarousel();
+</script>
+</body>
+</html>
