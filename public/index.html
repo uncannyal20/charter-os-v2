@@ -90,6 +90,11 @@ body {
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+/* Wider scrollbar for Gantt chart */
+#rm-gantt-view ::-webkit-scrollbar { height: 10px; }
+#rm-gantt-view ::-webkit-scrollbar-track { background: var(--bg2); border-radius: 6px; }
+#rm-gantt-view ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 6px; }
+#rm-gantt-view ::-webkit-scrollbar-thumb:hover { background: var(--accent2); }
 
 /* ── Sidebar ── */
 .sidebar {
