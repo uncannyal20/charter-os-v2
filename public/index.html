@@ -1308,7 +1308,7 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
                 <div style="font-size:12px;color:var(--text3)">Supports .xlsx, .xls, .csv</div>
                 <label style="cursor:pointer">
                   <input type="file" id="ben-file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleBenefitUpload(this.files)">
-                  <span class="btn btn-primary btn-sm" onclick="document.getElementById('ben-file-input').click()">📁 Browse File</span>
+                  <span class="btn btn-primary btn-sm">📁 Browse File</span>
                 </label>
               </div>
               <div id="ben-upload-status" style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:10px">
@@ -2617,10 +2617,19 @@ async function handleBenefitUpload(files) {
     let matched = 0;
     if (!S.cba_benefit_values) S.cba_benefit_values = {};
     // Normalise string for fuzzy matching — lowercase, strip punctuation and extra spaces
-    const norm = s => s.toLowerCase().replace(/[^a-z0-9\s]/g,'').replace(/\s+/g,' ').trim();
-    console.log('=== BENEFIT UPLOAD DEBUG ===');
-    console.log('Parsed rows:', parsed.map(r => r.name));
-    console.log('KPI items:', S.kpis.items.map(k => k.name));
+    const norm = s => s.toLowerCase().replace(/[-_]/g,' ').replace(/[^a-z0-9\s]/g,'').replace(/\s+/g,' ').trim();
+    const sigWords = s => norm(s).split(' ').filter(w => w.length > 3); // only words >3 chars as signal
+    const wordOverlap = (a, b) => {
+      const wa = sigWords(a); const wb = sigWords(b);
+      if (!wa.length || !wb.length) return false;
+      const common = wa.filter(w => wb.includes(w));
+      const shorter = Math.min(wa.length, wb.length);
+      // Match if: 3+ words in common, OR 2+ words and 50%+ of shorter name matches
+      // OR 2 words in common when shorter name only has 2-3 sig words (e.g. "Resolution Rate")
+      return common.length >= 3 ||
+             (common.length >= 2 && common.length / shorter >= 0.5) ||
+             (common.length >= 2 && shorter <= 3);
+    };
     parsed.forEach(row => {
       const rowNorm = norm(row.name);
       const idx = S.kpis.items.findIndex(k => {
@@ -2633,6 +2642,8 @@ async function handleBenefitUpload(files) {
         const rowWords = rowNorm.split(' ').filter(w => w.length > 2).slice(0,4).join(' ');
         const kWords = kNorm.split(' ').filter(w => w.length > 2).slice(0,4).join(' ');
         if (rowWords && kWords && (rowWords === kWords || kNorm.includes(rowWords) || rowNorm.includes(kWords))) return true;
+        // Fuzzy word overlap match
+        if (wordOverlap(row.name, k.name)) return true;
         return false;
       });
       console.log(`Row "${row.name}" -> idx ${idx}`);
@@ -2655,14 +2666,17 @@ async function handleBenefitUpload(files) {
             <thead><tr><th>KPI Name</th><th>Annual Benefit (SGD)</th><th>Type</th><th>Matched</th></tr></thead>
             <tbody>
               ${parsed.map(r => {
-                const normFn = s => s.toLowerCase().replace(/[^a-z0-9\s]/g,'').replace(/\s+/g,' ').trim();
+                const normFn = s => s.toLowerCase().replace(/[-_]/g,' ').replace(/[^a-z0-9\s]/g,'').replace(/\s+/g,' ').trim();
+                const sigW = s => normFn(s).split(' ').filter(w => w.length > 3);
+                const wOverlap = (a, b) => { const wa=sigW(a),wb=sigW(b); if(!wa.length||!wb.length)return false; const c=wa.filter(w=>wb.includes(w)),s=Math.min(wa.length,wb.length); return c.length>=3||(c.length>=2&&c.length/s>=0.5)||(c.length>=2&&s<=3); };
                 const rn = normFn(r.name);
                 const isMatched = S.kpis.items.some(k => {
                   const kn = normFn(k.name);
                   if (kn === rn || kn.includes(rn) || rn.includes(kn)) return true;
                   const rw = rn.split(' ').filter(w=>w.length>2).slice(0,4).join(' ');
                   const kw = kn.split(' ').filter(w=>w.length>2).slice(0,4).join(' ');
-                  return rw && kw && (rw === kw || kn.includes(rw) || rn.includes(kw));
+                  if (rw && kw && (rw === kw || kn.includes(rw) || rn.includes(kw))) return true;
+                  return wOverlap(r.name, k.name);
                 });
                 return `<tr>
                   <td>${r.name}</td>
