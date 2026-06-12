@@ -664,16 +664,28 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
     // Show team name in sidebar
     const el = document.getElementById('team-label');
     if (el) el.textContent = CURRENT_TEAM.name;
-    // Reset S to this team's local storage (team-specific key)
-    // This prevents data bleed from another team's session
-    const teamRaw = localStorage.getItem(getStorageKey());
-    if (teamRaw) {
+
+    // ── Migrate legacy storage key to team-specific key ──────────
+    // If team-specific key is empty but old shared key has data, migrate it
+    const teamKey    = getStorageKey();
+    const legacyKey  = 'charter_os_data';
+    const teamRaw    = localStorage.getItem(teamKey);
+    const legacyRaw  = localStorage.getItem(legacyKey);
+
+    if (!teamRaw && legacyRaw) {
+      // Migrate old data to new team-specific key and clear legacy
+      localStorage.setItem(teamKey, legacyRaw);
+      localStorage.removeItem(legacyKey);
+      try { Object.assign(S, JSON.parse(legacyRaw)); } catch(e) { Object.assign(S, defaultState()); }
+    } else if (teamRaw) {
       try { Object.assign(S, JSON.parse(teamRaw)); } catch(e) { Object.assign(S, defaultState()); }
     } else {
       Object.assign(S, defaultState());
     }
-    // Load from cloud (overwrites local if cloud has newer data)
+
+    // Load from cloud — always authoritative, overwrites local
     setTimeout(loadFromCloud, 500);
+
     // Hook into state changes for auto-save
     const origRenderAll = window.renderAll;
     if (origRenderAll) {
@@ -2310,9 +2322,9 @@ function approveTOR() {
   if (!confirm('Approve this TOR? This confirms the team structure and ways of working are agreed.')) return;
   S.tor_approved = true;
   saveState();
+  scheduleSave();
   renderTOR();
   if (typeof renderDashboard === 'function') renderDashboard();
-  scheduleSave();
   logActivity('TOR approved and signed off', 'var(--green)');
   toast('TOR approved! Team & TOR section is now complete.', 'success');
 }
@@ -3100,6 +3112,7 @@ function downloadCBAExcel() {
 
 function approveCBA() {
   if (S.cba) S.cba.approved = true;
+  scheduleSave();
   saveState();
   logActivity('Cost Benefit Analysis approved', 'var(--green)');
   toast('CBA approved and saved!', 'success');
@@ -3364,6 +3377,7 @@ function renderDraftArea(section, text) {
 }
 
 function approveSection(section) {
+  // Always cloud-save after approval so it persists on refresh
   const el = document.getElementById(section+'-edit-area');
   if (el) {
     // textarea uses .value, div uses .innerHTML
@@ -3372,6 +3386,7 @@ function approveSection(section) {
   }
   S[section].approved = true;
   saveState();
+  scheduleSave();
   renderDraftArea(section, S[section].draft);
   logActivity(`<strong>${section.charAt(0).toUpperCase()+section.slice(1)}</strong> section approved`, 'var(--green)');
   toast('Section approved and saved! ✓', 'success');
@@ -3438,6 +3453,7 @@ function renderKPITable() {
 }
 function approveKPIs() {
   S.kpis.approved = true;
+  scheduleSave();
   saveState();
   renderKPITable();
   logActivity('KPIs approved — ' + S.kpis.items.length + ' metrics defined', 'var(--green)');
@@ -3519,6 +3535,7 @@ async function renderGantt() {
 
 function approveRoadmap() {
   S.roadmap.approved = true;
+  scheduleSave();
   saveState();
   logActivity('Roadmap approved and finalised', 'var(--green)');
   toast('Roadmap approved!', 'success');
