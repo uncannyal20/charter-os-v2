@@ -654,6 +654,12 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
     }
   }
 
+  function teamLogout() {
+    if (!confirm('Sign out of CharterOS?')) return;
+    sessionStorage.removeItem(SESSION_KEY);
+    location.reload();
+  }
+
   function onTeamLoggedIn() {
     // Show team name in sidebar
     const el = document.getElementById('team-label');
@@ -759,6 +765,7 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
       <div id="team-label" style="font-size:12px;font-weight:600;color:var(--accent)">Loading...</div>
     </div>
     <div id="save-status" style="font-size:11px;text-align:center;margin-top:6px;height:14px;transition:all 0.3s"></div>
+    <button onclick="teamLogout()" style="width:100%;margin-top:8px;background:none;border:1px solid rgba(255,92,92,0.3);color:var(--red);border-radius:6px;padding:5px 0;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font-body);transition:all 0.2s" onmouseover="this.style.background='rgba(255,92,92,0.08)'" onmouseout="this.style.background='none'">Sign Out</button>
   </div>
   <div class="sidebar-nav">
     <div class="nav-section-label">Overview</div>
