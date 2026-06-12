@@ -3381,16 +3381,20 @@ Output ONLY a valid JSON object with this exact structure:
         S.roadmap.draft = result;
         S.roadmap.approved = false;
         saveState();
+        scheduleSave();
         switchTab('roadmap','phases');
         setTimeout(() => {
           renderRoadmapPhases();
           renderGantt();
+          if (typeof renderDashboard === 'function') renderDashboard();
         }, 100);
         logActivity('Roadmap generated with ' + data.phases.length + ' phases', 'var(--green)');
         toast('Roadmap generated!', 'success');
       } catch(e) {
         S.roadmap.draft = result;
         saveState();
+        scheduleSave();
+        if (typeof renderDashboard === 'function') renderDashboard();
         document.getElementById('rm-phases-view').innerHTML = `<div class="draft-box"><div class="draft-box-label">AI Draft</div><pre style="font-size:12.5px;white-space:pre-wrap;color:var(--text2)">${result}</pre></div>`;
         switchTab('roadmap','phases');
         toast('Roadmap generated (text format)', 'success');
