@@ -658,7 +658,15 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
     // Show team name in sidebar
     const el = document.getElementById('team-label');
     if (el) el.textContent = CURRENT_TEAM.name;
-    // Load existing charter from cloud
+    // Reset S to this team's local storage (team-specific key)
+    // This prevents data bleed from another team's session
+    const teamRaw = localStorage.getItem(getStorageKey());
+    if (teamRaw) {
+      try { Object.assign(S, JSON.parse(teamRaw)); } catch(e) { Object.assign(S, defaultState()); }
+    } else {
+      Object.assign(S, defaultState());
+    }
+    // Load from cloud (overwrites local if cloud has newer data)
     setTimeout(loadFromCloud, 500);
     // Hook into state changes for auto-save
     const origRenderAll = window.renderAll;
@@ -1486,7 +1494,11 @@ COSTS:
 // ═══════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════
-const STORAGE_KEY = 'charter_os_data';
+// Storage key is team-specific to prevent data bleed between teams
+function getStorageKey() {
+  return 'charter_os_data_' + (typeof CURRENT_TEAM !== 'undefined' && CURRENT_TEAM ? CURRENT_TEAM.id : 'default');
+}
+const STORAGE_KEY = 'charter_os_data'; // legacy fallback only
 
 function defaultState() {
   return {
@@ -1510,14 +1522,15 @@ let S = loadState();
 
 function loadState() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const key = getStorageKey();
+    const raw = localStorage.getItem(key);
     if (raw) return JSON.parse(raw);
   } catch(e) {}
   return defaultState();
 }
 
 function saveState() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); } catch(e) {}
+  try { localStorage.setItem(getStorageKey(), JSON.stringify(S)); } catch(e) {}
 }
 
 function clearActivityLog() {
