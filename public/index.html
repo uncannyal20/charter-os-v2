@@ -16,6 +16,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
 <style>
 :root {
   --bg: #0a0b0f;
@@ -3943,25 +3944,119 @@ async function generateSummarySlides() {
       }
     }
 
-    // Send charter state + chart images to server
-    const payload = { ...S, chartImages };
-    const resp = await fetch('http://localhost:3131/api/generate-slides', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+    // Generate PPTX client-side using PptxGenJS
+    if (typeof PptxGenJS === 'undefined') throw new Error('PptxGenJS not loaded. Please refresh and try again.');
+
+    const pptx = new PptxGenJS();
+    pptx.layout = 'LAYOUT_WIDE';
+    pptx.title  = S.charter_name || 'Product Charter';
+
+    const DARK  = 'F0F4FF';  // light blue-grey background
+    const BLUE  = '1F3864';  // deep navy
+    const GREEN = '0A6640';  // deep green
+    const AMBER = 'B45309';  // deep amber
+    const PURP  = '5B21B6';  // deep purple
+    const WHITE = '1F3864';  // use navy for "white" text on light bg
+    const LTXT  = '4A5568';  // medium grey for body text
+    const CARD  = 'FFFFFF';  // white cards
+    const ACCENT= '4472C4';  // accent blue
+
+    const mkShadow = () => ({ type:'outer', color:'000000', blur:8, offset:3, angle:45, opacity:0.25 });
+
+    // ── SLIDE 1: COVER ──────────────────────────────────────────
+    const s1 = pptx.addSlide();
+    s1.background = { color: 'FFFFFF' };
+    s1.addShape(pptx.shapes.RECTANGLE, { x:0, y:0, w:13.33, h:7.5, fill:{ color:'1F3864' }, line:{ color:'1F3864' } });
+    s1.addShape(pptx.shapes.RECTANGLE, { x:0, y:5.8, w:13.33, h:0.06, fill:{ color:BLUE }, line:{ color:BLUE } });
+    s1.addText('PRODUCT CHARTER', { x:0.6, y:1.2, w:12, h:0.4, fontSize:11, color:BLUE, bold:true, charSpacing:4, fontFace:'Calibri' });
+    s1.addText(S.charter_name || 'Product Charter', { x:0.6, y:1.8, w:11, h:1.8, fontSize:36, color:WHITE, bold:true, fontFace:'Calibri', breakLine:false });
+    s1.addText(new Date().toLocaleDateString('en-SG',{day:'numeric',month:'long',year:'numeric'}) + '  ·  ' + (S.members||[]).length + ' team members  ·  100% complete',
+      { x:0.6, y:4.0, w:11, h:0.4, fontSize:12, color:LTXT, fontFace:'Calibri' });
+    const teamNames = (S.members||[]).slice(0,6).map(m=>m.name+' ('+m.role+')').join('   ·   ');
+    s1.addText(teamNames, { x:0.6, y:4.6, w:12, h:0.4, fontSize:10, color:LTXT, italic:true, fontFace:'Calibri' });
+
+    // ── SLIDE 2: PROBLEM STATEMENT ──────────────────────────────
+    const s2 = pptx.addSlide();
+    s2.background = { color: 'FFFFFF' };
+    s2.addText('THE PROBLEM', { x:0.6, y:0.4, w:12, h:0.35, fontSize:11, color:AMBER, bold:true, charSpacing:4, fontFace:'Calibri' });
+    s2.addText('Why This Matters', { x:0.6, y:0.85, w:10, h:0.7, fontSize:28, color:WHITE, bold:true, fontFace:'Calibri' });
+    const probText = (S.problem?.draft||'').replace(/<[^>]*>/g,'').replace(/&[^;]+;/g,' ').slice(0,600).trim();
+    s2.addText(probText || 'Problem statement not yet defined.', { x:0.6, y:1.8, w:8, h:4, fontSize:13, color:LTXT, fontFace:'Calibri', valign:'top', wrap:true });
+    // Stat boxes
+    const stats = [['2.9/5','Resident satisfaction'],['9.1 days','Avg resolution time'],['38%','Duplicate report rate'],['12%','MP escalation rate']];
+    stats.forEach((st,i) => {
+      const bx = 9.5; const by = 1.4 + i*1.4;
+      s2.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x:bx, y:by, w:3.2, h:1.1, fill:{color:'F8FAFF'}, rectRadius:0.08, shadow:mkShadow() });
+      s2.addText(st[0], { x:bx+0.1, y:by+0.05, w:3.0, h:0.55, fontSize:26, color:AMBER, bold:true, align:'center', fontFace:'Calibri' });
+      s2.addText(st[1], { x:bx+0.1, y:by+0.58, w:3.0, h:0.35, fontSize:10, color:LTXT, align:'center', fontFace:'Calibri' });
     });
-    if (!resp.ok) {
-      const err = await resp.json().catch(()=>({error:'Unknown error'}));
-      throw new Error('Server error: ' + resp.status + ' — ' + (err.error||''));
-    }
-    const blob = await resp.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const name = (S.charter_name || 'charter').replace(/[^a-z0-9]/gi,'-').toLowerCase();
-    a.download = name + '-management-presentation.pptx';
-    a.click();
-    URL.revokeObjectURL(url);
+
+    // ── SLIDE 3: VISION & STRATEGY ──────────────────────────────
+    const s3 = pptx.addSlide();
+    s3.background = { color: 'FFFFFF' };
+    s3.addText('VISION & STRATEGY', { x:0.6, y:0.4, w:12, h:0.35, fontSize:11, color:PURP, bold:true, charSpacing:4, fontFace:'Calibri' });
+    s3.addText('Where We Are Going', { x:0.6, y:0.85, w:10, h:0.7, fontSize:28, color:WHITE, bold:true, fontFace:'Calibri' });
+    const visText = (S.vision?.draft||'').replace(/<[^>]*>/g,'').replace(/&[^;]+;/g,' ').slice(0,500).trim();
+    s3.addText(visText || 'Vision not yet defined.', { x:0.6, y:1.8, w:12, h:3.5, fontSize:13, color:LTXT, fontFace:'Calibri', valign:'top', wrap:true });
+    s3.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x:0.6, y:5.6, w:12.1, h:1.3, fill:{color:'F8FAFF'}, rectRadius:0.08, shadow:mkShadow() });
+    s3.addText('"' + (S.vision?.product_name||'Our platform') + ' — delivering measurable value to residents, officers and stakeholders."',
+      { x:0.8, y:5.7, w:11.7, h:1.1, fontSize:13, color:WHITE, italic:true, align:'center', fontFace:'Calibri', valign:'middle' });
+
+    // ── SLIDE 4: VALUE REALISATION / KPIs ───────────────────────
+    const s4 = pptx.addSlide();
+    s4.background = { color: 'FFFFFF' };
+    s4.addText('VALUE REALISATION', { x:0.6, y:0.4, w:12, h:0.35, fontSize:11, color:GREEN, bold:true, charSpacing:4, fontFace:'Calibri' });
+    s4.addText('How We Measure Success', { x:0.6, y:0.85, w:10, h:0.7, fontSize:28, color:WHITE, bold:true, fontFace:'Calibri' });
+    const kpis = (S.kpis?.items||[]).slice(0,6);
+    const colW = 4.0; const startX = 0.6;
+    kpis.forEach((k,i) => {
+      const col = i % 3; const row = Math.floor(i/3);
+      const bx = startX + col*(colW+0.2); const by = 1.9 + row*2.2;
+      const kColors = [BLUE,GREEN,AMBER,PURP,'2dd4bf','ff5c5c'];
+      s4.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x:bx, y:by, w:colW, h:1.9, fill:{color:'F8FAFF'}, rectRadius:0.08, shadow:mkShadow() });
+      s4.addShape(pptx.shapes.RECTANGLE, { x:bx, y:by, w:colW, h:0.06, fill:{color:kColors[i%6]}, line:{color:kColors[i%6]} });
+      s4.addText(k.name||'KPI', { x:bx+0.15, y:by+0.15, w:colW-0.3, h:0.6, fontSize:11, color:WHITE, bold:true, fontFace:'Calibri', wrap:true });
+      s4.addText(k.target||'', { x:bx+0.15, y:by+0.85, w:colW-0.3, h:0.8, fontSize:10, color:LTXT, fontFace:'Calibri', wrap:true });
+    });
+
+    // ── SLIDE 5: ROADMAP ────────────────────────────────────────
+    const s5 = pptx.addSlide();
+    s5.background = { color: 'FFFFFF' };
+    s5.addText('PRODUCT ROADMAP', { x:0.6, y:0.4, w:12, h:0.35, fontSize:11, color:AMBER, bold:true, charSpacing:4, fontFace:'Calibri' });
+    s5.addText('Phased Execution Plan', { x:0.6, y:0.85, w:10, h:0.7, fontSize:28, color:WHITE, bold:true, fontFace:'Calibri' });
+    const phases = (S.roadmap?.phases_data||[]).slice(0,4);
+    const phColors = [BLUE,GREEN,AMBER,PURP];
+    const phW = phases.length > 0 ? (12.1/phases.length) - 0.15 : 3;
+    phases.forEach((ph,i) => {
+      const bx = 0.6 + i*(phW+0.15); const by = 1.9;
+      s5.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x:bx, y:by, w:phW, h:4.8, fill:{color:'F8FAFF'}, rectRadius:0.08, shadow:mkShadow() });
+      s5.addShape(pptx.shapes.RECTANGLE, { x:bx, y:by, w:phW, h:0.08, fill:{color:phColors[i%4]}, line:{color:phColors[i%4]} });
+      s5.addText('PHASE ' + (i+1), { x:bx+0.15, y:by+0.15, w:phW-0.3, h:0.3, fontSize:9, color:phColors[i%4], bold:true, charSpacing:2, fontFace:'Calibri' });
+      s5.addText(ph.name||'', { x:bx+0.15, y:by+0.5, w:phW-0.3, h:0.55, fontSize:12, color:WHITE, bold:true, fontFace:'Calibri', wrap:true });
+      s5.addText(ph.label||'', { x:bx+0.15, y:by+1.1, w:phW-0.3, h:0.35, fontSize:10, color:LTXT, italic:true, fontFace:'Calibri' });
+      const tasks = (ph.tasks||[]).slice(0,4);
+      tasks.forEach((t,ti) => {
+        s5.addText('▸  ' + (t.name||t), { x:bx+0.15, y:by+1.6+ti*0.62, w:phW-0.3, h:0.55, fontSize:10, color:LTXT, fontFace:'Calibri', wrap:true });
+      });
+      if (ph.milestone) {
+        s5.addText('🏁 ' + ph.milestone, { x:bx+0.1, y:by+4.35, w:phW-0.2, h:0.35, fontSize:9, color:GREEN, italic:true, fontFace:'Calibri', wrap:true });
+      }
+    });
+
+    // ── SLIDE 6: CLOSING ────────────────────────────────────────
+    const s6 = pptx.addSlide();
+    s6.background = { color: '1F3864' };
+    s6.addShape(pptx.shapes.RECTANGLE, { x:0, y:3.3, w:13.33, h:0.06, fill:{color:'4472C4'}, line:{color:'4472C4'} });
+    s6.addText('THANK YOU', { x:0.6, y:1.0, w:12, h:0.5, fontSize:11, color:'4472C4', bold:true, charSpacing:6, align:'center', fontFace:'Calibri' });
+    s6.addText(S.charter_name||'Product Charter', { x:0.6, y:1.6, w:12, h:1.2, fontSize:32, color:'FFFFFF', bold:true, align:'center', fontFace:'Calibri' });
+    s6.addText('Prepared by ' + (S.members||[]).slice(0,3).map(m=>m.name).join(', ') + (S.members?.length>3?' and team':''),
+      { x:0.6, y:3.6, w:12, h:0.4, fontSize:12, color:'AABBDD', align:'center', italic:true, fontFace:'Calibri' });
+    s6.addText('Generated by Charter OS  ·  Product Office  ·  ' + new Date().toLocaleDateString('en-SG',{month:'long',year:'numeric'}),
+      { x:0.6, y:6.8, w:12, h:0.3, fontSize:10, color:'7799BB', align:'center', fontFace:'Calibri' });
+
+    // Save
+    const name = (S.charter_name||'charter').replace(/[^a-z0-9]/gi,'-').toLowerCase();
+    await pptx.writeFile({ fileName: name + '-management-presentation.pptx' });
     logActivity('Management presentation slides generated', 'var(--accent)');
     toast('Slides downloaded!', 'success');
   } catch(e) {
@@ -3969,7 +4064,7 @@ async function generateSummarySlides() {
   }
 }
 
-function exportAsPDF() {
+async function exportAsPDF() {
   const name = S.charter_name || S.vision.product_name || 'Product Charter';
   const date = new Date().toLocaleDateString('en-GB', { year:'numeric', month:'long', day:'numeric' });
   // Pre-process all HTML content before inserting into template
@@ -3996,6 +4091,30 @@ function exportAsPDF() {
       </table>
       ${ph.milestone?`<div class="milestone">🏁 Milestone: ${ph.milestone}</div>`:''}
     </div>`).join('');
+
+  // Capture Gantt chart as image
+  let ganttImageHtml = '';
+  const ganttEl = document.getElementById('rm-gantt-view');
+  if (ganttEl && ganttEl.querySelector('div[style]') && typeof html2canvas !== 'undefined') {
+    try {
+      const ganttCanvas = await html2canvas(ganttEl, {
+        scale: 1.5, backgroundColor: '#ffffff', logging: false, useCORS: true
+      });
+      ganttImageHtml = `<img src="${ganttCanvas.toDataURL('image/png')}" style="width:100%;border-radius:8px;border:1px solid #e5e7eb;margin-top:16px" alt="Gantt Chart">`;
+    } catch(e) { console.warn('Gantt capture failed:', e.message); }
+  }
+
+  // Capture CBA charts as image
+  let cbaChartHtml = '';
+  const cbaEl = document.getElementById('cba-output');
+  if (cbaEl && cbaEl.innerHTML.trim() && typeof html2canvas !== 'undefined') {
+    try {
+      const cbaCanvas = await html2canvas(cbaEl, {
+        scale: 1.5, backgroundColor: '#ffffff', logging: false, useCORS: true
+      });
+      cbaChartHtml = `<img src="${cbaCanvas.toDataURL('image/png')}" style="width:100%;border-radius:8px;border:1px solid #e5e7eb;margin-top:16px" alt="Cost Benefit Analysis">`;
+    } catch(e) { console.warn('CBA capture failed:', e.message); }
+  }
 
   const cleanHtml = (html) => html ? html.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim() : '';
 
