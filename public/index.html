@@ -1644,8 +1644,7 @@ function getProgress(id) {
   if (id==='vision') {
     let s = 0;
     const hasVisFiles = (sectionFiles.vision && sectionFiles.vision.length > 0) || S.vision.file_texts;
-    if (S.vision.notes || hasVisFiles) s += 30;
-    if (S.vision.industry) s += 10;
+    if (S.vision.notes || hasVisFiles) s += 40;
     if (S.vision.draft) s += 40;
     if (S.vision.approved) s += 20;
     return Math.min(s, 100);
