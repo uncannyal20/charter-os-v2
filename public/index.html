@@ -1618,7 +1618,7 @@ function getProgress(id) {
   if (id==='team') {
     const memberScore = Math.min(S.members.length / 3, 1) * 50;
     const meetingScore = Math.min(S.meetings.length / 3, 1) * 30;
-    const torScore = S.tor ? 20 : 0;
+    const torScore = S.tor ? (S.tor_approved ? 20 : 10) : 0;
     return Math.round(memberScore + meetingScore + torScore);
   }
   if (id==='problem') {
@@ -2291,14 +2291,30 @@ function renderTOR() {
   const el = document.getElementById('tor-output');
   if (!S.tor) { el.innerHTML=''; return; }
   const clean = cleanDraft(S.tor);
+  const isApproved = S.tor_approved || false;
   el.innerHTML = `<div class="draft-box">
-    <div class="draft-box-label">✓ AI-Generated TOR — ${new Date().toLocaleDateString()}</div>
+    <div class="draft-box-label">${isApproved ? '✅ TOR Approved' : '✓ AI-Generated TOR'} — ${new Date().toLocaleDateString()}</div>
     <div class="tor-html-output" style="font-size:13.5px;line-height:1.8;color:var(--text2)">${clean}</div>
     <div class="draft-actions">
       <button class="btn btn-ghost btn-sm" onclick="copyText(S.tor)">📋 Copy</button>
-      <button class="btn btn-ghost btn-sm" onclick="generateTOR()">↻ Regenerate</button>
+      ${isApproved
+        ? `<button class="btn btn-ghost btn-sm" style="color:var(--green);border-color:var(--green);cursor:default" disabled>✅ Approved</button>`
+        : `<button class="btn btn-ghost btn-sm" onclick="generateTOR()">↻ Regenerate</button>
+           <button class="btn btn-green btn-sm" onclick="approveTOR()">✓ Approve TOR</button>`
+      }
     </div>
   </div>`;
+}
+
+function approveTOR() {
+  if (!confirm('Approve this TOR? This confirms the team structure and ways of working are agreed.')) return;
+  S.tor_approved = true;
+  saveState();
+  renderTOR();
+  if (typeof renderDashboard === 'function') renderDashboard();
+  scheduleSave();
+  logActivity('TOR approved and signed off', 'var(--green)');
+  toast('TOR approved! Team & TOR section is now complete.', 'success');
 }
 
 // ── GENERIC SECTION GENERATOR ──
