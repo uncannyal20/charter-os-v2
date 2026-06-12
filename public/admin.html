@@ -8,222 +8,114 @@
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:     #0d0f14;
-    --bg1:    #111318;
-    --bg2:    #181b22;
-    --bg3:    #1e2230;
-    --border: rgba(255,255,255,0.08);
-    --text:   #eceef2;
-    --text2:  #8a90a0;
-    --text3:  #555d70;
-    --accent: #4f7cff;
-    --accent2:#6c3cff;
-    --accent-soft: rgba(79,124,255,0.12);
-    --green:  #1fd68a;
-    --green-soft: rgba(31,214,138,0.12);
-    --amber:  #f5a623;
-    --amber-soft: rgba(245,166,35,0.12);
-    --red:    #ff5c5c;
-    --red-soft: rgba(255,92,92,0.12);
-    --purple: #b06cfb;
-    --teal:   #2dd4bf;
-    --font-head: 'Nunito', sans-serif;
-    --font-body: 'DM Sans', sans-serif;
-    --r: 10px;
-    --r-lg: 14px;
-    --transition: all 0.18s ease;
+    --bg:#0d0f14;--bg1:#111318;--bg2:#181b22;--bg3:#1e2230;
+    --border:rgba(255,255,255,0.08);--text:#eceef2;--text2:#8a90a0;--text3:#555d70;
+    --accent:#4f7cff;--accent2:#6c3cff;--accent-soft:rgba(79,124,255,0.12);
+    --green:#1fd68a;--amber:#f5a623;--red:#ff5c5c;--purple:#b06cfb;--teal:#2dd4bf;
+    --font-head:'Nunito',sans-serif;--font-body:'DM Sans',sans-serif;
+    --r:10px;--r-lg:14px;--transition:all 0.18s ease;
   }
   body.light-mode {
-    --bg:     #f0f2f8;
-    --bg1:    #ffffff;
-    --bg2:    #f0f2f8;
-    --bg3:    #e4e8f0;
-    --border: rgba(0,0,0,0.08);
-    --text:   #1a1d24;
-    --text2:  #4a5168;
-    --text3:  #8a90a0;
-    --accent: #3b6bef;
-    --accent2:#5a2fd4;
-    --accent-soft: rgba(59,107,239,0.1);
-    --green:  #0fa870;
-    --green-soft: rgba(15,168,112,0.1);
-    --amber:  #d4870a;
-    --amber-soft: rgba(212,135,10,0.1);
-    --red:    #e03d3d;
-    --red-soft: rgba(224,61,61,0.1);
+    --bg:#f0f2f8;--bg1:#ffffff;--bg2:#f0f2f8;--bg3:#e4e8f0;
+    --border:rgba(0,0,0,0.08);--text:#1a1d24;--text2:#4a5168;--text3:#8a90a0;
+    --accent:#3b6bef;--accent2:#5a2fd4;--accent-soft:rgba(59,107,239,0.1);
+    --green:#0fa870;--amber:#d4870a;--red:#e03d3d;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.2s, color 0.2s; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;transition:background 0.2s,color 0.2s;}
 
   /* LOGIN */
-  #admin-gate {
-    position: fixed; inset: 0; background: #0a0b0f; z-index: 9999;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .login-box {
-    background: var(--bg1); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 16px; padding: 40px; width: 360px; text-align: center;
-  }
-  .login-logo {
-    width: 48px; height: 48px;
-    background: linear-gradient(135deg, #4f7cff, #6c3cff);
-    border-radius: 12px; display: flex; align-items: center; justify-content: center;
-    font-size: 22px; font-weight: 800; color: white; margin: 0 auto 20px;
-    font-family: var(--font-head);
-  }
-  .login-title { font-family: var(--font-head); font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
-  .login-sub { font-size: 12px; color: var(--text2); margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.06em; }
-  .login-input {
-    width: 100%; background: var(--bg2); border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 8px; padding: 11px 14px; font-size: 14px; color: var(--text);
-    outline: none; margin-bottom: 12px; font-family: var(--font-body);
-  }
-  .login-btn {
-    width: 100%; background: var(--accent); color: white; border: none;
-    border-radius: 8px; padding: 11px; font-size: 14px; font-weight: 500;
-    cursor: pointer; font-family: var(--font-body); transition: var(--transition);
-  }
-  .login-btn:hover { background: #3d6ef0; }
-  .login-error { color: var(--red); font-size: 12px; margin-bottom: 10px; display: none; }
+  #admin-gate{position:fixed;inset:0;background:#0a0b0f;z-index:9999;display:flex;align-items:center;justify-content:center;}
+  .login-box{background:var(--bg1);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:40px;width:360px;text-align:center;}
+  .login-logo{width:48px;height:48px;background:linear-gradient(135deg,#4f7cff,#6c3cff);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
+  .login-title{font-family:var(--font-head);font-size:20px;font-weight:800;color:var(--text);margin-bottom:4px;}
+  .login-sub{font-size:12px;color:var(--text2);margin-bottom:24px;text-transform:uppercase;letter-spacing:0.06em;}
+  .login-input{width:100%;background:var(--bg2);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:11px 14px;font-size:14px;color:var(--text);outline:none;margin-bottom:12px;font-family:var(--font-body);}
+  .login-btn{width:100%;background:var(--accent);color:white;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--font-body);transition:var(--transition);}
+  .login-btn:hover{background:#3d6ef0;}
+  .login-error{color:var(--red);font-size:12px;margin-bottom:10px;display:none;}
 
   /* HEADER */
-  .header {
-    background: var(--bg1); border-bottom: 1px solid var(--border);
-    padding: 0 32px; height: 60px; display: flex; align-items: center;
-    justify-content: space-between; position: sticky; top: 0; z-index: 100;
-  }
-  .header-left { display: flex; align-items: center; gap: 12px; }
-  .header-logo {
-    width: 32px; height: 32px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 8px; display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 14px; color: white; font-family: var(--font-head);
-  }
-  .header-title { font-family: var(--font-head); font-weight: 800; font-size: 16px; }
-  .header-badge {
-    background: var(--accent-soft); color: var(--accent); border-radius: 6px;
-    padding: 3px 10px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
-  }
-  .header-right { display: flex; align-items: center; gap: 12px; }
-  .refresh-btn {
-    background: var(--bg2); border: 1px solid var(--border); color: var(--text2);
-    border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer;
-    font-family: var(--font-body); transition: var(--transition); display: flex; align-items: center; gap: 6px;
-  }
-  .refresh-btn:hover { color: var(--text); border-color: var(--accent); }
-  .last-updated { font-size: 12px; color: var(--text3); }
+  .header{background:var(--bg1);border-bottom:1px solid var(--border);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+  .header-left{display:flex;align-items:center;gap:12px;}
+  .header-logo{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;}
+  .header-title{font-family:var(--font-head);font-weight:800;font-size:16px;}
+  .header-badge{background:var(--accent-soft);color:var(--accent);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;}
+  .header-right{display:flex;align-items:center;gap:12px;}
+  .hbtn{background:var(--bg2);border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;font-family:var(--font-body);transition:var(--transition);}
+  .hbtn:hover{color:var(--text);border-color:var(--accent);}
 
   /* MAIN */
-  .main { padding: 32px; max-width: 1400px; margin: 0 auto; }
+  .main{padding:32px;max-width:1400px;margin:0 auto;}
 
   /* SUMMARY CARDS */
-  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
-  .summary-card {
-    background: var(--bg1); border: 1px solid var(--border);
-    border-radius: var(--r-lg); padding: 20px 24px;
-  }
-  .summary-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
-  .summary-value { font-size: 28px; font-weight: 800; font-family: var(--font-head); }
-  .summary-sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;}
+  .summary-card{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px 24px;}
+  .summary-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;}
+  .summary-value{font-size:28px;font-weight:800;font-family:var(--font-head);}
+  .summary-sub{font-size:12px;color:var(--text2);margin-top:4px;}
 
-  /* SECTION HEADING */
-  .section-heading {
-    font-family: var(--font-head); font-size: 16px; font-weight: 700;
-    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
-  }
+  /* DEPT TILES */
+  .dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;margin-bottom:32px;}
+  .dept-tile{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px;cursor:pointer;transition:var(--transition);position:relative;overflow:hidden;}
+  .dept-tile:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 32px rgba(79,124,255,0.15);}
+  .dept-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px;}
+  .dept-name{font-family:var(--font-head);font-size:15px;font-weight:700;margin-bottom:4px;}
+  .dept-meta{font-size:11px;color:var(--text3);margin-bottom:16px;}
+  .dept-ring-wrap{display:flex;align-items:center;gap:16px;margin-bottom:14px;}
+  .dept-ring{position:relative;width:56px;height:56px;flex-shrink:0;}
+  .dept-ring svg{transform:rotate(-90deg);}
+  .dept-ring-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;font-family:var(--font-head);}
+  .dept-ring-label{font-size:11px;color:var(--text3);}
+  .dept-ring-value{font-size:22px;font-weight:800;font-family:var(--font-head);}
+  .dept-products{display:flex;flex-direction:column;gap:6px;}
+  .dept-product-row{display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-radius:8px;padding:7px 10px;}
+  .dept-product-name{font-size:11px;color:var(--text2);flex:1;margin-right:8px;line-height:1.3;}
+  .dept-product-pct{font-size:11px;font-weight:700;flex-shrink:0;}
+  .dept-view-btn{position:absolute;top:16px;right:16px;background:var(--accent-soft);color:var(--accent);border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;opacity:0;transition:var(--transition);}
+  .dept-tile:hover .dept-view-btn{opacity:1;}
 
-  /* TEAM TABLE */
-  .team-table-wrap {
-    background: var(--bg1); border: 1px solid var(--border);
-    border-radius: var(--r-lg); overflow: hidden; margin-bottom: 32px;
-  }
-  .team-table { width: 100%; border-collapse: collapse; }
-  .team-table th {
-    background: var(--bg2); padding: 12px 16px; text-align: left;
-    font-size: 11px; font-weight: 600; color: var(--text3);
-    text-transform: uppercase; letter-spacing: 0.07em;
-    border-bottom: 1px solid var(--border);
-  }
-  .team-table td {
-    padding: 16px; border-bottom: 1px solid var(--border);
-    font-size: 13.5px; vertical-align: middle;
-  }
-  .team-table tr:last-child td { border-bottom: none; }
-  .team-table tr:hover td { background: var(--bg2); }
-  .team-name { font-weight: 600; color: var(--text); }
-  .charter-name { color: var(--text2); font-size: 12.5px; margin-top: 2px; }
-
-  /* PROGRESS BAR */
-  .prog-wrap { display: flex; align-items: center; gap: 10px; }
-  .prog-bar { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
-  .prog-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
-  .prog-pct { font-size: 12px; font-weight: 700; min-width: 34px; text-align: right; }
-
-  /* SECTION PILLS */
-  .section-pills { display: flex; gap: 6px; flex-wrap: wrap; }
-  .pill { position: relative; }
-  .pill-tooltip {
-    visibility: hidden; opacity: 0;
-    position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
-    background: #1a1d24; color: #eceef2; font-size: 11px; font-weight: 500;
-    white-space: nowrap; border-radius: 6px; padding: 5px 9px;
-    border: 1px solid rgba(255,255,255,0.1);
-    pointer-events: none; transition: opacity 0.15s; z-index: 999;
-  }
-  .pill-tooltip::after {
-    content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-    border: 5px solid transparent; border-top-color: #1a1d24;
-  }
-  .pill:hover .pill-tooltip { visibility: visible; opacity: 1; }
-  .pill {
-    display: flex; align-items: center; gap: 4px;
-    border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 600;
-  }
-  .pill-dot { width: 6px; height: 6px; border-radius: 50%; }
-
-  /* STATUS BADGE */
-  .status-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 600;
-  }
-
-  /* BREAKDOWN GRID */
-  .breakdown-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-  .breakdown-cell {
-    background: var(--bg2); border-radius: 8px; padding: 10px 12px; text-align: center;
-  }
-  .breakdown-icon { font-size: 16px; margin-bottom: 4px; }
-  .breakdown-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; line-height: 1.3; }
-  .breakdown-pct { font-size: 15px; font-weight: 800; font-family: var(--font-head); }
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px);}
+  .modal{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r-lg);width:100%;max-width:700px;max-height:90vh;overflow-y:auto;}
+  .modal-header{padding:24px 28px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+  .modal-close{background:var(--bg2);border:1px solid var(--border);color:var(--text2);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0;transition:var(--transition);}
+  .modal-close:hover{color:var(--text);border-color:var(--red);}
+  .modal-body{padding:20px 28px 28px;}
+  .modal-product{background:var(--bg2);border-radius:var(--r);padding:18px;margin-bottom:14px;}
+  .modal-product:last-child{margin-bottom:0;}
+  .modal-product-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .modal-product-name{font-size:13px;font-weight:600;}
+  .modal-charter-link{color:var(--accent);text-decoration:none;font-size:12px;font-weight:500;}
+  .modal-charter-link:hover{text-decoration:underline;}
+  .sections-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px;}
+  .section-cell{background:var(--bg1);border-radius:8px;padding:10px 6px;text-align:center;}
+  .section-cell-icon{font-size:16px;margin-bottom:3px;}
+  .section-cell-label{font-size:9px;color:var(--text3);margin-bottom:3px;line-height:1.2;}
+  .section-cell-pct{font-size:14px;font-weight:800;font-family:var(--font-head);}
+  .prog-wrap{display:flex;align-items:center;gap:10px;}
+  .prog-bar{flex:1;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+  .prog-fill{height:100%;border-radius:3px;transition:width 0.6s ease;}
+  .status-badge{display:inline-flex;align-items:center;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;}
 
   /* LOADING */
-  .loading { text-align: center; padding: 60px; color: var(--text3); }
-  .loading-spinner {
-    width: 32px; height: 32px; border: 3px solid var(--border);
-    border-top-color: var(--accent); border-radius: 50%;
-    animation: spin 0.8s linear infinite; margin: 0 auto 16px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* EMPTY STATE */
-  .empty-row td { text-align: center; padding: 40px; color: var(--text3); }
+  .loading{text-align:center;padding:60px;color:var(--text3);}
+  .loading-spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .section-heading{font-family:var(--font-head);font-size:16px;font-weight:700;margin-bottom:16px;}
 </style>
 </head>
 <body>
 
-<!-- ADMIN LOGIN -->
+<!-- LOGIN -->
 <div id="admin-gate">
   <div class="login-box">
     <div class="login-logo">
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2L3 6v6c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V6L12 2z" fill="white" opacity="0.9"/>
-    <path d="M9 12l2 2 4-4" stroke="#4f7cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
-</div>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 6v6c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V6L12 2z" fill="white" opacity="0.9"/><path d="M9 12l2 2 4-4" stroke="#4f7cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
     <div class="login-title">Charter OS</div>
     <div class="login-sub">TPO Admin Dashboard</div>
-    <input type="password" class="login-input" id="admin-pw" placeholder="Admin password"
-      onkeydown="if(event.key==='Enter')adminLogin()">
+    <input type="password" class="login-input" id="admin-pw" placeholder="Admin password" onkeydown="if(event.key==='Enter')adminLogin()">
     <div class="login-error" id="admin-error">Incorrect password.</div>
     <button class="login-btn" onclick="adminLogin()">Access Dashboard →</button>
     <div style="margin-top:16px;font-size:11px;color:var(--text3)">Restricted to TPO administrators only</div>
@@ -234,11 +126,8 @@
 <header class="header">
   <div class="header-left">
     <div class="header-logo">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2L3 6v6c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V6L12 2z" fill="white" opacity="0.9"/>
-    <path d="M9 12l2 2 4-4" stroke="#4f7cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
-</div>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 6v6c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V6L12 2z" fill="white" opacity="0.9"/><path d="M9 12l2 2 4-4" stroke="#4f7cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
     <div>
       <div class="header-title">Charter OS</div>
       <div style="font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:0.08em;margin-top:1px;font-weight:600">Admin Portal</div>
@@ -246,16 +135,15 @@
     <div class="header-badge">TPO Admin</div>
   </div>
   <div class="header-right">
-    <div class="last-updated" id="last-updated">—</div>
-    <button class="refresh-btn" onclick="toggleTheme()" id="theme-btn" title="Toggle dark/light mode">🌙 Dark</button>
-    <button class="refresh-btn" onclick="loadData()">⟳ Refresh</button>
-    <button class="refresh-btn" style="color:var(--red);border-color:rgba(255,92,92,0.3)" onclick="adminLogout()">Sign Out</button>
+    <div style="font-size:12px;color:var(--text3)" id="last-updated">—</div>
+    <button class="hbtn" onclick="toggleTheme()" id="theme-btn">🌙 Dark</button>
+    <button class="hbtn" onclick="loadData()">⟳ Refresh</button>
+    <button class="hbtn" style="color:var(--red);border-color:rgba(255,92,92,0.3)" onclick="adminLogout()">Sign Out</button>
   </div>
 </header>
 
 <!-- MAIN -->
 <main class="main">
-
   <div id="loading-state" class="loading" style="display:none">
     <div class="loading-spinner"></div>
     <div>Loading charter data…</div>
@@ -263,69 +151,84 @@
 
   <div id="dashboard-content" style="display:none">
 
-    <!-- SUMMARY CARDS -->
+    <!-- SUMMARY -->
     <div class="summary-grid">
       <div class="summary-card">
-        <div class="summary-label">Total Teams</div>
-        <div class="summary-value" id="stat-total" style="color:var(--accent)">—</div>
-        <div class="summary-sub">Product Office teams</div>
+        <div class="summary-label">Departments</div>
+        <div class="summary-value" id="stat-depts" style="color:var(--accent)">—</div>
+        <div class="summary-sub">Active product divisions</div>
       </div>
       <div class="summary-card">
-        <div class="summary-label">Charters Started</div>
-        <div class="summary-value" id="stat-started" style="color:var(--teal)">—</div>
-        <div class="summary-sub">Teams with activity</div>
+        <div class="summary-label">Total Charters</div>
+        <div class="summary-value" id="stat-total" style="color:var(--teal)">—</div>
+        <div class="summary-sub">Across all departments</div>
       </div>
       <div class="summary-card">
         <div class="summary-label">Avg. Completion</div>
         <div class="summary-value" id="stat-avg" style="color:var(--amber)">—</div>
-        <div class="summary-sub">Across all teams</div>
+        <div class="summary-sub">Across all charters</div>
       </div>
       <div class="summary-card">
-        <div class="summary-label">Fully Complete</div>
-        <div class="summary-value" id="stat-complete" style="color:var(--green)">—</div>
-        <div class="summary-sub">Charters at 100%</div>
+        <div class="summary-label">Charters Started</div>
+        <div class="summary-value" id="stat-started" style="color:var(--green)">—</div>
+        <div class="summary-sub">Teams with activity</div>
       </div>
     </div>
 
-    <!-- TEAM PROGRESS TABLE -->
-    <div class="section-heading">📋 Product Charter Progress</div>
-    <div class="team-table-wrap">
-      <table class="team-table">
-        <thead>
-          <tr>
-            <th style="width:220px">Team</th>
-            <th style="width:200px">Charter Name</th>
-            <th style="width:180px">Overall Progress</th>
-            <th>Section Breakdown</th>
-            <th style="width:130px">Last Updated</th>
-            <th style="width:100px">Status</th>
-          </tr>
-        </thead>
-        <tbody id="team-tbody">
-          <tr class="empty-row"><td colspan="6">Loading…</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- SECTION BREAKDOWN DETAIL -->
-
+    <!-- DEPT TILES -->
+    <div class="section-heading">🏢 Department Charter Progress</div>
+    <div class="dept-grid" id="dept-grid"></div>
 
   </div>
 </main>
 
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Department Detail</div>
+        <div id="modal-dept-name" style="font-family:var(--font-head);font-size:20px;font-weight:800;"></div>
+        <div id="modal-dept-meta" style="font-size:12px;color:var(--text3);margin-top:3px;"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
 <script>
   const ADMIN_PASSWORD = 'tpoadmin2026';
   const ADMIN_SESSION  = 'charterOS_admin_auth';
+  const THEME_KEY      = 'charterOS_admin_theme';
+
+  // Department mapping
+  const DEPT_MAP = {
+    'team-a': 'Digital Services Office',
+    'team-b': 'Estate Management Division',
+    'team-c': 'Estate Management Division',
+    'team-d': 'Citizen Experience Group',
+    'team-e': 'Building Infrastructure & Ops'
+  };
+
+  const DEPT_ICONS = {
+    'Digital Services Office':    { icon: '💻', color: '4f7cff' },
+    'Estate Management Division': { icon: '🏘️', color: '1fd68a' },
+    'Citizen Experience Group':   { icon: '👥', color: 'f5a623' },
+    'Building Infrastructure & Ops': { icon: '🏗️', color: 'b06cfb' }
+  };
 
   const SECTIONS = [
-    { id: 'team',    label: 'Team & TOR',    icon: '👥', color: '#4f7cff' },
-    { id: 'problem', label: 'Problem Stmt',  icon: '🎯', color: '#f5a623' },
-    { id: 'vision',  label: 'Vision',        icon: '🔭', color: '#b06cfb' },
-    { id: 'kpis',    label: 'Value',         icon: '📊', color: '#2dd4bf' },
-    { id: 'roadmap', label: 'Roadmap',       icon: '🗺️', color: '#1fd68a' }
+    { id:'team',    label:'Team & TOR',   icon:'👥', color:'#4f7cff' },
+    { id:'problem', label:'Problem Stmt', icon:'🎯', color:'#f5a623' },
+    { id:'vision',  label:'Vision',       icon:'🔭', color:'#b06cfb' },
+    { id:'kpis',    label:'Value',        icon:'📊', color:'#2dd4bf' },
+    { id:'roadmap', label:'Roadmap',      icon:'🗺️', color:'#1fd68a' }
   ];
 
-  // ── Auth ────────────────────────────────────────────────────────
+  let ALL_TEAMS = [];
+
+  // ── Auth ──────────────────────────────────────────────────────
   function adminLogin() {
     const pw = document.getElementById('admin-pw').value;
     if (pw === ADMIN_PASSWORD) {
@@ -337,124 +240,177 @@
       document.getElementById('admin-pw').value = '';
     }
   }
+  function adminLogout() { sessionStorage.removeItem(ADMIN_SESSION); location.reload(); }
 
-  function adminLogout() {
-    sessionStorage.removeItem(ADMIN_SESSION);
-    location.reload();
-  }
-
-  // ── Helpers ─────────────────────────────────────────────────────
+  // ── Helpers ───────────────────────────────────────────────────
   function progColor(pct) {
     if (pct >= 80) return '#1fd68a';
     if (pct >= 40) return '#f5a623';
-    return '#ff5c5c';
+    if (pct > 0)   return '#4f7cff';
+    return '#555d70';
   }
-
   function statusBadge(pct) {
-    if (pct === 0)   return { label: 'Not Started', bg: 'rgba(255,92,92,0.1)',    color: '#ff5c5c' };
-    if (pct < 80)    return { label: 'In Progress',  bg: 'rgba(245,166,35,0.1)',  color: '#f5a623' };
-    if (pct < 100)   return { label: 'Near Complete',bg: 'rgba(45,212,191,0.1)',  color: '#2dd4bf' };
-    return             { label: 'Complete',           bg: 'rgba(31,214,138,0.12)', color: '#1fd68a' };
+    if (pct === 0)  return { label:'Not Started', bg:'rgba(85,93,112,0.15)',   color:'#8a90a0' };
+    if (pct < 80)   return { label:'In Progress',  bg:'rgba(245,166,35,0.1)',  color:'#f5a623' };
+    if (pct < 100)  return { label:'Near Complete',bg:'rgba(45,212,191,0.1)',  color:'#2dd4bf' };
+    return            { label:'Complete',           bg:'rgba(31,214,138,0.12)',color:'#1fd68a' };
   }
-
   function formatDate(iso) {
-    if (!iso) return '—';
+    if (!iso) return 'Never';
     return new Date(iso).toLocaleString('en-SG', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
   }
+  function ringPath(pct, r) {
+    const c = 2 * Math.PI * r;
+    return `stroke-dasharray:${(pct/100)*c} ${c}`;
+  }
 
-  // ── Load Data ───────────────────────────────────────────────────
+  // ── Load ──────────────────────────────────────────────────────
   async function loadData() {
     document.getElementById('loading-state').style.display = 'block';
     document.getElementById('dashboard-content').style.display = 'none';
-
     try {
       const res = await fetch('/api/get-all');
       if (!res.ok) throw new Error('API error ' + res.status);
-      const teams = await res.json();
-      renderDashboard(teams);
+      ALL_TEAMS = await res.json();
+      renderDashboard(ALL_TEAMS);
       document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit' });
     } catch(e) {
-      document.getElementById('loading-state').innerHTML = `<div style="color:#ff5c5c;padding:40px;text-align:center">Failed to load data: ${e.message}<br><br><button onclick="loadData()" class="refresh-btn" style="margin:0 auto">Retry</button></div>`;
+      document.getElementById('loading-state').innerHTML = `<div style="color:#ff5c5c;padding:40px;text-align:center">Failed to load: ${e.message}<br><br><button onclick="loadData()" class="hbtn" style="margin:8px auto 0;display:block">Retry</button></div>`;
       return;
     }
-
     document.getElementById('loading-state').style.display = 'none';
     document.getElementById('dashboard-content').style.display = 'block';
   }
 
+  // ── Render ────────────────────────────────────────────────────
   function renderDashboard(teams) {
+    // Group by department
+    const depts = {};
+    teams.forEach(t => {
+      const dept = DEPT_MAP[t.team_id] || t.team_name;
+      if (!depts[dept]) depts[dept] = [];
+      depts[dept].push(t);
+    });
+
     // Summary stats
-    const started  = teams.filter(t => t.progress_overall > 0).length;
-    const avg      = teams.length ? Math.round(teams.reduce((s,t) => s + t.progress_overall, 0) / teams.length) : 0;
-    const complete = teams.filter(t => t.progress_overall >= 100).length;
+    const deptCount   = Object.keys(depts).length;
+    const started     = teams.filter(t => t.progress_overall > 0).length;
+    const avg         = teams.length ? Math.round(teams.reduce((s,t) => s + t.progress_overall, 0) / teams.length) : 0;
+    document.getElementById('stat-depts').textContent   = deptCount;
+    document.getElementById('stat-total').textContent   = teams.length;
+    document.getElementById('stat-avg').textContent     = avg + '%';
+    document.getElementById('stat-started').textContent = started;
 
-    document.getElementById('stat-total').textContent    = teams.length;
-    document.getElementById('stat-started').textContent  = started;
-    document.getElementById('stat-avg').textContent      = avg + '%';
-    document.getElementById('stat-complete').textContent = complete;
-
-    // Table
-    const tbody = document.getElementById('team-tbody');
-    if (!teams.length) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No teams found. Check your Supabase setup.</td></tr>';
-    } else {
-      tbody.innerHTML = teams.map(t => {
-        const overall = t.progress_overall || 0;
-        const color   = progColor(overall);
-        const badge   = statusBadge(overall);
-        const pills   = SECTIONS.map(s => {
-          const pct = t[`progress_${s.id}`] || 0;
-          return `<div class="pill" style="background:${s.color}18;color:${s.color}">
-            <div class="pill-dot" style="background:${s.color};opacity:${pct>0?1:0.3}"></div>
-            ${s.icon} ${pct}%
-          </div>`;
-        }).join('');
-
-        return `<tr>
-          <td>
-            <div class="team-name">${t.team_name}</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px">${t.team_id}</div>
-          </td>
-          <td>
-            ${t.progress_overall > 0
-              ? `<a href="/?team=${t.team_id}&readonly=true" target="_blank"
-                   style="font-size:13px;color:var(--accent);text-decoration:none;font-weight:500"
-                   title="Open charter in read-only view">${t.charter_name || 'Untitled Charter'} ↗</a>`
-              : `<span style="font-size:13px;color:var(--text3)">Not started</span>`
-            }
-          </td>
-          <td>
-            <div class="prog-wrap">
-              <div class="prog-bar">
-                <div class="prog-fill" style="width:${overall}%;background:${color}"></div>
-              </div>
-              <div class="prog-pct" style="color:${color}">${overall}%</div>
-            </div>
-          </td>
-          <td><div class="section-pills">${pills}</div></td>
-          <td style="font-size:12px;color:var(--text3)">${formatDate(t.updated_at)}</td>
-          <td>
-            <div class="status-badge" style="background:${badge.bg};color:${badge.color}">
-              ${badge.label}
-            </div>
-          </td>
-        </tr>`;
+    // Dept tiles
+    const grid = document.getElementById('dept-grid');
+    grid.innerHTML = Object.entries(depts).map(([deptName, deptTeams]) => {
+      const info      = DEPT_ICONS[deptName] || { icon:'📋', color:'4f7cff' };
+      const avgPct    = Math.round(deptTeams.reduce((s,t) => s + (t.progress_overall||0), 0) / deptTeams.length);
+      const color     = progColor(avgPct);
+      const r         = 22; const c = 2*Math.PI*r;
+      const dash      = (avgPct/100)*c;
+      const productRows = deptTeams.map(t => {
+        const pct = t.progress_overall || 0;
+        const pc  = progColor(pct);
+        const shortName = t.charter_name && t.charter_name !== 'Not started'
+          ? (t.charter_name.length > 38 ? t.charter_name.slice(0,36)+'…' : t.charter_name)
+          : 'Not started';
+        return `<div class="dept-product-row">
+          <div class="dept-product-name">${shortName}</div>
+          <div class="dept-product-pct" style="color:${pc}">${pct}%</div>
+        </div>`;
       }).join('');
-    }
 
-
+      return `<div class="dept-tile" onclick="openModal('${deptName}')">
+        <button class="dept-view-btn">View Details →</button>
+        <div class="dept-icon" style="background:rgba(${hexToRgb(info.color)},0.15);font-size:20px">${info.icon}</div>
+        <div class="dept-name">${deptName}</div>
+        <div class="dept-meta">${deptTeams.length} charter${deptTeams.length>1?'s':''} · Click to expand</div>
+        <div class="dept-ring-wrap">
+          <div class="dept-ring">
+            <svg width="56" height="56" viewBox="0 0 56 56">
+              <circle cx="28" cy="28" r="${r}" fill="none" stroke="var(--bg3)" stroke-width="5"/>
+              <circle cx="28" cy="28" r="${r}" fill="none" stroke="${color}" stroke-width="5"
+                stroke-dasharray="${dash} ${c}" stroke-linecap="round"/>
+            </svg>
+            <div class="dept-ring-pct" style="color:${color}">${avgPct}%</div>
+          </div>
+          <div>
+            <div class="dept-ring-label">Avg. Completion</div>
+            <div class="dept-ring-value" style="color:${color}">${avgPct}%</div>
+          </div>
+        </div>
+        <div class="dept-products">${productRows}</div>
+      </div>`;
+    }).join('');
   }
 
-  // ── Theme ───────────────────────────────────────────────────────
-  const THEME_KEY = 'charterOS_admin_theme';
+  function hexToRgb(hex) {
+    const r = parseInt(hex.slice(0,2),16);
+    const g = parseInt(hex.slice(2,4),16);
+    const b = parseInt(hex.slice(4,6),16);
+    return `${r},${g},${b}`;
+  }
 
+  // ── Modal ─────────────────────────────────────────────────────
+  function openModal(deptName) {
+    const teams = ALL_TEAMS.filter(t => (DEPT_MAP[t.team_id] || t.team_name) === deptName);
+    const info  = DEPT_ICONS[deptName] || { icon:'📋', color:'4f7cff' };
+
+    document.getElementById('modal-dept-name').textContent = `${info.icon} ${deptName}`;
+    document.getElementById('modal-dept-meta').textContent =
+      `${teams.length} charter${teams.length>1?'s':''} · Last updated: ${formatDate(teams.map(t=>t.updated_at).filter(Boolean).sort().pop())}`;
+
+    document.getElementById('modal-body').innerHTML = teams.map(t => {
+      const overall = t.progress_overall || 0;
+      const color   = progColor(overall);
+      const badge   = statusBadge(overall);
+      const sectionCells = SECTIONS.map(s => {
+        const pct = t[`progress_${s.id}`] || 0;
+        return `<div class="section-cell">
+          <div class="section-cell-icon">${s.icon}</div>
+          <div class="section-cell-label">${s.label}</div>
+          <div class="section-cell-pct" style="color:${progColor(pct)}">${pct}%</div>
+        </div>`;
+      }).join('');
+
+      const charterLink = overall > 0
+        ? `<a href="/?team=${t.team_id}&readonly=true" target="_blank" class="modal-charter-link">Open Charter ↗</a>`
+        : `<span style="font-size:11px;color:var(--text3)">Not started</span>`;
+
+      return `<div class="modal-product">
+        <div class="modal-product-header">
+          <div>
+            <div class="modal-product-name">${t.charter_name && t.charter_name !== 'Not started' ? t.charter_name : 'Untitled Charter'}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Last updated: ${formatDate(t.updated_at)}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="status-badge" style="background:${badge.bg};color:${badge.color}">${badge.label}</div>
+            ${charterLink}
+          </div>
+        </div>
+        <div class="sections-grid">${sectionCells}</div>
+        <div class="prog-wrap">
+          <div class="prog-bar" style="height:6px">
+            <div class="prog-fill" style="width:${overall}%;background:${color}"></div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:${color};min-width:36px;text-align:right">${overall}%</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('modal').style.display = 'flex';
+  }
+
+  function closeModal() { document.getElementById('modal').style.display = 'none'; }
+  document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+
+  // ── Theme ─────────────────────────────────────────────────────
   function toggleTheme() {
     const isLight = document.body.classList.toggle('light-mode');
     localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark');
-    document.getElementById('theme-btn').textContent = isLight ? '🌙 Dark' : '☀️ Light';
+    document.getElementById('theme-btn').textContent = isLight ? '☀️ Light' : '🌙 Dark';
   }
-
-  // Apply saved theme on load
   if (localStorage.getItem(THEME_KEY) === 'light') {
     document.body.classList.add('light-mode');
     document.addEventListener('DOMContentLoaded', () => {
@@ -463,16 +419,12 @@
     });
   }
 
-  // ── Init ────────────────────────────────────────────────────────
+  // ── Init ──────────────────────────────────────────────────────
   if (sessionStorage.getItem(ADMIN_SESSION) === 'true') {
     document.getElementById('admin-gate').style.display = 'none';
     loadData();
   }
-
-  // Auto-refresh every 60 seconds
-  setInterval(() => {
-    if (sessionStorage.getItem(ADMIN_SESSION) === 'true') loadData();
-  }, 60000);
+  setInterval(() => { if (sessionStorage.getItem(ADMIN_SESSION) === 'true') loadData(); }, 60000);
 </script>
 </body>
 </html>
