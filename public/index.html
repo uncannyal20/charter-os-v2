@@ -3567,48 +3567,155 @@ function renderRoadmapPhases() {
 
 async function renderGantt() {
   const el = document.getElementById('rm-gantt-view');
-  if (!S.roadmap.gantt) return;
-
-  // Sanitise the gantt — strip fences and v10-incompatible directives
-  let gantt = S.roadmap.gantt
-    .replace(/```mermaid|```/g, '')
-    .trim();
-
-  // Ensure it starts with gantt keyword
-  if (!gantt.toLowerCase().startsWith('gantt')) {
-    gantt = 'gantt\n    title Product Roadmap\n    dateFormat YYYY-MM-DD\n' + gantt;
+  if (!S.roadmap.phases_data || !S.roadmap.phases_data.length) {
+    el.innerHTML = '<div class="empty-state"><div class="es-icon">📅</div><p>Generate a roadmap first to view the Gantt chart.</p></div>';
+    return;
   }
 
-  // Strip directives that break Mermaid v10
-  gantt = gantt
-    .replace(/^\s*axisFormat.*$/gm, '')
-    .replace(/^\s*%%.*$/gm, '')
-    .replace(/^\s*click\b.*$/gm, '')
-    .replace(/^\s*classDef.*$/gm, '')
-    .replace(/^\s*class\s+.*$/gm, '')
-    .replace(/:active,/g, ':')
-    .replace(/:done,/g, ':')
-    .replace(/:crit,/g, ':')
-    .replace(/,\s*after\s+(\w+)/g, ', after $1');
+  const phases = S.roadmap.phases_data;
+  const PHASE_COLORS = ['4f7cff','1fd68a','f5a623','b06cfb','2dd4bf','ff5c5c'];
+  const isLight = document.body.classList.contains('light-mode');
 
-  try {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: document.body.classList.contains('light-mode') ? 'default' : 'dark',
-      gantt: { barHeight: 20, barGap: 4, topPadding: 50, fontSize: 11 }
+  // Calculate total weeks across all phases
+  function parseWeeks(dur) {
+    if (!dur) return 4;
+    const m = String(dur).match(/(\d+)/);
+    return m ? parseInt(m[1]) : 4;
+  }
+
+  // Build all tasks flat with phase info
+  const allTasks = [];
+  let weekOffset = 0;
+  phases.forEach((ph, pi) => {
+    const phColor = PHASE_COLORS[pi % PHASE_COLORS.length];
+    const tasks = ph.tasks || [];
+    const phDur = tasks.reduce((s,t) => s + parseWeeks(t.duration), 0) || tasks.length * 4;
+    tasks.forEach((t, ti) => {
+      allTasks.push({
+        name: t.name || t,
+        duration: parseWeeks(t.duration),
+        phase: pi,
+        phaseColor: phColor,
+        phaseName: ph.name || 'Phase ' + (pi+1),
+        phaseLabel: ph.label || '',
+        weekStart: weekOffset,
+        isFirst: ti === 0,
+        phDur
+      });
+      weekOffset += parseWeeks(t.duration);
     });
-    // Use mermaid.render() which works reliably without needing DOM pre-insertion
-    const { svg } = await mermaid.render('mermaid-gantt-' + Date.now(), gantt);
-    el.innerHTML = `<div class="mermaid-wrap" style="overflow-x:auto">${svg}</div>`;
-  } catch(e) {
-    console.warn('Mermaid error:', e.message);
-    el.innerHTML = `<div class="card">
-      <div class="card-title" style="color:var(--amber)">⚠ Gantt Chart — Text View</div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Chart could not render. Showing text version.</div>
-      <pre style="font-size:12px;white-space:pre-wrap;color:var(--text2);line-height:1.6">${gantt}</pre>
-      <button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="generateSection('roadmap')">↻ Regenerate</button>
+    // Add milestone row
+    allTasks.push({
+      isMilestone: true,
+      name: ph.milestone || '',
+      phase: pi,
+      phaseColor: phColor,
+      weekStart: weekOffset,
+      duration: 0
+    });
+  });
+
+  const totalWeeks = weekOffset;
+  const COL_W = 52; // px per week column
+  const ROW_H = 38;
+  const LABEL_W = 260;
+  const chartW = totalWeeks * COL_W;
+
+  // Week headers
+  const weekHeaders = Array.from({length: totalWeeks}, (_,i) =>
+    `<div style="width:${COL_W}px;flex-shrink:0;text-align:center;font-size:10px;
+      color:var(--text3);font-weight:600;border-right:1px solid var(--border);
+      padding:4px 0">W${i+1}</div>`
+  ).join('');
+
+  // Phase header spans
+  let phaseHeaders = '';
+  let pw = 0;
+  phases.forEach((ph, pi) => {
+    const tasks = ph.tasks || [];
+    const phW = tasks.reduce((s,t) => s + parseWeeks(t.duration), 0) || tasks.length * 4;
+    const color = PHASE_COLORS[pi % PHASE_COLORS.length];
+    phaseHeaders += `<div style="width:${phW * COL_W}px;flex-shrink:0;
+      background:rgba(${hexToRgbStr(color)},0.15);
+      border-right:2px solid #${color};
+      padding:6px 10px;font-size:11px;font-weight:700;color:#${color};
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+      Phase ${pi+1}: ${ph.name || ''}
     </div>`;
-  }
+    pw += phW;
+  });
+
+  // Task rows
+  const taskRows = allTasks.map(task => {
+    if (task.isMilestone && task.name) {
+      return `<div style="display:flex;height:28px;align-items:center;border-bottom:1px solid var(--border)">
+        <div style="width:${LABEL_W}px;flex-shrink:0;font-size:11px;color:#${task.phaseColor};
+          font-style:italic;padding:0 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          🏁 ${task.name}
+        </div>
+        <div style="position:relative;flex:1;height:100%">
+          <div style="position:absolute;left:${task.weekStart * COL_W}px;top:50%;
+            transform:translateY(-50%);width:14px;height:14px;
+            background:#${task.phaseColor};border-radius:50%;
+            box-shadow:0 0 0 3px rgba(${hexToRgbStr(task.phaseColor)},0.25)"></div>
+        </div>
+      </div>`;
+    }
+    if (task.isMilestone) return '';
+    const barW = Math.max(task.duration * COL_W - 4, 20);
+    const barLeft = task.weekStart * COL_W + 2;
+    return `<div style="display:flex;height:${ROW_H}px;align-items:center;
+      border-bottom:1px solid var(--border);
+      ${task.isFirst ? 'border-top:2px solid rgba('+hexToRgbStr(task.phaseColor)+',0.3)' : ''}">
+      <div style="width:${LABEL_W}px;flex-shrink:0;padding:0 12px 0 ${task.isFirst ? 12 : 24}px;
+        font-size:12px;color:var(--text${task.isFirst?'':2});font-weight:${task.isFirst?'600':'400'};
+        overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${task.name}">
+        ${task.name}
+      </div>
+      <div style="position:relative;flex:1;height:100%;display:flex;align-items:center">
+        <div style="position:absolute;left:${barLeft}px;width:${barW}px;height:22px;
+          background:rgba(${hexToRgbStr(task.phaseColor)},0.85);
+          border-radius:4px;display:flex;align-items:center;padding:0 8px;
+          font-size:10px;color:white;font-weight:600;overflow:hidden;white-space:nowrap">
+          ${task.duration}w
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="background:var(--bg1);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+        <div style="font-family:var(--font-head);font-weight:700;font-size:15px">📅 Product Roadmap — Gantt View</div>
+        <div style="font-size:11px;color:var(--text3)">${totalWeeks} weeks total · ${phases.length} phases · ${allTasks.filter(t=>!t.isMilestone).length} tasks</div>
+      </div>
+      <div style="overflow-x:auto">
+        <div style="min-width:${LABEL_W + chartW}px">
+          <!-- Phase headers -->
+          <div style="display:flex;border-bottom:1px solid var(--border)">
+            <div style="width:${LABEL_W}px;flex-shrink:0;background:var(--bg2);
+              padding:6px 12px;font-size:11px;font-weight:600;color:var(--text3);
+              text-transform:uppercase;letter-spacing:0.06em">Task</div>
+            <div style="display:flex;flex:1">${phaseHeaders}</div>
+          </div>
+          <!-- Week headers -->
+          <div style="display:flex;border-bottom:2px solid var(--border);background:var(--bg2)">
+            <div style="width:${LABEL_W}px;flex-shrink:0;padding:4px 12px;font-size:10px;
+              color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.06em">Timeline</div>
+            <div style="display:flex">${weekHeaders}</div>
+          </div>
+          <!-- Task rows -->
+          ${taskRows}
+        </div>
+      </div>
+    </div>`;
+}
+
+function hexToRgbStr(hex) {
+  const r = parseInt(hex.slice(0,2),16);
+  const g = parseInt(hex.slice(2,4),16);
+  const b = parseInt(hex.slice(4,6),16);
+  return r+','+g+','+b;
 }
 
 function approveRoadmap() {
