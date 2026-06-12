@@ -1700,9 +1700,9 @@ function renderDashboard() {
   const grid = document.getElementById('progress-grid');
   grid.innerHTML = COMPONENTS.map(c => {
     const pct = getProgress(c.id);
-    const cls = pct >= 80 ? 'complete' : pct > 0 ? 'partial' : '';
-    const statusLabel = pct >= 80 ? '✓ Complete' : pct > 0 ? 'In Progress' : 'Not Started';
-    const statusCls = pct >= 80 ? 'tag-green' : pct > 0 ? 'tag-amber' : 'tag tag-red';
+    const cls = pct === 100 ? 'complete' : pct > 0 ? 'partial' : '';
+    const statusLabel = pct === 100 ? '✓ Complete' : pct > 0 ? 'In Progress' : 'Not Started';
+    const statusCls = pct === 100 ? 'tag-green' : pct > 0 ? 'tag-amber' : 'tag tag-red';
     return `<div class="progress-card ${cls}" onclick="navigate('${c.id}')">
       <div class="pc-header">
         <div class="pc-icon" style="background:${c.color}22;font-size:18px;text-align:center;line-height:36px">${c.icon}</div>
@@ -1726,7 +1726,7 @@ function renderDashboard() {
     const pct = getProgress(c.id);
     const badge = document.getElementById('badge-'+c.id);
     if (!badge) return;
-    if (pct >= 80) { badge.textContent = '✓'; badge.className = 'nav-badge done'; }
+    if (pct === 100) { badge.textContent = '✓'; badge.className = 'nav-badge done'; }
     else if (pct > 0) { badge.textContent = pct+'%'; badge.className = 'nav-badge partial'; }
     else { badge.textContent = '—'; badge.className = 'nav-badge empty'; }
   });
