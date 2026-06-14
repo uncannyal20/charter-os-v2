@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charter OS — Learning Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #0d0f14;
+    --bg1:     #111318;
+    --bg2:     #181b22;
+    --bg3:     #1e2230;
+    --border:  rgba(255,255,255,0.08);
+    --text:    #eceef2;
+    --text2:   #8a90a0;
+    --text3:   #555d70;
+    --blue:    #4f7cff;
+    --blue2:   #6c3cff;
+    --green:   #1fd68a;
+    --amber:   #f5a623;
+    --purp:    #b06cfb;
+    --teal:    #2dd4bf;
+    --red:     #ff5c5c;
+    --font-h:  'Nunito', sans-serif;
+    --font-b:  'DM Sans', sans-serif;
+    --r:       10px;
+    --r-lg:    18px;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-b);
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(79,124,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,124,255,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .orb {
+    position: fixed; border-radius: 50%;
+    filter: blur(100px); pointer-events: none; z-index: 0;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  .orb-1 { width:450px; height:450px; background:rgba(79,124,255,0.1);  top:-80px;  left:-80px;  }
+  .orb-2 { width:350px; height:350px; background:rgba(176,108,251,0.08); top:40%;    right:-60px; animation-delay:-7s; }
+  .orb-3 { width:300px; height:300px; background:rgba(31,214,138,0.07);  bottom:5%;  left:25%;    animation-delay:-14s; }
+  @keyframes drift { to { transform: translate(25px,35px) scale(1.06); } }
+
+  /* ── NAV ────────────────────────────────────────────────────── */
+  nav {
+    position: fixed; top:0; left:0; right:0; z-index:100;
+    height:64px; background:rgba(13,15,20,0.85); backdrop-filter:blur(16px);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 48px;
+  }
+  .nav-logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+  .nav-logo-icon {
+    width:32px; height:32px; border-radius:8px;
+    background:linear-gradient(135deg,var(--blue),var(--blue2));
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-h); font-weight:900; font-size:16px; color:white;
+  }
+  .nav-logo-text { font-family:var(--font-h); font-weight:800; font-size:16px; }
+  .nav-links { display:flex; align-items:center; gap:28px; }
+  .nav-links a { color:var(--text2); text-decoration:none; font-size:14px; transition:color .2s; }
+  .nav-links a:hover, .nav-links a.active { color:var(--text); }
+  .nav-links a.active { color:var(--blue); }
+  .nav-cta {
+    background:var(--blue); color:white; border:none; border-radius:8px;
+    padding:8px 18px; font-size:14px; font-weight:600; font-family:var(--font-b);
+    cursor:pointer; text-decoration:none; transition:all .2s;
+  }
+  .nav-cta:hover { background:#3d6ef0; transform:translateY(-1px); }
+
+  section { position:relative; z-index:1; }
+
+  /* ── HERO ───────────────────────────────────────────────────── */
+  #hero {
+    min-height:56vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:120px 48px 64px;
+  }
+  .hero-badge {
+    display:inline-flex; align-items:center; gap:8px;
+    background:rgba(31,214,138,0.1); border:1px solid rgba(31,214,138,0.25);
+    border-radius:100px; padding:6px 16px; font-size:12px; font-weight:600;
+    color:var(--green); letter-spacing:.04em; text-transform:uppercase; margin-bottom:24px;
+    animation: fadeUp .6s ease both;
+  }
+  .hero-badge::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--green); }
+  .hero-title {
+    font-family:var(--font-h); font-weight:900;
+    font-size:clamp(36px,5vw,62px); line-height:1.1; letter-spacing:-.02em;
+    max-width:760px; animation:fadeUp .6s .1s ease both;
+  }
+  .hero-title span { background:linear-gradient(135deg,var(--green),var(--teal)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .hero-sub {
+    font-size:18px; color:var(--text2); line-height:1.65; max-width:540px;
+    margin:20px auto 36px; animation:fadeUp .6s .2s ease both;
+  }
+  .hero-stats {
+    display:flex; gap:40px; justify-content:center; flex-wrap:wrap;
+    animation:fadeUp .6s .3s ease both;
+  }
+  .hstat { text-align:center; }
+  .hstat-val { font-family:var(--font-h); font-size:28px; font-weight:800; }
+  .hstat-lbl { font-size:12px; color:var(--text3); margin-top:3px; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── LEARNING PATH ─────────────────────────────────────────── */
+  #path { padding:80px 48px; max-width:1000px; margin:0 auto; }
+  .path-header { text-align:center; margin-bottom:56px; }
+  .section-eyebrow { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--blue); margin-bottom:12px; }
+  .section-title { font-family:var(--font-h); font-weight:800; font-size:clamp(26px,3vw,38px); line-height:1.2; margin-bottom:14px; }
+  .section-sub { font-size:16px; color:var(--text2); max-width:520px; margin:0 auto; line-height:1.6; }
+
+  /* Step connector track */
+  .path-track {
+    position:relative;
+    display:flex; flex-direction:column; gap:0;
+  }
+  .path-track::before {
+    content:'';
+    position:absolute; left:31px; top:48px; bottom:48px; width:2px;
+    background:linear-gradient(to bottom, var(--blue),var(--purp),var(--green));
+    opacity:.2; z-index:0;
+  }
+
+  /* Module card */
+  .module {
+    display:grid; grid-template-columns:64px 1fr; gap:0;
+    position:relative; z-index:1;
+  }
+  .module + .module { margin-top:16px; }
+
+  /* Step number column */
+  .module-step {
+    display:flex; flex-direction:column; align-items:center; padding-top:20px;
+  }
+  .step-circle {
+    width:40px; height:40px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-h); font-weight:800; font-size:15px; color:white;
+    flex-shrink:0; transition:transform .2s;
+    box-shadow:0 0 0 4px var(--bg);
+  }
+  .module:hover .step-circle { transform:scale(1.08); }
+
+  /* Card body */
+  .module-card {
+    background:var(--bg1); border:1px solid var(--border);
+    border-radius:var(--r-lg); padding:28px 32px;
+    margin-left:16px; cursor:pointer;
+    transition:border-color .2s, box-shadow .2s, transform .15s;
+  }
+  .module-card:hover { border-color:rgba(79,124,255,.3); box-shadow:0 8px 32px rgba(0,0,0,.35); transform:translateX(3px); }
+  .module-card.expanded { border-color:rgba(79,124,255,.25); }
+
+  .module-header {
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+  }
+  .module-meta { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .module-tag {
+    font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    padding:3px 9px; border-radius:100px;
+  }
+  .module-time { font-size:12px; color:var(--text3); }
+  .module-title { font-family:var(--font-h); font-weight:800; font-size:18px; margin-bottom:6px; }
+  .module-desc { font-size:14px; color:var(--text2); line-height:1.6; }
+  .module-toggle {
+    width:32px; height:32px; border-radius:50%;
+    background:var(--bg3); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; font-size:16px; color:var(--text3);
+    transition:all .2s; cursor:pointer;
+  }
+  .module-card.expanded .module-toggle { background:var(--blue); border-color:var(--blue); color:white; transform:rotate(45deg); }
+
+  /* Expanded content */
+  .module-content {
+    display:none; margin-top:24px; padding-top:24px;
+    border-top:1px solid var(--border);
+  }
+  .module-card.expanded .module-content { display:block; }
+
+  .steps-list { display:flex; flex-direction:column; gap:12px; margin-bottom:24px; }
+  .step-item {
+    display:flex; gap:14px; align-items:flex-start;
+    background:var(--bg2); border-radius:var(--r);
+    padding:14px 16px;
+  }
+  .step-num {
+    width:26px; height:26px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:800; font-family:var(--font-h);
+    flex-shrink:0; color:white;
+  }
+  .step-item-body {}
+  .step-item-title { font-weight:600; font-size:13px; margin-bottom:4px; }
+  .step-item-desc { font-size:13px; color:var(--text2); line-height:1.5; }
+  .step-item-desc strong { color:var(--blue); font-weight:600; }
+
+  /* Key fields chips */
+  .key-fields { margin-top:16px; }
+  .key-fields-label { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text3); margin-bottom:10px; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip {
+    background:var(--bg3); border:1px solid var(--border);
+    border-radius:100px; padding:4px 12px;
+    font-size:12px; font-weight:600; color:var(--text2);
+    font-family:var(--font-b);
+  }
+  .chip.action { background:rgba(79,124,255,.12); border-color:rgba(79,124,255,.25); color:var(--blue); }
+  .chip.field  { background:rgba(245,166,35,.1);  border-color:rgba(245,166,35,.2);  color:var(--amber); }
+  .chip.tip    { background:rgba(31,214,138,.1);   border-color:rgba(31,214,138,.2);  color:var(--green); }
+
+  /* ── DOWNLOAD ─────────────────────────────────────────────── */
+  #download { padding:20px 48px 80px; max-width:1000px; margin:0 auto; }
+  .dl-card {
+    background:linear-gradient(135deg,rgba(79,124,255,.1) 0%,rgba(108,60,255,.07) 100%);
+    border:1px solid rgba(79,124,255,.2); border-radius:var(--r-lg);
+    padding:40px 48px; display:flex; align-items:center; gap:32px; flex-wrap:wrap;
+  }
+  .dl-icon {
+    width:64px; height:64px; border-radius:16px; flex-shrink:0;
+    background:linear-gradient(135deg,var(--blue),var(--blue2));
+    display:flex; align-items:center; justify-content:center; font-size:28px;
+  }
+  .dl-body { flex:1; min-width:200px; }
+  .dl-body h3 { font-family:var(--font-h); font-size:20px; font-weight:800; margin-bottom:8px; }
+  .dl-body p  { font-size:14px; color:var(--text2); line-height:1.55; }
+  .dl-meta { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
+  .dl-tag { font-size:11px; color:var(--text3); background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:3px 10px; }
+  .btn-dl {
+    background:white; color:#1a1d24; border:none; border-radius:10px;
+    padding:13px 26px; font-size:14px; font-weight:700; font-family:var(--font-b);
+    cursor:pointer; text-decoration:none; flex-shrink:0;
+    display:inline-flex; align-items:center; gap:9px;
+    transition:all .2s; box-shadow:0 4px 20px rgba(255,255,255,.12);
+  }
+  .btn-dl:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(255,255,255,.18); }
+
+  /* ── FAQ ──────────────────────────────────────────────────── */
+  #faq { padding:20px 48px 80px; max-width:1000px; margin:0 auto; }
+  .faq-grid { display:flex; flex-direction:column; gap:8px; margin-top:40px; }
+  .faq-item {
+    background:var(--bg1); border:1px solid var(--border);
+    border-radius:var(--r); overflow:hidden;
+  }
+  .faq-q {
+    padding:18px 22px; display:flex; justify-content:space-between; align-items:center;
+    cursor:pointer; font-weight:600; font-size:14px; gap:16px;
+    transition:background .15s;
+  }
+  .faq-q:hover { background:var(--bg2); }
+  .faq-icon { font-size:18px; color:var(--text3); transition:transform .25s; flex-shrink:0; }
+  .faq-item.open .faq-icon { transform:rotate(45deg); color:var(--blue); }
+  .faq-a {
+    display:none; padding:0 22px 18px;
+    font-size:14px; color:var(--text2); line-height:1.65;
+  }
+  .faq-a strong { color:var(--blue); font-weight:600; }
+  .faq-item.open .faq-a { display:block; }
+
+  /* ── FOOTER ───────────────────────────────────────────────── */
+  footer {
+    position:relative; z-index:1;
+    border-top:1px solid var(--border);
+    padding:36px 48px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;
+  }
+  footer p { font-size:13px; color:var(--text3); }
+  .footer-links { display:flex; gap:22px; }
+  .footer-links a { font-size:13px; color:var(--text3); text-decoration:none; transition:color .2s; }
+  .footer-links a:hover { color:var(--text2); }
+
+  .reveal { opacity:0; transform:translateY(20px); transition:opacity .55s ease, transform .55s ease; }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+
+  /* ── MOBILE ───────────────────────────────────────────────── */
+  @media (max-width:768px) {
+    nav { padding:0 20px; }
+    .nav-links { display:none; }
+    #hero { padding:100px 20px 52px; }
+    .hero-title { font-size:30px; }
+    .hero-sub { font-size:15px; }
+    .hero-stats { gap:24px; }
+    #path, #download, #faq { padding-left:20px; padding-right:20px; }
+    .path-track::before { left:27px; }
+    .module { grid-template-columns:56px 1fr; }
+    .module-card { padding:20px; margin-left:10px; }
+    .dl-card { padding:24px; flex-direction:column; }
+    .btn-dl { width:100%; justify-content:center; }
+    footer { padding:24px 20px; flex-direction:column; align-items:flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-icon">C</div>
+    <span class="nav-logo-text">Charter OS</span>
+  </a>
+  <div class="nav-links">
+    <a href="#path">Learning Path</a>
+    <a href="#download">Quick Guide</a>
+    <a href="#faq">FAQ</a>
+    <a href="/promo">About</a>
+  </div>
+  <a href="/" class="nav-cta">Launch App →</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-badge">Learning Hub</div>
+  <h1 class="hero-title">Learn CharterOS in<br><span>5 steps.</span></h1>
+  <p class="hero-sub">Everything your team needs to go from zero to a complete, AI-powered Product Charter — at your own pace.</p>
+  <div class="hero-stats">
+    <div class="hstat"><div class="hstat-val" style="color:var(--blue)">5</div><div class="hstat-lbl">Learning Modules</div></div>
+    <div class="hstat"><div class="hstat-val" style="color:var(--green)">~2 hrs</div><div class="hstat-lbl">First Charter</div></div>
+    <div class="hstat"><div class="hstat-val" style="color:var(--amber)">6</div><div class="hstat-lbl">AI Agents</div></div>
+    <div class="hstat"><div class="hstat-val" style="color:var(--purp)">5</div><div class="hstat-lbl">Approval Gates</div></div>
+  </div>
+</section>
+
+<!-- LEARNING PATH -->
+<section id="path">
+  <div class="path-header reveal">
+    <div class="section-eyebrow">Learning Path</div>
+    <h2 class="section-title">Your 5-Step Charter Journey</h2>
+    <p class="section-sub">Each module covers one charter component. Work through them in order — each AI agent builds on the previous.</p>
+  </div>
+
+  <div class="path-track">
+
+    <!-- MODULE 1: Getting Started -->
+    <div class="module reveal">
+      <div class="module-step">
+        <div class="step-circle" style="background:linear-gradient(135deg,#4f7cff,#6c3cff)">01</div>
+      </div>
+      <div class="module-card" onclick="toggleModule(this)">
+        <div class="module-header">
+          <div>
+            <div class="module-meta">
+              <span class="module-tag" style="background:rgba(79,124,255,.15);color:var(--blue)">Getting Started</span>
+              <span class="module-time">⏱ ~10 min</span>
+            </div>
+            <div class="module-title">Login, Dashboard & Your First Charter</div>
+            <div class="module-desc">Understand the CharterOS workspace — how to log in, rename your charter, read the dashboard and navigate between components.</div>
+          </div>
+          <div class="module-toggle">+</div>
+        </div>
+        <div class="module-content">
+          <div class="steps-list">
+            <div class="step-item">
+              <div class="step-num" style="background:var(--blue)">1</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Login with your team password</div>
+                <div class="step-item-desc">Your TPO administrator provides a unique team password. Enter it on the login screen and click <strong>Sign In →</strong>. Each department has its own password.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--blue)">2</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Rename your charter</div>
+                <div class="step-item-desc">On the dashboard, click <strong>✏ Rename</strong> next to "Untitled Charter". Give it a meaningful name — this appears on all exported documents.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--blue)">3</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Understand the 5 component cards</div>
+                <div class="step-item-desc">The dashboard shows 5 cards: Team & TOR, Problem Statement, Vision & Strategy, Value Realisation, and Roadmap. Work through them in order — <strong>each must reach 100%</strong> before the next AI agent can use it as context.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--blue)">4</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Try Load Sample Data</div>
+                <div class="step-item-desc">Click <strong>Load Sample</strong> to see a fully populated example charter. This is the fastest way to understand what each completed section should look like before you start your own.</div>
+              </div>
+            </div>
+          </div>
+          <div class="key-fields">
+            <div class="key-fields-label">Key Actions</div>
+            <div class="chips">
+              <span class="chip action">Sign In →</span>
+              <span class="chip action">✏ Rename</span>
+              <span class="chip action">Load Sample</span>
+              <span class="chip action">Export Backup</span>
+              <span class="chip tip">✓ Auto-saves every 3 seconds</span>
+              <span class="chip tip">✓ Progress resets only via Clear Charter</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE 2: Team & TOR -->
+    <div class="module reveal">
+      <div class="module-step">
+        <div class="step-circle" style="background:linear-gradient(135deg,#f5a623,#e08000)">02</div>
+      </div>
+      <div class="module-card" onclick="toggleModule(this)">
+        <div class="module-header">
+          <div>
+            <div class="module-meta">
+              <span class="module-tag" style="background:rgba(245,166,35,.15);color:var(--amber)">Step 1 of 5</span>
+              <span class="module-time">⏱ ~15 min</span>
+            </div>
+            <div class="module-title">Team Structure & Terms of Reference</div>
+            <div class="module-desc">Add your team members, set meeting cadence, and let AI generate your complete Terms of Reference — covering mandate, roles, decision authority and escalation paths.</div>
+          </div>
+          <div class="module-toggle">+</div>
+        </div>
+        <div class="module-content">
+          <div class="steps-list">
+            <div class="step-item">
+              <div class="step-num" style="background:var(--amber)">1</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Add all team members</div>
+                <div class="step-item-desc">Click <strong>+ Add Member</strong>. For each person enter their <strong>name</strong>, <strong>role</strong> and <strong>key responsibilities</strong>. Add every person involved — the AI uses the full team list to generate accountability structures.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--amber)">2</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Set meeting cadence</div>
+                <div class="step-item-desc">Click <strong>+ Add Meeting</strong>. Define your standups, sprint reviews and planning sessions — enter the <strong>meeting name</strong>, <strong>frequency</strong> and <strong>purpose</strong> for each.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--amber)">3</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Generate TOR</div>
+                <div class="step-item-desc">Click <strong>Generate TOR</strong>. The AI drafts a complete 5-section Terms of Reference in seconds. The 5 sections are: Purpose & Mandate, Roles & Responsibilities, Ways of Working, Decision Making Authority, and Reporting & Escalation.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--amber)">4</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Review and Approve TOR</div>
+                <div class="step-item-desc">Read through all 5 sections carefully. If needed, click <strong>Regenerate</strong> to get a new draft. When satisfied, click <strong>Approve TOR</strong> — this locks the TOR, completes Team & TOR at 100%, and unlocks Step 2.</div>
+              </div>
+            </div>
+          </div>
+          <div class="key-fields">
+            <div class="key-fields-label">Key Actions</div>
+            <div class="chips">
+              <span class="chip action">+ Add Member</span>
+              <span class="chip action">+ Add Meeting</span>
+              <span class="chip action">Generate TOR</span>
+              <span class="chip action">Approve TOR</span>
+            </div>
+            <div class="chips" style="margin-top:8px">
+              <span class="chip field">name · role · responsibilities</span>
+              <span class="chip field">meeting name · frequency · purpose</span>
+              <span class="chip tip">✓ TOR is locked on approval</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE 3: Problem Statement -->
+    <div class="module reveal">
+      <div class="module-step">
+        <div class="step-circle" style="background:linear-gradient(135deg,#b06cfb,#7c3aed)">03</div>
+      </div>
+      <div class="module-card" onclick="toggleModule(this)">
+        <div class="module-header">
+          <div>
+            <div class="module-meta">
+              <span class="module-tag" style="background:rgba(176,108,251,.15);color:var(--purp)">Step 2 of 5</span>
+              <span class="module-time">⏱ ~25 min</span>
+            </div>
+            <div class="module-title">Problem Statement</div>
+            <div class="module-desc">Upload your source materials — meeting notes, research files, interview transcripts, strategy docs — and let AI synthesise a structured Problem Statement with user pain points and business gap.</div>
+          </div>
+          <div class="module-toggle">+</div>
+        </div>
+        <div class="module-content">
+          <div class="steps-list">
+            <div class="step-item">
+              <div class="step-num" style="background:var(--purp)">1</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Upload source materials</div>
+                <div class="step-item-desc">Click <strong>Upload Source Materials</strong>. Supports <strong>TXT, DOC, DOCX, XLSX, PDF</strong>. Upload everything relevant — meeting notes, stakeholder interviews, research findings. You can upload multiple files at once and the AI reads across all of them.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--purp)">2</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Paste raw notes (optional)</div>
+                <div class="step-item-desc">Tick <strong>Include raw notes</strong> and paste any unstructured notes directly into the text box — no formatting needed. This is useful for quick observations or WhatsApp notes you haven't formatted into a doc yet.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--purp)">3</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Generate Draft</div>
+                <div class="step-item-desc">Click <strong>Generate Draft</strong>. The AI synthesises your uploaded materials into a 5-section Problem Statement: Executive Summary, User Pain Points, Business Gap, Impact of Inaction, and Key Assumptions.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--purp)">4</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Refine and Approve</div>
+                <div class="step-item-desc">Switch to the <strong>Refine & Approve</strong> tab. Read the full draft. Edit any section directly if needed, or click <strong>Regenerate</strong> for a new draft. When satisfied, click <strong>Approve & Save</strong> — this locks the Problem Statement and feeds it into the Vision agent.</div>
+              </div>
+            </div>
+          </div>
+          <div class="key-fields">
+            <div class="key-fields-label">Key Actions</div>
+            <div class="chips">
+              <span class="chip action">Upload Source Materials</span>
+              <span class="chip action">Include raw notes</span>
+              <span class="chip action">Generate Draft</span>
+              <span class="chip action">Refine & Approve</span>
+              <span class="chip action">Approve & Save</span>
+            </div>
+            <div class="chips" style="margin-top:8px">
+              <span class="chip field">TXT · DOC · DOCX · XLSX · PDF</span>
+              <span class="chip tip">✓ More files = better output</span>
+              <span class="chip tip">✓ Feeds into Vision agent on approval</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE 4: Vision & Value -->
+    <div class="module reveal">
+      <div class="module-step">
+        <div class="step-circle" style="background:linear-gradient(135deg,#2dd4bf,#0891b2)">04</div>
+      </div>
+      <div class="module-card" onclick="toggleModule(this)">
+        <div class="module-header">
+          <div>
+            <div class="module-meta">
+              <span class="module-tag" style="background:rgba(45,212,191,.15);color:var(--teal)">Steps 3 & 4 of 5</span>
+              <span class="module-time">⏱ ~40 min</span>
+            </div>
+            <div class="module-title">Vision & Strategy + Value Realisation</div>
+            <div class="module-desc">Craft your long-term vision with strategic pillars, then define KPIs and generate a full Cost Benefit Analysis from your uploaded Excel estimates.</div>
+          </div>
+          <div class="module-toggle">+</div>
+        </div>
+        <div class="module-content">
+
+          <p style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);margin-bottom:14px">VISION & STRATEGY</p>
+          <div class="steps-list">
+            <div class="step-item">
+              <div class="step-num" style="background:var(--teal)">1</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Enter product details</div>
+                <div class="step-item-desc">Fill in <strong>Product Name</strong>, <strong>Industry/Domain</strong> and <strong>Target Users</strong> at the top of the Vision section.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--teal)">2</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Upload strategy documents</div>
+                <div class="step-item-desc">Upload executive briefings, strategic papers, and workshop notes. The AI reads these <em>alongside your approved Problem Statement</em> — so the vision is always grounded in the problem.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--teal)">3</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Generate Draft, then Approve & Save</div>
+                <div class="step-item-desc">Click <strong>Generate Draft</strong>. Review on the Refine & Approve tab. Click <strong>Approve & Save</strong> to lock the Vision and feed it into the KPI Recommender agent.</div>
+              </div>
+            </div>
+          </div>
+
+          <p style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--green);margin:20px 0 14px">VALUE REALISATION</p>
+          <div class="steps-list">
+            <div class="step-item">
+              <div class="step-num" style="background:var(--green)">4</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Generate KPI Recommendations</div>
+                <div class="step-item-desc">On the <strong>AI Recommend</strong> tab, click <strong>Generate Recommendations</strong>. The KPI agent reads both your approved Problem Statement and Vision and recommends 6-8 SMART KPIs with targets, timeframes and owners.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--green)">5</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Review KPI Table and upload CBA data</div>
+                <div class="step-item-desc">Switch to <strong>KPI Table</strong> to review each KPI. Then go to <strong>Cost Benefit Analysis</strong> → enter <strong>benefit values</strong> per KPI and upload your <strong>cost estimates Excel</strong> file.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--green)">6</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Generate CBA and Approve</div>
+                <div class="step-item-desc">Click <strong>Generate CBA</strong>. Review the financial narrative, bar charts, donut chart and 3-year net position. Click <strong>Approve CBA</strong> to complete Value Realisation at 100%.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="key-fields">
+            <div class="key-fields-label">Key Actions</div>
+            <div class="chips">
+              <span class="chip action">Generate Draft</span>
+              <span class="chip action">Approve & Save</span>
+              <span class="chip action">Generate Recommendations</span>
+              <span class="chip action">KPI Table</span>
+              <span class="chip action">Generate CBA</span>
+              <span class="chip action">Approve CBA</span>
+            </div>
+            <div class="chips" style="margin-top:8px">
+              <span class="chip field">Product Name · Industry · Target Users</span>
+              <span class="chip field">benefit values · cost estimates Excel</span>
+              <span class="chip tip">✓ KPI agent reads Problem + Vision</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODULE 5: Roadmap & Export -->
+    <div class="module reveal">
+      <div class="module-step">
+        <div class="step-circle" style="background:linear-gradient(135deg,#1fd68a,#059669)">05</div>
+      </div>
+      <div class="module-card" onclick="toggleModule(this)">
+        <div class="module-header">
+          <div>
+            <div class="module-meta">
+              <span class="module-tag" style="background:rgba(31,214,138,.15);color:var(--green)">Step 5 of 5</span>
+              <span class="module-time">⏱ ~30 min</span>
+            </div>
+            <div class="module-title">Product Roadmap & Export</div>
+            <div class="module-desc">Generate a phased product roadmap with a visual Gantt chart, complete two approval gates, then export your finished charter as PDF, slides or Excel.</div>
+          </div>
+          <div class="module-toggle">+</div>
+        </div>
+        <div class="module-content">
+          <div class="steps-list">
+            <div class="step-item">
+              <div class="step-num" style="background:var(--green)">1</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Set roadmap parameters</div>
+                <div class="step-item-desc">Enter <strong>start date</strong>, <strong>total duration</strong>, <strong>number of phases</strong> and <strong>team size</strong>. The Roadmap Architect agent uses team size to calibrate task durations and parallel workstreams.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--green)">2</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Enter your epics and features</div>
+                <div class="step-item-desc">Type your key epics, features and deliverables in the <strong>Epics / Features</strong> text box. One item per line works best. Be specific — the AI uses these directly to structure phases and assign tasks.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--green)">3</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Generate Roadmap</div>
+                <div class="step-item-desc">Click <strong>Generate Roadmap</strong>. The AI structures phases, assigns tasks with durations, and identifies milestones. Review the phases and task list on the Phases view.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--green)">4</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Gate 1 — Approve Phases & Tasks</div>
+                <div class="step-item-desc">Review all phases and tasks. Click <strong>Approve Phases & Tasks</strong>. This is Gate 1 of 2. The Gantt chart is then auto-generated from the approved tasks.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--green)">5</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Gate 2 — Approve Timeline</div>
+                <div class="step-item-desc">Switch to the <strong>Gantt View</strong>. Review the week-by-week timeline and phase bands. Click <strong>Approve Timeline</strong> — this is Gate 2 of 2 and completes the Roadmap at 100%.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num" style="background:var(--green)">6</div>
+              <div class="step-item-body">
+                <div class="step-item-title">Export your charter</div>
+                <div class="step-item-desc">Navigate to <strong>Export Charter</strong> in the sidebar. Choose your format: <strong>Export PDF</strong> (full charter with Gantt and CBA charts), <strong>Generate Slides</strong> (10-slide management deck), or <strong>Export Backup</strong> (JSON restore point).</div>
+              </div>
+            </div>
+          </div>
+          <div class="key-fields">
+            <div class="key-fields-label">Key Actions</div>
+            <div class="chips">
+              <span class="chip action">Generate Roadmap</span>
+              <span class="chip action">Approve Phases & Tasks</span>
+              <span class="chip action">Gantt View</span>
+              <span class="chip action">Approve Timeline</span>
+              <span class="chip action">Export PDF</span>
+              <span class="chip action">Generate Slides</span>
+            </div>
+            <div class="chips" style="margin-top:8px">
+              <span class="chip field">start date · duration · phases · team size</span>
+              <span class="chip field">epics / features</span>
+              <span class="chip tip">✓ Two approval gates required</span>
+              <span class="chip tip">✓ Export only available at 100%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.path-track -->
+</section>
+
+<!-- DOWNLOAD -->
+<section id="download">
+  <div class="dl-card reveal">
+    <div class="dl-icon">📖</div>
+    <div class="dl-body">
+      <h3>CharterOS Quick Start Guide</h3>
+      <p>The complete 7-page reference guide — login walkthrough, step-by-step instructions for all 5 charter components, TPO Admin Portal guide, tips & troubleshooting, and a printable completion checklist.</p>
+      <div class="dl-meta">
+        <span class="dl-tag">📄 PDF · 7 pages</span>
+        <span class="dl-tag">All 5 steps covered</span>
+        <span class="dl-tag">Printable checklist included</span>
+      </div>
+    </div>
+    <a href="/CharterOS_QuickStartGuide.pdf" download class="btn-dl">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M8 2v8M5 7l3 3 3-3M2 12h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Download Guide
+    </a>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="path-header reveal">
+    <div class="section-eyebrow">FAQ</div>
+    <h2 class="section-title">Common Questions</h2>
+  </div>
+
+  <div class="faq-grid reveal">
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Why do I have to complete sections in order?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">Each AI agent reads the approved output of the previous section as context. The <strong>Vision Strategist</strong> agent reads your approved Problem Statement. The <strong>KPI Recommender</strong> reads both Problem and Vision. This context chain is what makes the outputs coherent — your KPIs will always be traceable back to the problem you defined.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        What files can I upload?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">CharterOS supports <strong>TXT, DOC, DOCX, XLSX, CSV and PDF</strong> files. You can also paste raw notes directly into the text box on any input section — no formatting required. Upload as much as you have — the more source material you provide, the richer the AI output.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        What happens if I'm not happy with the AI draft?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">Click <strong>Regenerate</strong> as many times as you need before approving. Each regeneration produces a fresh draft using the same inputs. You can also edit the draft directly in the Refine & Approve tab. Nothing is locked until you explicitly click Approve.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Can I go back and edit an approved section?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">Yes — click the section name in the left sidebar to return to it at any time. You can regenerate or edit the content. Note that if you change an approved section that a later section has already used as context, consider regenerating the later sections too to keep the charter coherent.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        Will I lose my work if I close the browser?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">No. CharterOS <strong>auto-saves to the cloud every few seconds</strong>. You can safely close the browser, switch devices, or take a break — your charter will be exactly as you left it when you log back in. We also recommend using <strong>Export Backup</strong> periodically to save a local JSON snapshot.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        What does the TPO Admin Portal show?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">TPO administrators can see a live dashboard of all departments and charters — showing section-by-section completion % for every team. Admins can drill down into any department tile and open any charter in <strong>read-only view</strong> without a team password. The dashboard auto-refreshes every 60 seconds.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        How do I export my finished charter?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">Once your charter reaches 100% completion, navigate to <strong>Export Charter</strong> in the sidebar. You can export as a <strong>PDF</strong> (full charter document with Gantt chart and CBA charts), a <strong>PowerPoint deck</strong> (10-slide management presentation), download the <strong>CBA Excel</strong> model, or save a <strong>JSON backup</strong> to restore or share your charter state.</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        What are the 6 AI agents and what do they do?
+        <span class="faq-icon">+</span>
+      </div>
+      <div class="faq-a">
+        CharterOS uses 6 sequential AI agents:<br><br>
+        <strong>01 TOR Drafter</strong> — generates the 5-section Terms of Reference from team members and meetings.<br>
+        <strong>02 Problem Analyst</strong> — synthesises pain points and business gap from your uploaded files.<br>
+        <strong>03 Vision Strategist</strong> — reads the approved Problem and crafts vision, mission and strategic pillars.<br>
+        <strong>04 KPI Recommender</strong> — reads Problem + Vision and recommends 6-8 SMART KPIs.<br>
+        <strong>05 CBA Analyst</strong> — parses benefit values and cost data to generate the financial narrative and charts.<br>
+        <strong>06 Roadmap Architect</strong> — structures phases, tasks, durations and milestones from your epics.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div class="nav-logo-icon" style="width:26px;height:26px;font-size:12px">C</div>
+      <span style="font-family:var(--font-h);font-weight:800;font-size:13px">Charter OS</span>
+    </div>
+    <p>AI-Powered Product Charter Platform · Confidential — Internal Use Only</p>
+  </div>
+  <div class="footer-links">
+    <a href="/">Launch App</a>
+    <a href="/admin">Admin Portal</a>
+    <a href="/promo">About</a>
+    <a href="/CharterOS_QuickStartGuide.pdf" download>Download Guide</a>
+  </div>
+</footer>
+
+<script>
+  function toggleModule(card) {
+    card.classList.toggle('expanded');
+  }
+
+  function toggleFaq(el) {
+    el.parentElement.classList.toggle('open');
+  }
+
+  // Scroll reveal
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+  // Stagger module reveals
+  document.querySelectorAll('.module.reveal').forEach((el, i) => {
+    el.style.transitionDelay = `${i * 0.08}s`;
+  });
+</script>
+</body>
+</html>
