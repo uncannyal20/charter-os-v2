@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CharterOS — Approval Portal</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222536;
+    --border: #2e3248;
+    --accent: #6c63ff;
+    --accent-dim: #3d3878;
+    --green: #3ecf8e;
+    --green-dim: rgba(62,207,142,0.12);
+    --orange: #f59e0b;
+    --orange-dim: rgba(245,158,11,0.12);
+    --orange-border: rgba(245,158,11,0.3);
+    --red-comment: #ef4444;
+    --text: #e8eaf0;
+    --text-dim: #8b90a8;
+    --text-muted: #555a72;
+    --font-ui: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-ui); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+
+  /* ── LOGIN ── */
+  #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .login-box { width: 380px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 40px 36px; }
+  .login-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+  .login-logo-icon { width: 36px; height: 36px; background: var(--green); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; color: #0f1117; }
+  .login-logo-text { font-size: 15px; font-weight: 700; }
+  .login-logo-sub { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+  .login-box h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .login-box p { font-size: 13px; color: var(--text-dim); margin-bottom: 28px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-dim); margin-bottom: 6px; }
+  .field input { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font-ui); font-size: 14px; outline: none; transition: border-color 0.15s; }
+  .field input:focus { border-color: var(--green); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 6px; border: none; font-family: var(--font-ui); font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
+  .btn:hover { opacity: 0.85; }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-green { background: var(--green); color: #0f1117; }
+  .btn-orange { background: var(--orange); color: #0f1117; }
+  .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text-dim); opacity: 1; }
+  .btn-full { width: 100%; justify-content: center; }
+  .error-msg { background: rgba(224,82,82,0.12); border: 1px solid rgba(224,82,82,0.3); color: #e05252; padding: 10px 12px; border-radius: 6px; font-size: 13px; margin-top: 12px; display: none; }
+
+  /* ── APP SHELL ── */
+  #app { display: none; min-height: 100vh; }
+  .topbar { height: 56px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 14px; position: sticky; top: 0; z-index: 100; }
+  .topbar-logo { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
+  .topbar-logo-icon { width: 28px; height: 28px; background: var(--green); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #0f1117; }
+  .topbar-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; background: rgba(62,207,142,0.15); color: var(--green); text-transform: uppercase; letter-spacing: 0.8px; border: 1px solid rgba(62,207,142,0.3); }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-dim); }
+  .topbar-right span { color: var(--text); font-weight: 500; }
+
+  /* ── MAIN LAYOUT ── */
+  .main { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 56px); }
+
+  /* ── SIDEBAR ── */
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 20px 0; }
+  .sidebar-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); padding: 0 18px; margin-bottom: 8px; }
+  .section-item { display: flex; align-items: center; gap: 10px; padding: 10px 18px; cursor: pointer; transition: background 0.12s; border-left: 3px solid transparent; }
+  .section-item:hover { background: rgba(108,99,255,0.06); }
+  .section-item.active { background: rgba(108,99,255,0.1); border-left-color: var(--accent); }
+  .section-item-label { flex: 1; font-size: 13px; font-weight: 500; }
+  .section-item-num { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
+
+  /* status badges */
+  .badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  .badge-draft { background: rgba(139,144,168,0.15); color: var(--text-muted); }
+  .badge-pending { background: rgba(108,99,255,0.15); color: #a5b4fc; border: 1px solid rgba(108,99,255,0.3); }
+  .badge-approved { background: var(--green-dim); color: var(--green); border: 1px solid rgba(62,207,142,0.3); }
+  .badge-revision { background: var(--orange-dim); color: var(--orange); border: 1px solid var(--orange-border); }
+
+  .notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .notif-dot.pending { background: var(--accent); }
+  .notif-dot.revision { background: var(--orange); }
+
+  /* ── CONTENT AREA ── */
+  .content-area { padding: 28px 32px; overflow-y: auto; }
+  .section-panel { display: none; }
+  .section-panel.active { display: block; }
+
+  .section-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; gap: 16px; }
+  .section-header-left h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .section-header-left p { font-size: 13px; color: var(--text-dim); }
+  .section-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+  /* ── CHARTER CONTENT ── */
+  .charter-content { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 28px; margin-bottom: 20px; position: relative; }
+  .charter-content h3 { color: #4f7cff; margin: 20px 0 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .charter-content h3:first-child { margin-top: 0; }
+  .charter-content h4 { margin: 14px 0 6px; font-size: 13px; color: var(--text); }
+  .charter-content p { line-height: 1.75; font-size: 13.5px; color: var(--text-dim); margin-bottom: 8px; }
+  .charter-content ul { margin: 6px 0 12px; padding-left: 20px; }
+  .charter-content li { margin-bottom: 5px; font-size: 13px; line-height: 1.6; color: var(--text-dim); }
+  .charter-content strong { color: var(--text); }
+
+  /* KPI table */
+  .kpi-grid { display: grid; gap: 12px; }
+  .kpi-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .kpi-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .kpi-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .kpi-cat { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; background: rgba(108,99,255,0.15); color: #a5b4fc; }
+  .kpi-target { font-size: 12px; color: var(--green); font-weight: 500; margin-bottom: 4px; }
+  .kpi-meta { font-size: 11px; color: var(--text-muted); }
+
+  /* Roadmap */
+  .phase-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  .phase-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .phase-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .phase-name { font-size: 14px; font-weight: 700; }
+  .phase-label { font-size: 11px; color: var(--text-muted); }
+  .phase-tasks { display: flex; flex-wrap: wrap; gap: 6px; }
+  .task-chip { font-size: 11px; padding: 3px 9px; border-radius: 4px; background: rgba(255,255,255,0.05); color: var(--text-dim); border: 1px solid var(--border); }
+  .phase-milestone { font-size: 12px; color: var(--green); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+
+  /* ── PO COMMENT SYSTEM ── */
+  .po-toolbar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: rgba(245,158,11,0.06); border: 1px solid var(--orange-border); border-radius: 8px; margin-bottom: 16px; font-size: 12px; color: var(--orange); }
+  .po-toolbar strong { color: var(--orange); }
+
+  /* inline comment anchors */
+  .comment-anchor { display: inline-block; width: 18px; height: 18px; border-radius: 50%; background: var(--red-comment); color: #fff; font-size: 9px; font-weight: 700; text-align: center; line-height: 18px; cursor: pointer; margin-left: 4px; vertical-align: middle; flex-shrink: 0; }
+
+  .po-comment-bubble { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); border-left: 3px solid var(--red-comment); border-radius: 0 6px 6px 0; padding: 10px 12px; margin: 6px 0 10px 0; }
+  .po-comment-bubble-header { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--red-comment); margin-bottom: 4px; }
+  .po-comment-bubble-text { font-size: 12px; color: #fca5a5; line-height: 1.6; }
+  .po-comment-bubble-actions { display: flex; gap: 6px; margin-top: 6px; }
+  .btn-tiny { font-size: 10px; padding: 3px 8px; border-radius: 4px; border: none; cursor: pointer; font-family: var(--font-ui); font-weight: 600; }
+  .btn-tiny-danger { background: rgba(239,68,68,0.2); color: #fca5a5; }
+  .btn-tiny-danger:hover { background: rgba(239,68,68,0.35); }
+
+  /* add comment button — floats near paragraphs on hover */
+  .commentable { position: relative; }
+  .commentable:hover .add-comment-btn { opacity: 1; }
+  .add-comment-btn { opacity: 0; transition: opacity 0.15s; position: absolute; right: -36px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .add-comment-btn:hover { background: var(--red-comment); color: #fff; border-color: var(--red-comment); }
+
+  /* comment input modal */
+  .comment-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; z-index: 300; }
+  .comment-modal-overlay.open { display: flex; }
+  .comment-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; width: 440px; padding: 22px; }
+  .comment-modal h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .comment-modal p { font-size: 12px; color: var(--text-dim); margin-bottom: 14px; line-height: 1.5; }
+  .comment-modal textarea { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font-ui); font-size: 13px; outline: none; resize: vertical; min-height: 90px; line-height: 1.5; }
+  .comment-modal textarea:focus { border-color: var(--red-comment); }
+  .comment-modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+
+  /* ── APPROVAL ACTIONS BAR ── */
+  .action-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+  .action-bar-status { display: flex; align-items: center; gap: 10px; }
+  .action-bar-label { font-size: 12px; color: var(--text-muted); }
+  .action-bar-btns { display: flex; gap: 8px; }
+
+  /* sendback note field */
+  .sendback-area { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .sendback-area.open { display: block; }
+  .sendback-area textarea { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--orange-border); border-radius: 6px; color: var(--text); font-family: var(--font-ui); font-size: 13px; outline: none; resize: vertical; min-height: 70px; }
+  .sendback-area textarea:focus { border-color: var(--orange); }
+  .sendback-area-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+
+  /* submitted info banner */
+  .submitted-banner { background: rgba(108,99,255,0.08); border: 1px solid rgba(108,99,255,0.2); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: #a5b4fc; display: flex; align-items: center; gap: 8px; }
+
+  /* ── EMPTY / DRAFT ── */
+  .empty-state { text-align: center; padding: 60px 24px; color: var(--text-muted); }
+  .empty-state h3 { font-size: 16px; margin-bottom: 8px; color: var(--text-dim); }
+  .empty-state p { font-size: 13px; }
+
+  /* ── TOAST ── */
+  #toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 12px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: all 0.2s; pointer-events: none; z-index: 999; }
+  #toast.show { opacity: 1; transform: translateY(0); }
+  #toast.success { border-color: var(--green); color: var(--green); }
+  #toast.warning { border-color: var(--orange); color: var(--orange); }
+
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--text-muted); font-size: 13px; gap: 10px; }
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">✓</div>
+      <div>
+        <div class="login-logo-text">CharterOS</div>
+        <div class="login-logo-sub">Approval Portal</div>
+      </div>
+    </div>
+    <h2>Product Owner sign in</h2>
+    <p>Review and approve your team's product charter submissions.</p>
+    <div class="field">
+      <label>Email</label>
+      <input type="text" id="login-email" placeholder="po.teama@charteros.app" autocomplete="off"/>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••"/>
+    </div>
+    <button class="btn btn-green btn-full" onclick="doLogin()">Sign in</button>
+    <div class="error-msg" id="login-error">Incorrect email or password.</div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">✓</div>
+      CharterOS
+    </div>
+    <div class="topbar-badge">Approval Portal</div>
+    <div class="topbar-right">
+      Signed in as <span id="po-name-display">—</span>
+      <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px;" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-label" style="margin-top:4px;">Charter sections</div>
+      <div id="sidebar-sections"></div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content-area" id="content-area">
+      <div class="loading"><div class="spinner"></div> Loading charter…</div>
+    </div>
+  </div>
+</div>
+
+<!-- COMMENT INPUT MODAL -->
+<div class="comment-modal-overlay" id="comment-modal">
+  <div class="comment-modal">
+    <h4>Add PO comment</h4>
+    <p id="comment-modal-context"></p>
+    <textarea id="comment-input" placeholder="Type your comment or revision request here…"></textarea>
+    <div class="comment-modal-actions">
+      <button class="btn btn-ghost" onclick="closeCommentModal()">Cancel</button>
+      <button class="btn btn-orange" onclick="saveComment()" style="color:#0f1117;">Add comment</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = '/api';
+const SECTIONS = [
+  { key: 'tor',     label: 'Terms of Reference',  num: '01' },
+  { key: 'problem', label: 'Problem Statement',    num: '02' },
+  { key: 'vision',  label: 'Vision & Strategy',    num: '03' },
+  { key: 'kpis',    label: 'KPIs & Metrics',       num: '04' },
+  { key: 'roadmap', label: 'Roadmap',               num: '05' },
+  { key: 'cba',     label: 'Cost-Benefit Analysis', num: '06' },
+];
+
+let currentPO = null;
+let charterState = null;
+let approvals = {};   // { tor: { status, annotations, comment, submitted_by }, ... }
+let currentSection = 'tor';
+let commentTarget = null; // { sectionKey, paragraphId, snippetText }
+let pendingComments = {}; // { sectionKey: [ { id, paragraphId, snippetText, text } ] }
+
+// ── LOGIN ─────────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  try {
+    const r = await fetch(`${API}/product-owners?action=auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    currentPO = data.po;
+    sessionStorage.setItem('po_session', JSON.stringify(currentPO));
+    showApp();
+  } catch(e) {
+    errEl.textContent = e.message || 'Incorrect email or password.';
+    errEl.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  currentPO = null;
+  sessionStorage.removeItem('po_session');
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-password').value = '';
+}
+
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// ── INIT ──────────────────────────────────────────────────────
+async function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('po-name-display').textContent = currentPO.name;
+  await loadData();
+}
+
+async function loadData() {
+  try {
+    // Load charter state
+    const cr = await fetch(`${API}/load-charter?team_id=${currentPO.team_id}`);
+    const cd = await cr.json();
+    charterState = cd.state ? (typeof cd.state === 'string' ? JSON.parse(cd.state) : cd.state) : null;
+
+    // Load approvals
+    const ar = await fetch(`${API}/approvals?action=list&team_id=${currentPO.team_id}`);
+    const ad = await ar.json();
+    approvals = {};
+    pendingComments = {};
+    if (Array.isArray(ad)) {
+      ad.forEach(a => {
+        approvals[a.section] = a;
+        pendingComments[a.section] = a.annotations || [];
+      });
+    }
+
+    renderSidebar();
+    renderSection(currentSection);
+  } catch(e) {
+    document.getElementById('content-area').innerHTML = `<div class="empty-state"><h3>Failed to load charter</h3><p>${e.message}</p></div>`;
+  }
+}
+
+// ── SIDEBAR ───────────────────────────────────────────────────
+function renderSidebar() {
+  const el = document.getElementById('sidebar-sections');
+  el.innerHTML = SECTIONS.map(s => {
+    const ap = approvals[s.key] || {};
+    const status = ap.status || 'draft';
+    const hasPending = status === 'pending';
+    const hasRevision = status === 'revision';
+    return `
+      <div class="section-item ${currentSection === s.key ? 'active' : ''}" onclick="renderSection('${s.key}')">
+        ${hasPending ? '<div class="notif-dot pending"></div>' : hasRevision ? '<div class="notif-dot revision"></div>' : '<div style="width:8px"></div>'}
+        <span class="section-item-num">${s.num}</span>
+        <span class="section-item-label">${s.label}</span>
+        <span class="badge badge-${status}">${status}</span>
+      </div>`;
+  }).join('');
+}
+
+// ── RENDER SECTION ────────────────────────────────────────────
+function renderSection(key) {
+  currentSection = key;
+  renderSidebar();
+
+  const sec = SECTIONS.find(s => s.key === key);
+  const ap = approvals[key] || {};
+  const status = ap.status || 'draft';
+  const ca = document.getElementById('content-area');
+
+  if (!charterState) {
+    ca.innerHTML = `<div class="empty-state"><h3>No charter data found</h3><p>This team has not started their charter yet.</p></div>`;
+    return;
+  }
+
+  const isSubmitted = status === 'pending' || status === 'approved' || status === 'revision';
+  const isApproved = status === 'approved';
+
+  let contentHtml = '';
+  switch(key) {
+    case 'tor':     contentHtml = renderTOR(); break;
+    case 'problem': contentHtml = renderProblem(); break;
+    case 'vision':  contentHtml = renderVision(); break;
+    case 'kpis':    contentHtml = renderKPIs(); break;
+    case 'roadmap': contentHtml = renderRoadmap(); break;
+    case 'cba':     contentHtml = renderCBA(); break;
+  }
+
+  const submittedBanner = isSubmitted ? `
+    <div class="submitted-banner">
+      <div class="spinner" style="border-top-color:var(--accent);width:12px;height:12px;"></div>
+      Submitted by ${ap.submitted_by || 'team'} · ${ap.submitted_at ? new Date(ap.submitted_at).toLocaleDateString('en-SG', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : ''}
+    </div>` : '';
+
+  const commentCount = (pendingComments[key] || []).length;
+  const poToolbar = !isApproved && isSubmitted ? `
+    <div class="po-toolbar">
+      <strong>PO Review Mode</strong> — hover over any paragraph and click + to add a comment
+      ${commentCount > 0 ? `<span style="margin-left:auto;background:rgba(239,68,68,0.15);color:#fca5a5;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;">${commentCount} comment${commentCount>1?'s':''}</span>` : ''}
+    </div>` : '';
+
+  const actionBar = isSubmitted ? renderActionBar(key, status, ap) : '';
+
+  ca.innerHTML = `
+    <div class="section-panel active">
+      <div class="section-header">
+        <div class="section-header-left">
+          <h2>${sec.label}</h2>
+          <p>${sec.num} · ${currentPO.team_id.toUpperCase()}</p>
+        </div>
+      </div>
+      ${actionBar}
+      ${submittedBanner}
+      ${poToolbar}
+      ${contentHtml}
+    </div>`;
+
+  // Inject saved comments
+  injectSavedComments(key);
+}
+
+function renderActionBar(key, status, ap) {
+  const isApproved = status === 'approved';
+  return `
+    <div class="action-bar" id="action-bar-${key}">
+      <div class="action-bar-status">
+        <span class="action-bar-label">Status:</span>
+        <span class="badge badge-${status}">${status}</span>
+        ${ap.comment ? `<span style="font-size:12px;color:var(--text-muted);margin-left:8px;">"${ap.comment.substring(0,60)}${ap.comment.length>60?'…':''}"</span>` : ''}
+      </div>
+      ${!isApproved ? `
+      <div class="action-bar-btns">
+        <button class="btn btn-orange" onclick="toggleSendBack('${key}')" style="color:#0f1117;">↩ Send back</button>
+        <button class="btn btn-green" onclick="approveSection('${key}')" style="color:#0f1117;">✓ Approve</button>
+      </div>` : `<span style="font-size:13px;color:var(--green);font-weight:600;">✓ Approved</span>`}
+    </div>
+    <div class="sendback-area" id="sendback-${key}">
+      <p style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">Add an overall note for the team (optional — inline comments above will also be sent):</p>
+      <textarea id="sendback-note-${key}" placeholder="e.g. Please revisit the KPI targets — they feel too conservative given the problem scale. See inline comments for specifics."></textarea>
+      <div class="sendback-area-actions">
+        <button class="btn btn-ghost" onclick="toggleSendBack('${key}')">Cancel</button>
+        <button class="btn btn-orange" onclick="sendBackSection('${key}')" style="color:#0f1117;">↩ Confirm send back</button>
+      </div>
+    </div>`;
+}
+
+// ── CONTENT RENDERERS ─────────────────────────────────────────
+function renderTOR() {
+  const html = charterState.tor || '';
+  return `<div class="charter-content" id="section-content-tor">${wrapParagraphs(html, 'tor')}</div>`;
+}
+
+function renderProblem() {
+  const html = charterState.problem?.draft || '';
+  return `<div class="charter-content" id="section-content-problem">${wrapParagraphs(html, 'problem')}</div>`;
+}
+
+function renderVision() {
+  const html = charterState.vision?.draft || '';
+  return `<div class="charter-content" id="section-content-vision">${wrapParagraphs(html, 'vision')}</div>`;
+}
+
+function renderKPIs() {
+  const items = charterState.kpis?.items || [];
+  if (!items.length) return `<div class="empty-state"><h3>No KPIs defined yet</h3></div>`;
+  return `
+    <div class="charter-content" id="section-content-kpis">
+      <div class="kpi-grid">
+        ${items.map((k,i) => `
+          <div class="kpi-card commentable" id="kpi-${i}">
+            <div class="kpi-card-header">
+              <span class="kpi-name">${k.name}</span>
+              <span class="kpi-cat">${k.category || ''}</span>
+            </div>
+            <div class="kpi-target">▸ ${k.target}</div>
+            <div class="kpi-meta">Owner: ${k.owner || '—'} · ${k.timeframe || ''}</div>
+            <div class="kpi-meta" style="margin-top:4px;color:var(--text-dim);font-size:11px;">${k.rationale || ''}</div>
+            <button class="add-comment-btn" onclick="openCommentModal('kpis','kpi-${i}','${escHtml(k.name)}')">+</button>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function renderRoadmap() {
+  const phases = charterState.roadmap?.phases_data || [];
+  if (!phases.length) return `<div class="empty-state"><h3>No roadmap defined yet</h3></div>`;
+  return `
+    <div class="charter-content" id="section-content-roadmap">
+      ${phases.map((ph,i) => `
+        <div class="phase-card commentable" id="phase-${i}">
+          <div class="phase-header">
+            <div class="phase-dot" style="background:${ph.color}"></div>
+            <div>
+              <div class="phase-name">${ph.name}</div>
+              <div class="phase-label">${ph.label}</div>
+            </div>
+            <button class="add-comment-btn" onclick="openCommentModal('roadmap','phase-${i}','${escHtml(ph.name)}')">+</button>
+          </div>
+          <div class="phase-tasks">
+            ${(ph.tasks||[]).map(t => `<span class="task-chip">${t.name} <span style="color:var(--text-muted)">${t.duration}</span></span>`).join('')}
+          </div>
+          <div class="phase-milestone">✦ ${ph.milestone}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function renderCBA() {
+  const html = charterState.cba?.draft || charterState.cba_parsed?.clean || '';
+  return `<div class="charter-content" id="section-content-cba">${wrapParagraphs(html, 'cba')}</div>`;
+}
+
+// ── WRAP PARAGRAPHS (makes them commentable) ──────────────────
+function wrapParagraphs(html, sectionKey) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  let idx = 0;
+  ['p','li','h3','h4'].forEach(tag => {
+    tmp.querySelectorAll(tag).forEach(el => {
+      const id = `${sectionKey}-p${idx++}`;
+      el.id = id;
+      el.classList.add('commentable');
+      el.style.position = 'relative';
+      const btn = document.createElement('button');
+      btn.className = 'add-comment-btn';
+      btn.innerHTML = '+';
+      const snippet = el.textContent.substring(0,60).replace(/'/g,"\\'");
+      btn.setAttribute('onclick', `openCommentModal('${sectionKey}','${id}','${snippet}')`);
+      el.appendChild(btn);
+    });
+  });
+  return tmp.innerHTML;
+}
+
+// ── INJECT SAVED COMMENTS ─────────────────────────────────────
+function injectSavedComments(sectionKey) {
+  const comments = pendingComments[sectionKey] || [];
+  comments.forEach(c => {
+    const target = document.getElementById(c.paragraphId);
+    if (!target) return;
+    const bubble = document.createElement('div');
+    bubble.className = 'po-comment-bubble';
+    bubble.id = `bubble-${c.id}`;
+    bubble.innerHTML = `
+      <div class="po-comment-bubble-header">PO Comment</div>
+      <div class="po-comment-bubble-text">${escHtml(c.text)}</div>
+      <div class="po-comment-bubble-actions">
+        <button class="btn-tiny btn-tiny-danger" onclick="removeComment('${sectionKey}','${c.id}')">Remove</button>
+      </div>`;
+    target.insertAdjacentElement('afterend', bubble);
+  });
+}
+
+// ── COMMENT MODAL ─────────────────────────────────────────────
+function openCommentModal(sectionKey, paragraphId, snippetText) {
+  commentTarget = { sectionKey, paragraphId, snippetText };
+  document.getElementById('comment-modal-context').textContent = `On: "${snippetText}${snippetText.length >= 60 ? '…' : ''}"`;
+  document.getElementById('comment-input').value = '';
+  document.getElementById('comment-modal').classList.add('open');
+  setTimeout(() => document.getElementById('comment-input').focus(), 100);
+}
+
+function closeCommentModal() {
+  document.getElementById('comment-modal').classList.remove('open');
+  commentTarget = null;
+}
+
+function saveComment() {
+  if (!commentTarget) return;
+  const text = document.getElementById('comment-input').value.trim();
+  if (!text) return;
+
+  const { sectionKey, paragraphId, snippetText } = commentTarget;
+  const id = `c${Date.now()}`;
+  if (!pendingComments[sectionKey]) pendingComments[sectionKey] = [];
+  pendingComments[sectionKey].push({ id, paragraphId, snippetText, text });
+
+  // Inject bubble immediately
+  const target = document.getElementById(paragraphId);
+  if (target) {
+    const bubble = document.createElement('div');
+    bubble.className = 'po-comment-bubble';
+    bubble.id = `bubble-${id}`;
+    bubble.innerHTML = `
+      <div class="po-comment-bubble-header">PO Comment</div>
+      <div class="po-comment-bubble-text">${escHtml(text)}</div>
+      <div class="po-comment-bubble-actions">
+        <button class="btn-tiny btn-tiny-danger" onclick="removeComment('${sectionKey}','${id}')">Remove</button>
+      </div>`;
+    target.insertAdjacentElement('afterend', bubble);
+  }
+
+  closeCommentModal();
+  renderSidebar();
+  showToast('Comment added.', 'success');
+}
+
+function removeComment(sectionKey, id) {
+  pendingComments[sectionKey] = (pendingComments[sectionKey] || []).filter(c => c.id !== id);
+  const bubble = document.getElementById(`bubble-${id}`);
+  if (bubble) bubble.remove();
+  renderSidebar();
+}
+
+// ── SEND BACK / APPROVE ───────────────────────────────────────
+function toggleSendBack(key) {
+  const el = document.getElementById(`sendback-${key}`);
+  el.classList.toggle('open');
+}
+
+async function sendBackSection(key) {
+  const note = document.getElementById(`sendback-note-${key}`)?.value.trim() || '';
+  const comments = pendingComments[key] || [];
+
+  try {
+    const r = await fetch(`${API}/approvals?action=update`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        team_id: currentPO.team_id,
+        section: key,
+        status: 'revision',
+        comment: note,
+        annotations: comments,
+        reviewed_at: new Date().toISOString()
+      })
+    });
+    if (!r.ok) throw new Error('Save failed');
+    approvals[key] = { ...(approvals[key] || {}), status: 'revision', comment: note, annotations: comments };
+    showToast('Section sent back for revision.', 'warning');
+    renderSection(key);
+  } catch(e) {
+    showToast('Failed: ' + e.message, 'warning');
+  }
+}
+
+async function approveSection(key) {
+  try {
+    const r = await fetch(`${API}/approvals?action=update`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        team_id: currentPO.team_id,
+        section: key,
+        status: 'approved',
+        comment: '',
+        annotations: [],
+        reviewed_at: new Date().toISOString()
+      })
+    });
+    if (!r.ok) throw new Error('Save failed');
+    approvals[key] = { ...(approvals[key] || {}), status: 'approved', comment: '', annotations: [] };
+    pendingComments[key] = [];
+    showToast('Section approved ✓', 'success');
+    renderSection(key);
+    renderSidebar();
+  } catch(e) {
+    showToast('Failed: ' + e.message, 'warning');
+  }
+}
+
+// ── UTILS ─────────────────────────────────────────────────────
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + (type || 'success');
+  setTimeout(() => t.className = '', 3000);
+}
+
+// ── SESSION CHECK ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = sessionStorage.getItem('po_session');
+  if (saved) {
+    try {
+      currentPO = JSON.parse(saved);
+      showApp();
+    } catch(e) {}
+  }
+});
+</script>
+</body>
+</html>
