@@ -28,8 +28,28 @@
       "dest": "/api/get-all.js"
     },
     {
+      "src": "/api/teams",
+      "dest": "/api/teams.js"
+    },
+    {
+      "src": "/api/product-owners",
+      "dest": "/api/product-owners.js"
+    },
+    {
+      "src": "/api/admins",
+      "dest": "/api/admins.js"
+    },
+    {
       "src": "/admin",
       "dest": "/public/admin.html"
+    },
+    {
+      "src": "/superadmin",
+      "dest": "/public/superadmin.html"
+    },
+    {
+      "src": "/approval",
+      "dest": "/public/approval.html"
     },
     {
       "src": "/promo",
