@@ -115,8 +115,9 @@
     </div>
     <div class="login-title">Charter OS</div>
     <div class="login-sub">TPO Admin Dashboard</div>
-    <input type="password" class="login-input" id="admin-pw" placeholder="Admin password" onkeydown="if(event.key==='Enter')adminLogin()">
-    <div class="login-error" id="admin-error">Incorrect password.</div>
+    <input type="text" class="login-input" id="admin-email" placeholder="Email" onkeydown="if(event.key==='Enter')adminLogin()" autocomplete="off" style="margin-bottom:8px">
+    <input type="password" class="login-input" id="admin-pw" placeholder="Password" onkeydown="if(event.key==='Enter')adminLogin()">
+    <div class="login-error" id="admin-error">Incorrect email or password.</div>
     <button class="login-btn" onclick="adminLogin()">Access Dashboard →</button>
     <div style="margin-top:16px;font-size:11px;color:var(--text3)">Restricted to TPO administrators only</div>
   </div>
@@ -198,7 +199,6 @@
 </div>
 
 <script>
-  const ADMIN_PASSWORD = 'tpoadmin2026';
   const ADMIN_SESSION  = 'charterOS_admin_auth';
   const THEME_KEY      = 'charterOS_admin_theme';
 
@@ -229,14 +229,29 @@
   let ALL_TEAMS = [];
 
   // ── Auth ──────────────────────────────────────────────────────
-  function adminLogin() {
+  async function adminLogin() {
+    const email = document.getElementById('admin-email').value.trim();
     const pw = document.getElementById('admin-pw').value;
-    if (pw === ADMIN_PASSWORD) {
-      sessionStorage.setItem(ADMIN_SESSION, 'true');
-      document.getElementById('admin-gate').style.display = 'none';
-      loadData();
-    } else {
-      document.getElementById('admin-error').style.display = 'block';
+    const errEl = document.getElementById('admin-error');
+    errEl.style.display = 'none';
+    if (!email || !pw) return;
+    try {
+      const r = await fetch('/api/admins?action=auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pw })
+      });
+      const data = await r.json();
+      if (r.ok && data.success) {
+        sessionStorage.setItem(ADMIN_SESSION, JSON.stringify({ email: data.admin.email, name: data.admin.name }));
+        document.getElementById('admin-gate').style.display = 'none';
+        loadData();
+      } else {
+        errEl.style.display = 'block';
+        document.getElementById('admin-pw').value = '';
+      }
+    } catch(e) {
+      errEl.style.display = 'block';
       document.getElementById('admin-pw').value = '';
     }
   }
@@ -419,7 +434,8 @@
   }
 
   // ── Init ──────────────────────────────────────────────────────
-  if (sessionStorage.getItem(ADMIN_SESSION) === 'true') {
+  const _adminSession = sessionStorage.getItem(ADMIN_SESSION);
+  if (_adminSession) {
     document.getElementById('admin-gate').style.display = 'none';
     loadData();
   }
