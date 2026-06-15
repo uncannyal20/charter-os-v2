@@ -17,13 +17,14 @@ export default async function handler(req, res) {
   const action = req.query.action;
 
   // ── AUTH: verify team login (used by index.html) ──────────────────────────
-  // POST /api/teams?action=auth  { team_id, password }
+  // POST /api/teams?action=auth  { password }
+  // Login screen is password-only — look up team by password
   if (action === 'auth') {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-    const { team_id, password } = req.body;
-    if (!team_id || !password) return res.status(400).json({ error: 'team_id and password required' });
+    const { password } = req.body;
+    if (!password) return res.status(400).json({ error: 'password required' });
 
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/teams?team_id=eq.${team_id}&password=eq.${encodeURIComponent(password)}&select=team_id,team_name,department`, {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/teams?password=eq.${encodeURIComponent(password)}&select=team_id,team_name,department`, {
       headers
     });
     const data = await r.json();

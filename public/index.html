@@ -623,7 +623,7 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
       const r = await fetch('/api/teams?action=auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ team_id: input.toLowerCase().replace(/\s+/g,'-'), password: input })
+        body: JSON.stringify({ password: input })
       });
       const data = await r.json();
       if (r.ok && data.success) {
