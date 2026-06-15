@@ -391,7 +391,7 @@ function renderSection(key) {
 
   const submittedBanner = isSubmitted ? `
     <div class="submitted-banner">
-      <div class="spinner" style="border-top-color:var(--accent);width:12px;height:12px;"></div>
+      <span style="font-size:13px">📋</span>
       Submitted by ${ap.submitted_by || 'team'} · ${ap.submitted_at ? new Date(ap.submitted_at).toLocaleDateString('en-SG', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : ''}
     </div>` : '';
 
