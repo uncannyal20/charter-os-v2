@@ -764,7 +764,7 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
       const r = await fetch('/api/approvals?action=submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ team_id: CURRENT_TEAM.id, section, submitted_by: 'Product Manager' })
+        body: JSON.stringify({ team_id: CURRENT_TEAM.id, section, submitted_by: 'Product Manager', team_replies: replies })
       });
       if (!r.ok) throw new Error('Resubmit failed');
       window.APPROVALS[section] = { ...(window.APPROVALS[section]||{}), status: 'pending', submitted_by: 'Product Manager', submitted_at: new Date().toISOString(), team_replies: replies };
