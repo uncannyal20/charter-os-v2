@@ -326,7 +326,9 @@
 
 <!-- ── LOGIN ──────────────────────────────────────────────────── -->
 <div id="login-screen">
-  <div class="login-box">
+
+  <!-- VERIFY SCREEN (default) -->
+  <div class="login-box" id="screen-verify">
     <div class="logo">
       <div class="logo-icon">C</div>
       <div>
@@ -334,19 +336,41 @@
         <div class="logo-sub">Super Admin</div>
       </div>
     </div>
-    <h2>Sign in</h2>
-    <p>Account management access only.</p>
+    <h2>Enter your code</h2>
+    <p>Open your authenticator app and enter the 6-digit code for CharterOS.</p>
     <div class="field">
-      <label>User ID</label>
-      <input type="text" id="login-email" placeholder="superadmin" autocomplete="off"/>
+      <label>6-digit code</label>
+      <input type="text" id="totp-code" placeholder="000000" maxlength="6" autocomplete="one-time-code" inputmode="numeric" style="font-size:24px;letter-spacing:8px;text-align:center;font-family:var(--font-mono);"/>
     </div>
-    <div class="field">
-      <label>Password</label>
-      <input type="password" id="login-password" placeholder="••••••••"/>
-    </div>
-    <button class="btn btn-primary btn-full" onclick="doLogin()">Sign in</button>
-    <div class="error-msg" id="login-error">Incorrect email or password.</div>
+    <button class="btn btn-primary btn-full" id="verify-btn" onclick="doVerify()">Verify</button>
+    <div class="error-msg" id="verify-error"></div>
+    <p style="margin-top:16px;font-size:12px;color:var(--text-muted);text-align:center;">
+      First time? <a href="#" onclick="showSetup()" style="color:var(--accent);">Set up authenticator</a>
+    </p>
   </div>
+
+  <!-- SETUP SCREEN -->
+  <div class="login-box" id="screen-setup" style="display:none;width:420px;">
+    <div class="logo">
+      <div class="logo-icon">C</div>
+      <div>
+        <div class="logo-text">CharterOS</div>
+        <div class="logo-sub">Authenticator Setup</div>
+      </div>
+    </div>
+    <h2>Set up authenticator</h2>
+    <p>Scan this QR code with Google Authenticator, Authy, or any TOTP app. You only need to do this once.</p>
+    <div id="qr-container" style="text-align:center;margin:20px 0;min-height:180px;display:flex;align-items:center;justify-content:center;">
+      <div class="loading"><div class="spinner"></div> Generating QR code…</div>
+    </div>
+    <div id="setup-manual" style="display:none;margin-bottom:16px;">
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Or enter this code manually in your app:</p>
+      <div id="setup-manual-code" style="font-family:var(--font-mono);font-size:13px;color:var(--accent);background:rgba(108,99,255,0.1);padding:8px 12px;border-radius:6px;word-break:break-all;"></div>
+    </div>
+    <div class="error-msg" id="setup-error"></div>
+    <button class="btn btn-ghost btn-full" onclick="showVerify()" style="margin-top:8px;">← Back to sign in</button>
+  </div>
+
 </div>
 
 <!-- ── APP ────────────────────────────────────────────────────── -->
@@ -359,6 +383,7 @@
     <div class="topbar-badge">Super Admin</div>
     <div class="topbar-user">
       Signed in as <span id="admin-name-display">—</span>
+      <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px;" onclick="openHelpPDF()">Help</button>
       <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px;" onclick="doLogout()">Sign out</button>
     </div>
   </div>
@@ -592,44 +617,126 @@
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const SUPERADMIN_EMAIL = 'superadmin';
-const SUPERADMIN_PASSWORD = 'superadmin2026';
-const API_BASE = '/api';
-
 // ── STATE ─────────────────────────────────────────────────────
 let currentAdmin = null;
 let teamsData = [];
 let posData = [];
 let adminsData = [];
 
-// ── LOGIN ─────────────────────────────────────────────────────
-function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-  const err = document.getElementById('login-error');
-  err.style.display = 'none';
+// ── TOTP AUTH ─────────────────────────────────────────────────
+function showSetup() {
+  document.getElementById('screen-verify').style.display = 'none';
+  document.getElementById('screen-setup').style.display = 'block';
+  loadSetupQR();
+}
 
-  if (email === SUPERADMIN_EMAIL && password === SUPERADMIN_PASSWORD) {
-    currentAdmin = { email, name: 'Super Admin' };
+function showVerify() {
+  document.getElementById('screen-setup').style.display = 'none';
+  document.getElementById('screen-verify').style.display = 'block';
+}
+
+async function loadSetupQR() {
+  const container = document.getElementById('qr-container');
+  const errEl = document.getElementById('setup-error');
+  errEl.style.display = 'none';
+  container.innerHTML = '<div class="loading"><div class="spinner"></div> Generating QR code…</div>';
+  try {
+    const r = await fetch('/api/superadmin-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'setup' })
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      if (data.error && data.error.includes('already configured')) {
+        container.innerHTML = '<p style="color:var(--text-dim);font-size:13px;text-align:center;">Authenticator already set up.<br>Use your existing app to sign in.</p>';
+      } else {
+        throw new Error(data.error);
+      }
+      return;
+    }
+    const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(data.otpauthUri);
+    container.innerHTML = '<img src="' + qrUrl + '" width="180" height="180" style="border-radius:8px;background:#fff;padding:8px;" />';
+    const match = data.otpauthUri.match(/secret=([A-Z2-7]+)/i);
+    if (match) {
+      document.getElementById('setup-manual').style.display = 'block';
+      document.getElementById('setup-manual-code').textContent = match[1];
+    }
+  } catch(e) {
+    container.innerHTML = '';
+    errEl.textContent = 'Setup failed: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+async function doVerify() {
+  const code = document.getElementById('totp-code').value.trim();
+  const errEl = document.getElementById('verify-error');
+  const btn = document.getElementById('verify-btn');
+  errEl.style.display = 'none';
+  if (!code || code.length !== 6) {
+    errEl.textContent = 'Enter the 6-digit code from your authenticator app.';
+    errEl.style.display = 'block';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Verifying…';
+  try {
+    const r = await fetch('/api/superadmin-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'verify', code })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Invalid code');
+    sessionStorage.setItem('sa_session', data.sessionToken);
+    currentAdmin = { name: 'Super Admin' };
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
-    document.getElementById('admin-name-display').textContent = currentAdmin.name;
+    document.getElementById('admin-name-display').textContent = 'Super Admin';
+    document.getElementById('totp-code').value = '';
     loadAll();
-  } else {
-    err.style.display = 'block';
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Verify';
   }
 }
 
 function doLogout() {
   currentAdmin = null;
+  sessionStorage.removeItem('sa_session');
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
-  document.getElementById('login-password').value = '';
+  document.getElementById('totp-code').value = '';
+  showVerify();
 }
 
-document.getElementById('login-password').addEventListener('keydown', e => {
-  if (e.key === 'Enter') doLogin();
+document.addEventListener('DOMContentLoaded', () => {
+  const session = sessionStorage.getItem('sa_session');
+  if (session) {
+    currentAdmin = { name: 'Super Admin' };
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('admin-name-display').textContent = 'Super Admin';
+    loadAll();
+  }
+  if (new URLSearchParams(window.location.search).get('setup') === 'true') {
+    showSetup();
+  }
 });
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const verify = document.getElementById('screen-verify');
+    if (verify && verify.style.display !== 'none') doVerify();
+  }
+});
+const API_BASE = '/api';
+
+
 
 // ── TABS ──────────────────────────────────────────────────────
 function switchTab(tab) {
@@ -1841,6 +1948,387 @@ async function downloadAllFiles() {
     await downloadFile(i);
   }
   showToast('All files downloaded.', 'success');
+}
+
+
+
+// ── HELP PDF ──────────────────────────────────────────────────
+function openHelpPDF() {
+  if (typeof window.jspdf === 'undefined' && typeof jsPDF === 'undefined') {
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', () => {
+      setTimeout(generateHelpPDF, 300);
+    });
+  } else {
+    generateHelpPDF();
+  }
+}
+
+function generateHelpPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  const W = 210; const H = 297;
+  const ML = 18; const MR = 18; const TW = W - ML - MR;
+  const DARK = '#0f1117'; const ACCENT = '#6c63ff'; const WHITE = '#ffffff';
+  const BODY = '#c8cad4'; const DIM = '#8b90a8'; const SURFACE = '#1a1d27';
+  const SUCCESS = '#3ecf8e'; const WARNING = '#f5a623';
+
+  let y = 0;
+
+  function newPage() {
+    doc.addPage();
+    y = 0;
+    // page header bar
+    doc.setFillColor(SURFACE);
+    doc.rect(0, 0, W, 12, 'F');
+    doc.setFillColor(ACCENT);
+    doc.rect(0, 0, W, 1.5, 'F');
+    doc.setFontSize(8); doc.setTextColor(DIM);
+    doc.text('CharterOS — Super Admin Help Guide', ML, 8);
+    doc.text('For internal use only', W - MR, 8, { align: 'right' });
+    y = 18;
+  }
+
+  function checkY(needed) {
+    if (y + needed > H - 18) newPage();
+  }
+
+  function sectionHeader(title, color) {
+    checkY(14);
+    doc.setFillColor(color || ACCENT);
+    doc.roundedRect(ML, y, TW, 9, 1.5, 1.5, 'F');
+    doc.setFontSize(11); doc.setTextColor(WHITE); doc.setFont('helvetica', 'bold');
+    doc.text(title, ML + 4, y + 6.2);
+    y += 13;
+  }
+
+  function subHeader(title) {
+    checkY(10);
+    doc.setFontSize(10); doc.setTextColor(WHITE); doc.setFont('helvetica', 'bold');
+    doc.text(title, ML, y);
+    doc.setDrawColor(ACCENT);
+    doc.setLineWidth(0.3);
+    doc.line(ML, y + 1.5, ML + doc.getTextWidth(title), y + 1.5);
+    y += 7;
+  }
+
+  function bodyText(text, indent) {
+    const x = ML + (indent || 0);
+    const lines = doc.splitTextToSize(text, TW - (indent || 0));
+    checkY(lines.length * 5.5);
+    doc.setFontSize(9.5); doc.setTextColor(BODY); doc.setFont('helvetica', 'normal');
+    doc.text(lines, x, y);
+    y += lines.length * 5.5 + 1;
+  }
+
+  function bullet(text, indent) {
+    const x = ML + (indent || 6);
+    const bullet = '•';
+    const lines = doc.splitTextToSize(text, TW - (indent || 6) - 4);
+    checkY(lines.length * 5.2);
+    doc.setFontSize(9.5); doc.setTextColor(ACCENT); doc.setFont('helvetica', 'bold');
+    doc.text(bullet, ML + (indent || 2), y);
+    doc.setTextColor(BODY); doc.setFont('helvetica', 'normal');
+    doc.text(lines, x, y);
+    y += lines.length * 5.2 + 1;
+  }
+
+  function infoBox(label, value, color) {
+    checkY(10);
+    doc.setFillColor(SURFACE);
+    doc.roundedRect(ML, y, TW, 9, 1.5, 1.5, 'F');
+    doc.setDrawColor(color || ACCENT);
+    doc.setLineWidth(0.4);
+    doc.line(ML, y, ML, y + 9);
+    doc.setFontSize(8.5); doc.setTextColor(DIM); doc.setFont('helvetica', 'bold');
+    doc.text(label, ML + 3, y + 3.5);
+    doc.setFontSize(9.5); doc.setTextColor(WHITE); doc.setFont('helvetica', 'normal');
+    doc.text(value, ML + 3, y + 7.2);
+    y += 12;
+  }
+
+  function twoCol(label, value) {
+    checkY(7);
+    doc.setFontSize(9); doc.setTextColor(DIM); doc.setFont('helvetica', 'bold');
+    doc.text(label, ML, y);
+    doc.setTextColor(BODY); doc.setFont('helvetica', 'normal');
+    doc.text(value, ML + 45, y);
+    y += 6;
+  }
+
+  function gap(n) { y += (n || 4); }
+
+  // ── COVER PAGE ─────────────────────────────────────────────
+  doc.setFillColor(DARK);
+  doc.rect(0, 0, W, H, 'F');
+  doc.setFillColor(ACCENT);
+  doc.rect(0, 0, W, 2, 'F');
+  doc.rect(0, H - 2, W, 2, 'F');
+
+  // Logo block
+  doc.setFillColor(ACCENT);
+  doc.roundedRect(ML, 40, 18, 18, 2, 2, 'F');
+  doc.setFontSize(16); doc.setTextColor(WHITE); doc.setFont('helvetica', 'bold');
+  doc.text('C', ML + 5.5, 52.5);
+
+  doc.setFontSize(28); doc.setTextColor(WHITE); doc.setFont('helvetica', 'bold');
+  doc.text('CharterOS', ML + 22, 52);
+  doc.setFontSize(11); doc.setTextColor(ACCENT); doc.setFont('helvetica', 'normal');
+  doc.text('Super Admin Portal', ML + 22, 60);
+
+  doc.setDrawColor(ACCENT);
+  doc.setLineWidth(0.4);
+  doc.line(ML, 70, W - MR, 70);
+
+  doc.setFontSize(22); doc.setTextColor(WHITE); doc.setFont('helvetica', 'bold');
+  doc.text('Help Guide', ML, 88);
+  doc.setFontSize(13); doc.setTextColor(BODY); doc.setFont('helvetica', 'normal');
+  doc.text('Account management & use case generation', ML, 98);
+
+  // Summary boxes
+  const boxes = [
+    { label: 'Teams', desc: 'Create & manage team logins', color: ACCENT },
+    { label: 'Product Owners', desc: 'Manage PO approval accounts', color: '#7c3aed' },
+    { label: 'Admins', desc: 'Manage admin portal accounts', color: '#0891b2' },
+    { label: 'Generate Use Case', desc: 'AI-powered demo generator', color: SUCCESS }
+  ];
+  boxes.forEach((b, i) => {
+    const bx = ML + (i % 2) * (TW / 2 + 3);
+    const by = 115 + Math.floor(i / 2) * 28;
+    doc.setFillColor(SURFACE);
+    doc.roundedRect(bx, by, TW / 2 - 3, 24, 2, 2, 'F');
+    doc.setFillColor(b.color);
+    doc.rect(bx, by, 2.5, 24, 'F');
+    doc.setFontSize(11); doc.setTextColor(WHITE); doc.setFont('helvetica', 'bold');
+    doc.text(b.label, bx + 6, by + 9);
+    doc.setFontSize(9); doc.setTextColor(DIM); doc.setFont('helvetica', 'normal');
+    doc.text(b.desc, bx + 6, by + 17);
+  });
+
+  doc.setFontSize(9); doc.setTextColor(DIM);
+  doc.text('Generated: ' + new Date().toLocaleDateString('en-SG', {day:'numeric',month:'long',year:'numeric'}), ML, H - 14);
+  doc.text('For internal use only — CharterOS TPO', W - MR, H - 14, { align: 'right' });
+
+  // ── PAGE 2: LOGIN + TEAMS ──────────────────────────────────
+  newPage();
+
+  sectionHeader('1. Signing In', ACCENT);
+  bodyText('The Super Admin portal is accessible only to the system administrator. Use the following credentials to sign in:');
+  gap();
+  infoBox('User ID', 'superadmin', ACCENT);
+  infoBox('Password', 'superadmin2026', ACCENT);
+  gap();
+  bodyText('Keep these credentials confidential. To change them, update the SUPERADMIN_EMAIL and SUPERADMIN_PASSWORD constants in superadmin.html and redeploy.');
+  gap(6);
+
+  sectionHeader('2. Teams Tab', ACCENT);
+  bodyText('The Teams tab manages login credentials for the main CharterOS charter application (index.html). Each team entry corresponds to one team that can log in and work on their product charter.');
+  gap();
+
+  subHeader('Viewing teams');
+  bodyText('All existing teams are listed in a table showing Team ID, Charter name, Department, and Password. These are the credentials teams use on the CharterOS login screen.');
+  gap();
+
+  subHeader('Adding a new team');
+  bullet('Click "+ Add team" in the top right');
+  bullet('Fill in all four fields: Team ID (e.g. team-f), Charter/product name, Department, and Password');
+  bullet('Team ID must be unique and lowercase with hyphens only (e.g. team-f, team-estates)');
+  bullet('Click "Save team" — the team can log into CharterOS immediately');
+  gap();
+
+  subHeader('Editing a team');
+  bullet('Click "Edit" on any row to update the charter name, department, or password');
+  bullet('Team ID cannot be changed after creation (it is the primary key)');
+  bullet('Password changes take effect immediately on next login');
+  gap();
+
+  subHeader('Deleting a team');
+  bullet('Click "Delete" and confirm — this removes the team account permanently');
+  bullet('Warning: deleting a team also removes their Product Owner and approval records from the database due to cascading deletion');
+  bullet('The team\'s charter data in the charters table is NOT automatically deleted');
+
+  // ── PAGE 3: PRODUCT OWNERS ─────────────────────────────────
+  newPage();
+
+  sectionHeader('3. Product Owners Tab', '#7c3aed');
+  bodyText('Product Owner accounts are used to log into the Approval Portal (/approval). Each team should have exactly one Product Owner account. POs review and approve submitted charter sections from their team.');
+  gap();
+
+  subHeader('Adding a Product Owner');
+  bullet('Click "+ Add product owner"');
+  bullet('Select the team this PO belongs to from the dropdown');
+  bullet('Enter the PO\'s display name (e.g. Sarah Tan)');
+  bullet('Enter a login email — use the dummy format: po.teamname@charteros.app');
+  bullet('Set a password — recommended format: poX2026 (e.g. poF2026 for team-f)');
+  bullet('Click "Save product owner"');
+  gap();
+
+  subHeader('Default PO accounts (pre-seeded)');
+  twoCol('Team A PO:', 'po.teama@charteros.app / poA2026');
+  twoCol('Team B PO:', 'po.teamb@charteros.app / poB2026');
+  twoCol('Team C PO:', 'po.teamc@charteros.app / poC2026');
+  twoCol('Team D PO:', 'po.teamd@charteros.app / poD2026');
+  twoCol('Team E PO:', 'po.teame@charteros.app / poE2026');
+  gap();
+
+  subHeader('Resetting a PO password');
+  bullet('Click "Edit" on the PO row');
+  bullet('Update the password field and click "Save product owner"');
+  bullet('The new password is active immediately');
+  gap(6);
+
+  sectionHeader('4. Admins Tab', '#0891b2');
+  bodyText('Admin accounts are used to log into the TPO Admin Portal (/admin). Admins have read-only visibility across all teams\' charter progress and approval statuses.');
+  gap();
+
+  subHeader('Default admin account');
+  infoBox('Email', 'admin@charteros.app', '#0891b2');
+  infoBox('Password', 'tpoadmin2026', '#0891b2');
+  gap();
+
+  subHeader('Adding a new admin');
+  bullet('Click "+ Add admin"');
+  bullet('Enter a display name and a dummy login email (e.g. admin2@charteros.app)');
+  bullet('Set a password and click "Save admin"');
+  gap();
+
+  subHeader('Resetting an admin password');
+  bullet('Click "Edit / Reset pw" on the admin row');
+  bullet('Enter the new password and save');
+
+  // ── PAGE 4: GENERATE USE CASE ──────────────────────────────
+  newPage();
+
+  sectionHeader('5. Generate Use Case Tab', SUCCESS);
+  bodyText('The Generate Use Case feature uses the Claude AI API to create a complete, believable demo scenario for any department and problem context. It outputs a scenario summary and 11 downloadable sample files covering all charter sections.');
+  gap();
+
+  subHeader('Input fields');
+  twoCol('Department:', 'The HDB department this use case belongs to');
+  twoCol('Problem description:', 'A plain-language description of the operational problem');
+  twoCol('Use case gist:', 'The high-level idea for the digital solution');
+  twoCol('Team size:', 'Small (5–8), Medium (9–12), or Large (13+)');
+  twoCol('Section focus:', 'Generate files for all sections or a specific one');
+  gap();
+
+  subHeader('What gets generated');
+  bodyText('One Claude API call generates a full JSON scenario including: charter name, product summary, problem statement, vision statement, strategic pillars, meeting cadence, KPIs, delivery epics, cost items, benefit items, pain points, and stakeholder list.');
+  gap();
+
+  subHeader('Output files (11 total)');
+  const files = [
+    ['TOR', 'tor_kickoff_meeting_notes.txt', 'Meeting notes with agenda, attendees, action items'],
+    ['TOR', 'tor_team_roster.txt', 'Full team roster with roles, RACI summary, meeting cadence'],
+    ['Problem', 'problem_discovery_notes.txt', 'Problem statement, root cause analysis, impact assessment'],
+    ['Problem', 'problem_stakeholder_inputs.txt', 'Stakeholder interview summaries and requirements'],
+    ['Problem', 'problem_pain_points_process.txt', 'Documented pain points with process observation notes'],
+    ['Vision', 'vision_workshop_notes.txt', 'Workshop facilitation notes, activities, parking lot'],
+    ['Vision', 'vision_statement.docx', 'Formatted Word document with vision and strategic pillars'],
+    ['Vision', 'vision_strategic_alignment.pptx', 'PowerPoint deck: vision, pillars, KPI overview'],
+    ['KPIs', 'kpi_brainstorm_notes.txt', 'KPI framework, recommended and rejected KPIs'],
+    ['KPIs', 'kpi_success_metrics.txt', 'Measurement plan, value dimensions, reporting cadence'],
+    ['Roadmap', 'roadmap_epic_breakdown.xlsx', 'Excel: epic breakdown tab + sprint plan tab'],
+    ['Roadmap', 'roadmap_delivery_plan.pptx', 'PowerPoint: epic summary + Gantt-style timeline'],
+    ['CBA', 'cost_benefit_analysis.xlsx', 'Excel: Tab 1 — implementation costs, Tab 2 — benefits & KPIs'],
+  ];
+  files.forEach(f => {
+    checkY(8);
+    doc.setFillColor(SURFACE);
+    doc.rect(ML, y, TW, 7, 'F');
+    doc.setFontSize(8); doc.setTextColor(ACCENT); doc.setFont('helvetica', 'bold');
+    doc.text(f[0], ML + 2, y + 4.8);
+    doc.setTextColor(WHITE); doc.setFont('helvetica', 'normal');
+    doc.text(f[1], ML + 18, y + 4.8);
+    doc.setTextColor(DIM);
+    doc.text(f[2], ML + 80, y + 4.8);
+    y += 8;
+  });
+  gap();
+
+  subHeader('Downloading files');
+  bullet('Each file card has an individual Download button');
+  bullet('"Download all files" triggers sequential download of all 11 files');
+  bullet('Files load external libraries (PptxGenJS, SheetJS, JSZip) on first use — allow a moment on first download');
+  bullet('Files are ready to be uploaded directly into CharterOS as sample inputs');
+  gap(6);
+
+  // ── PAGE 5: QUICK REFERENCE ────────────────────────────────
+  newPage();
+
+  sectionHeader('6. Quick Reference — All Credentials', ACCENT);
+  gap();
+
+  subHeader('Super Admin Portal (/superadmin)');
+  infoBox('User ID', 'superadmin', ACCENT);
+  infoBox('Password', 'superadmin2026', ACCENT);
+  gap();
+
+  subHeader('TPO Admin Portal (/admin)');
+  infoBox('Email', 'admin@charteros.app', '#0891b2');
+  infoBox('Password', 'tpoadmin2026', '#0891b2');
+  gap();
+
+  subHeader('CharterOS Teams (/index.html)');
+  const teams = [
+    ['team-a', 'teamA2026', 'HDB Maintenance & Estate Services Digital Transformation'],
+    ['team-b', 'teamB2026', 'Resident Feedback & Engagement Platform'],
+    ['team-c', 'teamC2026', 'Municipal Smart Sensor & IoT Network Platform'],
+    ['team-d', 'teamD2026', 'Community Space Booking & Management System'],
+    ['team-e', 'teamE2026', 'Predictive Lift Maintenance Intelligence System'],
+  ];
+  teams.forEach(t => {
+    checkY(8);
+    doc.setFillColor(SURFACE);
+    doc.rect(ML, y, TW, 7.5, 'F');
+    doc.setFontSize(8.5); doc.setTextColor(ACCENT); doc.setFont('helvetica', 'bold');
+    doc.text(t[0], ML + 2, y + 5);
+    doc.setTextColor(WHITE); doc.setFont('helvetica', 'normal');
+    doc.text(t[1], ML + 22, y + 5);
+    doc.setTextColor(DIM);
+    const nameLines = doc.splitTextToSize(t[2], TW - 55);
+    doc.text(nameLines[0], ML + 42, y + 5);
+    y += 8.5;
+  });
+  gap();
+
+  subHeader('Approval Portal (/approval) — Product Owners');
+  const pos = [
+    ['po.teama@charteros.app', 'poA2026', 'Team A'],
+    ['po.teamb@charteros.app', 'poB2026', 'Team B'],
+    ['po.teamc@charteros.app', 'poC2026', 'Team C'],
+    ['po.teamd@charteros.app', 'poD2026', 'Team D'],
+    ['po.teame@charteros.app', 'poE2026', 'Team E'],
+  ];
+  pos.forEach(p => {
+    checkY(8);
+    doc.setFillColor(SURFACE);
+    doc.rect(ML, y, TW, 7.5, 'F');
+    doc.setFontSize(8.5); doc.setTextColor(WHITE); doc.setFont('helvetica', 'normal');
+    doc.text(p[0], ML + 2, y + 5);
+    doc.setTextColor(ACCENT); doc.setFont('helvetica', 'bold');
+    doc.text(p[1], ML + 72, y + 5);
+    doc.setTextColor(DIM); doc.setFont('helvetica', 'normal');
+    doc.text(p[2], ML + 92, y + 5);
+    y += 8.5;
+  });
+  gap(8);
+
+  subHeader('Important notes');
+  bullet('All emails are dummy/non-functional — used for login only, no real emails are sent');
+  bullet('Passwords are stored in plain text in Supabase — this is intentional for demo purposes');
+  bullet('New teams created via superadmin are immediately available on the CharterOS login screen');
+  bullet('Deleting a team cascades to their Product Owner and approval records');
+
+  // ── PAGE NUMBERS ───────────────────────────────────────────
+  const totalPages = doc.internal.getNumberOfPages();
+  for (let i = 2; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8); doc.setTextColor(DIM); doc.setFont('helvetica', 'normal');
+    doc.text(`Page ${i} of ${totalPages}`, W - MR, H - 8, { align: 'right' });
+  }
+
+  doc.save('CharterOS_SuperAdmin_HelpGuide.pdf');
+  showToast('Help guide downloaded.', 'success');
 }
 
 
