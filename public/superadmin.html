@@ -292,6 +292,34 @@
     text-align: center; padding: 48px 24px; color: var(--text-muted);
   }
   .empty-state p { margin-top: 8px; font-size: 13px; }
+
+  /* ── GENERATE USE CASE ─────────────────────────────────────── */
+  .gen-layout { display: grid; grid-template-columns: 340px 1fr; gap: 24px; align-items: start; }
+  .gen-form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; }
+  .gen-form-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+  select.field-select { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font-ui); font-size: 14px; outline: none; }
+  textarea.field-textarea { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font-ui); font-size: 14px; outline: none; resize: vertical; min-height: 80px; line-height: 1.5; }
+  textarea.field-textarea:focus, select.field-select:focus { border-color: var(--accent); }
+  .gen-output { display: none; }
+  .gen-output.visible { display: block; }
+  .scenario-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin-bottom: 20px; }
+  .scenario-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 14px; color: var(--accent); }
+  .scenario-body { font-size: 13px; line-height: 1.75; color: var(--text-dim); white-space: pre-wrap; }
+  .files-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .file-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .file-card-section { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); }
+  .file-card-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .file-card-type { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; }
+  .type-txt { background: rgba(139,144,168,0.15); color: var(--text-dim); }
+  .type-docx { background: rgba(37,99,235,0.15); color: #60a5fa; }
+  .type-pptx { background: rgba(234,88,12,0.15); color: #fb923c; }
+  .type-xlsx { background: rgba(22,163,74,0.15); color: #4ade80; }
+  .file-card-preview { font-size: 11px; color: var(--text-muted); line-height: 1.5; max-height: 60px; overflow: hidden; border-top: 1px solid var(--border); padding-top: 8px; font-family: var(--font-mono); }
+  .gen-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin: 20px 0 10px; }
+  .download-all-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .download-all-bar h3 { font-size: 15px; font-weight: 700; }
+  .gen-thinking { display: none; align-items: center; gap: 10px; color: var(--text-muted); font-size: 13px; padding: 20px 0; }
+  .gen-thinking.visible { display: flex; }
 </style>
 </head>
 <body>
@@ -339,6 +367,7 @@
     <div class="tab active" onclick="switchTab('teams')">Teams</div>
     <div class="tab" onclick="switchTab('pos')">Product Owners</div>
     <div class="tab" onclick="switchTab('admins')">Admins</div>
+    <div class="tab" onclick="switchTab('generate')">✦ Generate Use Case</div>
   </div>
 
   <div class="content">
@@ -377,6 +406,81 @@
         <button class="btn btn-primary" onclick="openModal('admin')">+ Add admin</button>
       </div>
       <div id="admins-table-wrap"><div class="loading"><div class="spinner"></div> Loading…</div></div>
+    </div>
+
+
+    <!-- GENERATE USE CASE PANEL -->
+    <div class="panel" id="panel-generate">
+      <div class="panel-header">
+        <div>
+          <h2>Generate Use Case</h2>
+          <p>AI-generate a believable demo scenario with supporting sample files for all charter sections.</p>
+        </div>
+      </div>
+      <div class="gen-layout">
+
+        <!-- FORM -->
+        <div class="gen-form-card">
+          <h3>Use case inputs</h3>
+          <div class="field">
+            <label>Department</label>
+            <input type="text" id="gen-dept" placeholder="e.g. Estate Management Division"/>
+          </div>
+          <div class="field">
+            <label>Problem description</label>
+            <textarea class="field-textarea" id="gen-problem" placeholder="e.g. Residents face long wait times when reporting estate maintenance issues. There is no single system tracking resolution status across contractors."></textarea>
+          </div>
+          <div class="field">
+            <label>Use case gist</label>
+            <textarea class="field-textarea" id="gen-gist" placeholder="e.g. A unified digital platform for residents to report issues, track status in real-time and for HDB to manage contractor workflows."></textarea>
+          </div>
+          <div class="field">
+            <label>Team size</label>
+            <select class="field-select" id="gen-teamsize">
+              <option value="small">Small (5–8 people)</option>
+              <option value="medium" selected>Medium (9–12 people)</option>
+              <option value="large">Large (13+ people)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Charter section focus</label>
+            <select class="field-select" id="gen-focus">
+              <option value="all" selected>All sections</option>
+              <option value="tor">TOR only</option>
+              <option value="problem">Problem only</option>
+              <option value="vision">Vision only</option>
+              <option value="kpis">KPIs only</option>
+              <option value="roadmap">Roadmap only</option>
+              <option value="cba">CBA only</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-full" id="gen-btn" onclick="generateUseCase()">Generate use case</button>
+          <div class="error-msg" id="gen-error"></div>
+        </div>
+
+        <!-- OUTPUT -->
+        <div>
+          <div class="gen-thinking" id="gen-thinking">
+            <div class="spinner"></div>
+            <span id="gen-thinking-text">Generating scenario…</span>
+          </div>
+
+          <div class="gen-output" id="gen-output">
+            <div class="scenario-card">
+              <h3>Generated scenario</h3>
+              <div class="scenario-body" id="gen-scenario-body"></div>
+            </div>
+
+            <div class="download-all-bar">
+              <h3>Sample files</h3>
+              <button class="btn btn-success" onclick="downloadAllFiles()">⬇ Download all files</button>
+            </div>
+
+            <div id="gen-files-container"></div>
+          </div>
+        </div>
+
+      </div>
     </div>
 
   </div>
@@ -532,7 +636,8 @@ function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   event.target.classList.add('active');
-  document.getElementById('panel-' + (tab === 'pos' ? 'pos' : tab === 'admins' ? 'admins' : 'teams')).classList.add('active');
+  const panelMap = { teams: 'teams', pos: 'pos', admins: 'admins', generate: 'generate' };
+  document.getElementById('panel-' + (panelMap[tab] || 'teams')).classList.add('active');
 }
 
 // ── LOAD ALL ──────────────────────────────────────────────────
@@ -896,6 +1001,848 @@ function showToast(msg, type = 'success') {
   t.className = 'show ' + type;
   setTimeout(() => { t.className = ''; }, 3000);
 }
+
+
+// ── GENERATE USE CASE ─────────────────────────────────────────
+let generatedFiles = [];
+
+const TEAM_SIZES = {
+  small: { total: '5–8', pm: 1, tpm: 1, uxd_lead: 1, uxd: 0, cloud: 1, tech_lead: 1, swe: 1, po: 1 },
+  medium: { total: '9–12', pm: 2, tpm: 2, uxd_lead: 1, uxd: 1, cloud: 2, tech_lead: 1, swe: 2, po: 1 },
+  large: { total: '13+', pm: 2, tpm: 2, uxd_lead: 1, uxd: 2, cloud: 2, tech_lead: 1, swe: 3, po: 1 }
+};
+
+const SG_FIRST_NAMES = ['Wei Ming','Siti','Rajan','Mei Ling','Ahmad','Priya','Jun Kai','Nurul','Vikram','Xiu Ying','Farid','Lakshmi','Zhi Hao','Aisha','Suresh','Hui Fen','Hafiz','Deepa','Kian Ann','Shalini'];
+const SG_LAST_NAMES = ['Tan','Lim','Lee','Wong','Chen','Ng','Goh','Chua','Ong','Teo','Koh','Yeo','Low','Tan','Singh','Sharma','Rahman','Abdullah','Pillai','Krishnan'];
+
+function randName() {
+  return SG_FIRST_NAMES[Math.floor(Math.random()*SG_FIRST_NAMES.length)] + ' ' + SG_LAST_NAMES[Math.floor(Math.random()*SG_LAST_NAMES.length)];
+}
+
+function buildRoster(sizeKey) {
+  const s = TEAM_SIZES[sizeKey];
+  const members = [];
+  members.push({ role: 'Product Owner', name: randName() });
+  for (let i=0;i<s.pm;i++) members.push({ role: 'Product Manager', name: randName() });
+  for (let i=0;i<s.tpm;i++) members.push({ role: 'Technical Product Manager', name: randName() });
+  if (s.uxd_lead) members.push({ role: 'UXD Lead', name: randName() });
+  for (let i=0;i<s.uxd;i++) members.push({ role: 'UXD Designer', name: randName() });
+  if (s.tech_lead) members.push({ role: 'Technical Lead', name: randName() });
+  for (let i=0;i<s.cloud;i++) members.push({ role: 'Cloud Engineer', name: randName() });
+  for (let i=0;i<s.swe;i++) members.push({ role: 'Software Engineer', name: randName() });
+  return members;
+}
+
+async function callClaude(prompt) {
+  const r = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  const data = await r.json();
+  if (data.error) throw new Error(data.error);
+  return data.content[0].text;
+}
+
+async function generateUseCase() {
+  const dept = document.getElementById('gen-dept').value.trim();
+  const problem = document.getElementById('gen-problem').value.trim();
+  const gist = document.getElementById('gen-gist').value.trim();
+  const teamSize = document.getElementById('gen-teamsize').value;
+  const errEl = document.getElementById('gen-error');
+  errEl.style.display = 'none';
+
+  if (!dept || !problem || !gist) {
+    errEl.textContent = 'Please fill in all fields.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  document.getElementById('gen-btn').disabled = true;
+  document.getElementById('gen-output').classList.remove('visible');
+  const thinking = document.getElementById('gen-thinking');
+  thinking.classList.add('visible');
+  generatedFiles = [];
+
+  try {
+    // Step 1: Generate scenario JSON
+    setThinking('Generating use case scenario…');
+    const roster = buildRoster(teamSize);
+    const rosterText = roster.map(m => `${m.role}: ${m.name}`).join('\n');
+
+    const scenarioPrompt = `You are generating a believable HDB (Housing Development Board Singapore) product charter use case for a demo.
+
+Department: ${dept}
+Problem: ${problem}
+Use case gist: ${gist}
+Team size: ${TEAM_SIZES[teamSize].total} people
+Team roster:
+${rosterText}
+
+Generate a JSON object (no markdown, no backticks, raw JSON only) with these exact keys:
+{
+  "charter_name": "A specific, believable product name (not generic)",
+  "product_summary": "2-3 sentence summary of what this digital product does",
+  "problem_statement": "A detailed 4-5 sentence problem statement grounded in HDB's operational context",
+  "vision_statement": "An inspiring 2-sentence product vision statement",
+  "strategic_pillars": ["Pillar 1 name: one line description", "Pillar 2 name: one line description", "Pillar 3 name: one line description"],
+  "meeting_cadence": "Describe the team's sprint cadence, standups, retrospectives, and stakeholder reviews in 3-4 sentences",
+  "kpis": [
+    {"name": "KPI name", "baseline": "current state metric", "target": "12-month target", "unit": "measurement unit"},
+    {"name": "KPI name", "baseline": "current state metric", "target": "12-month target", "unit": "measurement unit"},
+    {"name": "KPI name", "baseline": "current state metric", "target": "12-month target", "unit": "measurement unit"},
+    {"name": "KPI name", "baseline": "current state metric", "target": "12-month target", "unit": "measurement unit"}
+  ],
+  "epics": [
+    {"name": "Epic name", "duration_weeks": 6, "description": "What this epic delivers"},
+    {"name": "Epic name", "duration_weeks": 8, "description": "What this epic delivers"},
+    {"name": "Epic name", "duration_weeks": 6, "description": "What this epic delivers"},
+    {"name": "Epic name", "duration_weeks": 10, "description": "What this epic delivers"}
+  ],
+  "cost_items": [
+    {"item": "Cost item name", "category": "Infrastructure/Manpower/Licensing/Change Management", "year1": 120000, "year2": 60000, "year3": 60000},
+    {"item": "Cost item name", "category": "Infrastructure/Manpower/Licensing/Change Management", "year1": 80000, "year2": 40000, "year3": 40000},
+    {"item": "Cost item name", "category": "Infrastructure/Manpower/Licensing/Change Management", "year1": 50000, "year2": 25000, "year3": 25000},
+    {"item": "Cost item name", "category": "Infrastructure/Manpower/Licensing/Change Management", "year1": 30000, "year2": 15000, "year3": 15000}
+  ],
+  "benefit_items": [
+    {"benefit": "Benefit description", "type": "Efficiency/Quality/Cost Avoidance", "year1": 80000, "year2": 120000, "year3": 160000},
+    {"benefit": "Benefit description", "type": "Efficiency/Quality/Cost Avoidance", "year1": 60000, "year2": 90000, "year3": 120000},
+    {"benefit": "Benefit description", "type": "Efficiency/Quality/Cost Avoidance", "year1": 40000, "year2": 60000, "year3": 80000}
+  ],
+  "pain_points": ["Pain point 1 with specific operational detail", "Pain point 2", "Pain point 3", "Pain point 4", "Pain point 5"],
+  "stakeholders": [
+    {"name": "Stakeholder group", "role": "their role in this initiative", "concern": "their main concern or requirement"}
+  ]
+}`;
+
+    const raw = await callClaude(scenarioPrompt);
+    const scenario = JSON.parse(raw.trim());
+
+    // Display scenario summary
+    const scenarioDisplay = `CHARTER NAME\n${scenario.charter_name}\n\nPRODUCT SUMMARY\n${scenario.product_summary}\n\nPROBLEM STATEMENT\n${scenario.problem_statement}\n\nVISION\n${scenario.vision_statement}\n\nSTRATEGIC PILLARS\n${scenario.strategic_pillars.join('\n')}\n\nTEAM & MEETING CADENCE\n${scenario.meeting_cadence}\n\nKEY KPIs\n${scenario.kpis.map(k => `• ${k.name}: ${k.baseline} → ${k.target} ${k.unit}`).join('\n')}`;
+    document.getElementById('gen-scenario-body').textContent = scenarioDisplay;
+
+    // Step 2: Generate all files
+    setThinking('Building TOR files…');
+    await buildTORFiles(scenario, roster, dept, teamSize);
+
+    setThinking('Building Problem files…');
+    await buildProblemFiles(scenario, dept);
+
+    setThinking('Building Vision files…');
+    await buildVisionFiles(scenario, dept);
+
+    setThinking('Building KPI files…');
+    await buildKPIFiles(scenario, dept);
+
+    setThinking('Building Roadmap files…');
+    await buildRoadmapFiles(scenario, dept);
+
+    setThinking('Building CBA files…');
+    await buildCBAFiles(scenario, dept);
+
+    // Render file cards
+    renderFileCards();
+
+    thinking.classList.remove('visible');
+    document.getElementById('gen-output').classList.add('visible');
+    showToast('Use case generated — ' + generatedFiles.length + ' files ready.', 'success');
+
+  } catch(e) {
+    thinking.classList.remove('visible');
+    errEl.textContent = 'Generation failed: ' + e.message;
+    errEl.style.display = 'block';
+    console.error(e);
+  } finally {
+    document.getElementById('gen-btn').disabled = false;
+  }
+}
+
+function setThinking(msg) {
+  document.getElementById('gen-thinking-text').textContent = msg;
+}
+
+// ── TOR FILES ────────────────────────────────────────────────
+async function buildTORFiles(scenario, roster, dept, teamSize) {
+  const today = new Date().toLocaleDateString('en-SG', {day:'numeric',month:'long',year:'numeric'});
+
+  // File 1: Meeting notes TXT
+  const meetingNotes = `TERMS OF REFERENCE — KICK-OFF MEETING NOTES
+Product: ${scenario.charter_name}
+Department: ${dept}
+Date: ${today}
+
+ATTENDEES
+${roster.map(m => `- ${m.name} (${m.role})`).join('\n')}
+
+AGENDA
+1. Product overview and mandate
+2. Team structure and responsibilities
+3. Ways of working and sprint cadence
+4. Key milestones and delivery timeline
+5. Risks and dependencies
+
+KEY DISCUSSION POINTS
+
+Product Mandate
+The team aligned on the core mandate: ${scenario.product_summary}
+
+Team Responsibilities
+${roster.map(m => `- ${m.name} (${m.role}): responsible for ${getRoleResponsibility(m.role)}`).join('\n')}
+
+Ways of Working
+${scenario.meeting_cadence}
+
+Action Items
+- Product Owner to confirm budget envelope by next sprint
+- Technical Lead to complete initial architecture review
+- UXD Lead to schedule user research sessions with operations staff
+- All PMs to complete stakeholder mapping by end of week
+
+NEXT MEETING
+Sprint 1 Planning — scheduled for one week from today.`;
+
+  generatedFiles.push({ section: 'TOR', name: 'tor_kickoff_meeting_notes', ext: 'txt', type: 'txt', content: meetingNotes, preview: meetingNotes.substring(0,120) });
+
+  // File 2: Team roster TXT
+  const rosterTxt = `TEAM ROSTER — ${scenario.charter_name.toUpperCase()}
+Department: ${dept}
+Generated: ${today}
+Team Size: ${TEAM_SIZES[teamSize].total} members
+
+TEAM MEMBERS
+${'─'.repeat(60)}
+${roster.map((m,i) => `${String(i+1).padStart(2,'0')}  ${m.name.padEnd(22)} ${m.role}`).join('\n')}
+
+MEETING CADENCE
+${scenario.meeting_cadence}
+
+RACI SUMMARY
+Product Owner     — Accountable for product outcomes and stakeholder sign-off
+Product Manager   — Responsible for backlog, sprint planning, and delivery
+Tech Product Mgr  — Responsible for technical requirements and API specs
+UXD Lead          — Responsible for UX research, design system, and prototypes
+Technical Lead    — Responsible for architecture, code review, and tech quality
+Cloud Engineer    — Responsible for infrastructure, CI/CD, and deployments
+Software Engineer — Responsible for feature development and unit testing`;
+
+  generatedFiles.push({ section: 'TOR', name: 'tor_team_roster', ext: 'txt', type: 'txt', content: rosterTxt, preview: rosterTxt.substring(0,120) });
+}
+
+function getRoleResponsibility(role) {
+  const map = {
+    'Product Owner': 'overall product outcomes, stakeholder alignment, and final approvals',
+    'Product Manager': 'backlog prioritisation, sprint planning, and delivery coordination',
+    'Technical Product Manager': 'technical requirements, API specifications, and integration planning',
+    'UXD Lead': 'UX research strategy, design system, and prototype sign-off',
+    'UXD Designer': 'user flows, wireframes, and usability testing',
+    'Technical Lead': 'system architecture, code review standards, and technical governance',
+    'Cloud Engineer': 'cloud infrastructure, CI/CD pipelines, and environment management',
+    'Software Engineer': 'feature development, unit testing, and bug resolution'
+  };
+  return map[role] || 'assigned deliverables and team collaboration';
+}
+
+// ── PROBLEM FILES ─────────────────────────────────────────────
+async function buildProblemFiles(scenario, dept) {
+  const today = new Date().toLocaleDateString('en-SG', {day:'numeric',month:'long',year:'numeric'});
+
+  // File 1: Problem notes TXT
+  const problemNotes = `PROBLEM DISCOVERY NOTES
+Product: ${scenario.charter_name}
+Department: ${dept}
+Date: ${today}
+
+PROBLEM STATEMENT
+${scenario.problem_statement}
+
+KEY PAIN POINTS IDENTIFIED
+${scenario.pain_points.map((p,i) => `${i+1}. ${p}`).join('\n')}
+
+ROOT CAUSE ANALYSIS
+The team conducted a structured root cause analysis using the 5-Why methodology. The primary root causes identified are:
+- Fragmented legacy systems with no unified data layer
+- Manual handoff processes creating delays and data loss
+- Lack of real-time visibility for both staff and end users
+- Insufficient tooling for tracking SLA compliance across contractors
+
+IMPACT ASSESSMENT
+Operational: High — directly affects day-to-day service delivery and staff productivity
+Citizen-facing: High — residents experience delays and lack of transparency
+Financial: Medium — rework costs and inefficiency estimated at significant overhead per annum
+
+SCOPE BOUNDARIES
+In scope: ${scenario.product_summary}
+Out of scope: Legacy system decommissioning, HR process changes, inter-agency data sharing`;
+
+  generatedFiles.push({ section: 'Problem', name: 'problem_discovery_notes', ext: 'txt', type: 'txt', content: problemNotes, preview: problemNotes.substring(0,120) });
+
+  // File 2: Stakeholder inputs TXT
+  const stakeholderTxt = `STAKEHOLDER INPUT SUMMARY
+Product: ${scenario.charter_name}
+Date: ${today}
+
+STAKEHOLDER INTERVIEWS CONDUCTED
+${scenario.stakeholders.map((s,i) => `
+Interview ${i+1}: ${s.name}
+Role in initiative: ${s.role}
+Key concern: ${s.concern}
+`).join('')}
+
+CONSOLIDATED REQUIREMENTS
+From stakeholder inputs, the following top requirements were identified:
+1. Single view of all cases/items across the full lifecycle
+2. Mobile-accessible interface for field staff
+3. Automated notifications and status updates for residents
+4. Integration with existing HDB backend systems
+5. Audit trail and compliance reporting capability
+
+OPEN QUESTIONS
+- What is the integration approach with legacy COBOL systems?
+- Will this replace or augment existing contractor management systems?
+- What are the data retention requirements under IM8?`;
+
+  generatedFiles.push({ section: 'Problem', name: 'problem_stakeholder_inputs', ext: 'txt', type: 'txt', content: stakeholderTxt, preview: stakeholderTxt.substring(0,120) });
+
+  // File 3: Pain points TXT
+  const painTxt = `CURRENT PROCESS PAIN POINTS
+Product: ${scenario.charter_name}
+Department: ${dept}
+Date: ${today}
+Method: Process observation + staff interviews
+
+DOCUMENTED PAIN POINTS
+${scenario.pain_points.map((p,i) => `
+PAIN POINT ${i+1}
+${p}
+
+Impact: Direct impact on service delivery and staff efficiency
+Frequency: Recurring — affects daily operations
+Evidence: Confirmed through staff interviews and process walkthroughs
+`).join('')}
+
+PROCESS OBSERVATION NOTES
+The team spent 2 days embedded with operations staff to observe current workflows. Key observations:
+- Average case resolution involves 4–6 manual handoffs between teams
+- Staff rely on email threads and spreadsheets to track status
+- There is no single source of truth for case status
+- Reporting to management requires manual data consolidation taking 2–3 hours weekly
+
+BENCHMARK COMPARISON
+Peer agencies with similar digital products report 40–60% reduction in manual processing time post-implementation. HDB's current baseline puts it below industry average for digital service maturity in this domain.`;
+
+  generatedFiles.push({ section: 'Problem', name: 'problem_pain_points_process', ext: 'txt', type: 'txt', content: painTxt, preview: painTxt.substring(0,120) });
+}
+
+// ── VISION FILES ──────────────────────────────────────────────
+async function buildVisionFiles(scenario, dept) {
+  const today = new Date().toLocaleDateString('en-SG', {day:'numeric',month:'long',year:'numeric'});
+
+  // File 1: Vision workshop notes TXT
+  const workshopNotes = `VISION WORKSHOP NOTES
+Product: ${scenario.charter_name}
+Department: ${dept}
+Date: ${today}
+Facilitator: UXD Lead
+
+WORKSHOP OBJECTIVES
+1. Align the team on a shared product vision
+2. Define strategic pillars and success outcomes
+3. Identify north star metric
+
+ACTIVITIES COMPLETED
+- Future state journey mapping (60 mins)
+- "How Might We" ideation (45 mins)  
+- Vision statement drafting and voting (30 mins)
+- Strategic pillar definition (45 mins)
+
+AGREED VISION STATEMENT
+"${scenario.vision_statement}"
+
+STRATEGIC PILLARS
+${scenario.strategic_pillars.map((p,i) => `Pillar ${i+1}: ${p}`).join('\n')}
+
+NORTH STAR METRIC
+The team agreed the primary success indicator is citizen/user satisfaction with the end-to-end digital experience, measured quarterly.
+
+PARKING LOT (deferred to later sprints)
+- Personalisation features
+- Predictive analytics dashboard
+- Third-party API integrations beyond core scope`;
+
+  generatedFiles.push({ section: 'Vision', name: 'vision_workshop_notes', ext: 'txt', type: 'txt', content: workshopNotes, preview: workshopNotes.substring(0,120) });
+
+  // File 2: Vision statement DOCX (via plain text with DOCX markers — built in JS)
+  const visionDocContent = {
+    title: `Product Vision Statement`,
+    charter: scenario.charter_name,
+    dept: dept,
+    date: today,
+    vision: scenario.vision_statement,
+    pillars: scenario.strategic_pillars,
+    summary: scenario.product_summary
+  };
+  generatedFiles.push({ section: 'Vision', name: 'vision_statement', ext: 'docx', type: 'docx', content: visionDocContent, preview: scenario.vision_statement.substring(0,120) });
+
+  // File 3: Strategic alignment PPTX
+  const visionPptContent = {
+    charter: scenario.charter_name,
+    dept: dept,
+    vision: scenario.vision_statement,
+    pillars: scenario.strategic_pillars,
+    summary: scenario.product_summary,
+    kpis: scenario.kpis
+  };
+  generatedFiles.push({ section: 'Vision', name: 'vision_strategic_alignment', ext: 'pptx', type: 'pptx', content: visionPptContent, preview: 'Vision statement + strategic pillars + KPI overview' });
+}
+
+// ── KPI FILES ─────────────────────────────────────────────────
+async function buildKPIFiles(scenario, dept) {
+  const today = new Date().toLocaleDateString('en-SG', {day:'numeric',month:'long',year:'numeric'});
+
+  // File 1: KPI brainstorm TXT
+  const kpiBrainstorm = `KPI BRAINSTORM SESSION NOTES
+Product: ${scenario.charter_name}
+Department: ${dept}
+Date: ${today}
+
+KPI FRAMEWORK USED: OKR-aligned with SMART criteria
+(Specific, Measurable, Achievable, Relevant, Time-bound)
+
+RECOMMENDED KPIs
+${scenario.kpis.map((k,i) => `
+KPI ${i+1}: ${k.name}
+Current baseline: ${k.baseline}
+12-month target: ${k.target}
+Unit of measure: ${k.unit}
+Measurement frequency: Monthly
+Data source: System-generated reports
+`).join('')}
+
+REJECTED KPIs (and reasons)
+- "Number of features delivered" — output not outcome metric
+- "System uptime %" — hygiene metric, not value metric
+- "Staff satisfaction score" — too broad, not product-specific
+
+DATA COLLECTION APPROACH
+All KPIs will be tracked via an in-product analytics dashboard. Baseline data to be established in Sprint 1 before go-live.`;
+
+  generatedFiles.push({ section: 'KPIs', name: 'kpi_brainstorm_notes', ext: 'txt', type: 'txt', content: kpiBrainstorm, preview: kpiBrainstorm.substring(0,120) });
+
+  // File 2: Success metrics TXT
+  const successMetrics = `SUCCESS METRICS & MEASUREMENT PLAN
+Product: ${scenario.charter_name}
+Date: ${today}
+
+DEFINITION OF SUCCESS
+This product will be considered successful when:
+${scenario.kpis.map(k => `• ${k.name} reaches ${k.target} ${k.unit} within 12 months of go-live`).join('\n')}
+
+MEASUREMENT CADENCE
+- Weekly: System performance and usage metrics via dashboard
+- Monthly: KPI review in Product Review meeting
+- Quarterly: Stakeholder report to Product Owner and department head
+- Annually: Full value realisation assessment against charter targets
+
+VALUE DIMENSIONS COVERED
+✓ Customer Satisfaction — through resident-facing metrics
+✓ Employee Productivity — through staff efficiency gains
+✓ System Maintainability — through technical quality indicators
+✓ Cost to Serve — through operational cost reduction targets
+
+REPORTING OWNER
+Product Manager is responsible for monthly KPI reporting.
+Product Owner reviews and signs off quarterly.`;
+
+  generatedFiles.push({ section: 'KPIs', name: 'kpi_success_metrics', ext: 'txt', type: 'txt', content: successMetrics, preview: successMetrics.substring(0,120) });
+}
+
+// ── ROADMAP FILES ─────────────────────────────────────────────
+async function buildRoadmapFiles(scenario, dept) {
+  const today = new Date().toLocaleDateString('en-SG', {day:'numeric',month:'long',year:'numeric'});
+
+  // File 1: Epic breakdown XLSX
+  const epicXlsx = {
+    charter: scenario.charter_name,
+    dept: dept,
+    date: today,
+    epics: scenario.epics
+  };
+  generatedFiles.push({ section: 'Roadmap', name: 'roadmap_epic_breakdown', ext: 'xlsx', type: 'xlsx', content: epicXlsx, preview: scenario.epics.map(e => e.name).join(' · ') });
+
+  // File 2: Delivery roadmap PPTX
+  const roadmapPpt = {
+    charter: scenario.charter_name,
+    dept: dept,
+    epics: scenario.epics,
+    kpis: scenario.kpis
+  };
+  generatedFiles.push({ section: 'Roadmap', name: 'roadmap_delivery_plan', ext: 'pptx', type: 'pptx', content: roadmapPpt, preview: 'Phased delivery timeline with epic breakdown and milestones' });
+
+  // File 3: Delivery notes TXT
+  const deliveryNotes = `DELIVERY TIMELINE NOTES
+Product: ${scenario.charter_name}
+Department: ${dept}
+Date: ${today}
+
+EPIC BREAKDOWN
+${scenario.epics.map((e,i) => `
+Epic ${i+1}: ${e.name}
+Duration: ${e.duration_weeks} weeks
+Description: ${e.description}
+`).join('')}
+
+TOTAL DELIVERY TIMELINE
+Estimated total: ${scenario.epics.reduce((a,e) => a + e.duration_weeks, 0)} weeks (sequential with 20% buffer)
+
+KEY MILESTONES
+- Sprint 0 (Week 1–2): Environment setup, architecture review, team onboarding
+- Alpha release (End of Epic 1): Internal testing with core team
+- Beta release (End of Epic 2): Controlled pilot with selected users
+- Go-live (End of Epic 3): Full production deployment
+- Stabilisation (Post go-live, 4 weeks): Bug fixes and performance tuning
+
+DEPENDENCIES
+- GovTech SingPass integration readiness
+- HDB IT infrastructure provisioning (lead time: 4 weeks)
+- Stakeholder UAT availability (minimum 2 weeks prior to go-live)
+- IM8 compliance review sign-off
+
+RISKS
+- Scope creep during stakeholder review cycles
+- Legacy system API instability during integration phase
+- Resource availability during peak HDB operational periods`;
+
+  generatedFiles.push({ section: 'Roadmap', name: 'roadmap_delivery_notes', ext: 'txt', type: 'txt', content: deliveryNotes, preview: deliveryNotes.substring(0,120) });
+}
+
+// ── CBA FILES ─────────────────────────────────────────────────
+async function buildCBAFiles(scenario, dept) {
+  const cbaXlsx = {
+    charter: scenario.charter_name,
+    dept: dept,
+    cost_items: scenario.cost_items,
+    benefit_items: scenario.benefit_items,
+    kpis: scenario.kpis
+  };
+  generatedFiles.push({ section: 'CBA', name: 'cost_benefit_analysis', ext: 'xlsx', type: 'xlsx', content: cbaXlsx, preview: 'Tab 1: Implementation costs · Tab 2: Benefits & savings (Y1/Y2/Y3)' });
+}
+
+// ── RENDER FILE CARDS ─────────────────────────────────────────
+function renderFileCards() {
+  const container = document.getElementById('gen-files-container');
+  const sections = ['TOR', 'Problem', 'Vision', 'KPIs', 'Roadmap', 'CBA'];
+  let html = '';
+
+  sections.forEach(sec => {
+    const files = generatedFiles.filter(f => f.section === sec);
+    if (!files.length) return;
+    html += `<div class="gen-section-label">${sec}</div><div class="files-grid">`;
+    files.forEach((f, idx) => {
+      const globalIdx = generatedFiles.indexOf(f);
+      html += `
+        <div class="file-card">
+          <div class="file-card-section">${f.section}</div>
+          <div class="file-card-name">${f.name}.${f.ext}</div>
+          <span class="file-card-type type-${f.type}">${f.ext}</span>
+          <div class="file-card-preview">${f.preview}</div>
+          <button class="btn btn-ghost" style="margin-top:4px;font-size:12px;padding:6px 10px;" onclick="downloadFile(${globalIdx})">⬇ Download</button>
+        </div>`;
+    });
+    html += '</div>';
+  });
+
+  container.innerHTML = html;
+}
+
+// ── DOWNLOAD INDIVIDUAL FILE ──────────────────────────────────
+async function downloadFile(idx) {
+  const f = generatedFiles[idx];
+  if (f.ext === 'txt') downloadTxt(f);
+  else if (f.ext === 'docx') downloadDocx(f);
+  else if (f.ext === 'pptx') downloadPptx(f);
+  else if (f.ext === 'xlsx') downloadXlsx(f);
+}
+
+function downloadTxt(f) {
+  const blob = new Blob([f.content], { type: 'text/plain' });
+  triggerDownload(blob, f.name + '.txt');
+}
+
+function downloadDocx(f) {
+  // Build a minimal DOCX using raw XML (no external library needed for simple docs)
+  const c = f.content;
+  const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:body>
+<w:p><w:pPr><w:pStyle w:val="Title"/></w:pPr><w:r><w:t>${escXml(c.title)}</w:t></w:r></w:p>
+<w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Product: </w:t></w:r><w:r><w:t>${escXml(c.charter)}</w:t></w:r></w:p>
+<w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Department: </w:t></w:r><w:r><w:t>${escXml(c.dept)}</w:t></w:r></w:p>
+<w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Date: </w:t></w:r><w:r><w:t>${escXml(c.date)}</w:t></w:r></w:p>
+<w:p><w:r><w:t></w:t></w:r></w:p>
+<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Product Summary</w:t></w:r></w:p>
+<w:p><w:r><w:t>${escXml(c.summary)}</w:t></w:r></w:p>
+<w:p><w:r><w:t></w:t></w:r></w:p>
+<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Vision Statement</w:t></w:r></w:p>
+<w:p><w:r><w:rPr><w:i/><w:color w:val="1F4E79"/></w:rPr><w:t>${escXml(c.vision)}</w:t></w:r></w:p>
+<w:p><w:r><w:t></w:t></w:r></w:p>
+<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Strategic Pillars</w:t></w:r></w:p>
+${c.pillars.map(p => `<w:p><w:r><w:t>• ${escXml(p)}</w:t></w:r></w:p>`).join('')}
+</w:body></w:document>`;
+
+  const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`;
+
+  const wordRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
+
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:style w:type="paragraph" w:styleId="Normal"><w:name w:val="Normal"/></w:style>
+<w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:rPr><w:b/><w:sz w:val="52"/><w:color w:val="1F4E79"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:rPr><w:b/><w:sz w:val="32"/><w:color w:val="2F5496"/></w:rPr></w:style>
+</w:styles>`;
+
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+</Types>`;
+
+  if (typeof JSZip === 'undefined') {
+    showToast('Loading DOCX library…', 'success');
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', () => buildAndDownloadDocx(f.name, docXml, relsXml, wordRelsXml, stylesXml, contentTypes));
+  } else {
+    buildAndDownloadDocx(f.name, docXml, relsXml, wordRelsXml, stylesXml, contentTypes);
+  }
+}
+
+async function buildAndDownloadDocx(name, docXml, relsXml, wordRelsXml, stylesXml, contentTypes) {
+  const zip = new JSZip();
+  zip.file('[Content_Types].xml', contentTypes);
+  zip.file('_rels/.rels', relsXml);
+  zip.file('word/document.xml', docXml);
+  zip.file('word/_rels/document.xml.rels', wordRelsXml);
+  zip.file('word/styles.xml', stylesXml);
+  const blob = await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  triggerDownload(blob, name + '.docx');
+}
+
+function escXml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function downloadPptx(f) {
+  if (typeof PptxGenJS === 'undefined') {
+    loadScript('https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js', () => buildPptx(f));
+  } else {
+    buildPptx(f);
+  }
+}
+
+function buildPptx(f) {
+  const pptx = new PptxGenJS();
+  pptx.layout = 'LAYOUT_WIDE';
+  const DARK = '0f1117'; const ACCENT = '6c63ff'; const WHITE = 'FFFFFF'; const DIM = '8b90a8';
+
+  const isVision = f.content.vision !== undefined && f.content.pillars !== undefined;
+  const c = f.content;
+
+  // Slide 1: Title
+  const s1 = pptx.addSlide();
+  s1.background = { color: DARK };
+  s1.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: 0.08, fill: { color: ACCENT } });
+  s1.addText(isVision ? 'Product Vision' : 'Delivery Roadmap', { x: 0.5, y: 1.2, w: 12, h: 0.6, fontSize: 14, color: ACCENT, bold: false });
+  s1.addText(c.charter, { x: 0.5, y: 1.9, w: 12, h: 1.2, fontSize: 32, color: WHITE, bold: true });
+  s1.addText(c.dept, { x: 0.5, y: 3.3, w: 12, h: 0.4, fontSize: 14, color: DIM });
+
+  if (isVision) {
+    // Slide 2: Vision statement
+    const s2 = pptx.addSlide();
+    s2.background = { color: DARK };
+    s2.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: 0.08, fill: { color: ACCENT } });
+    s2.addText('OUR VISION', { x: 0.5, y: 0.4, w: 12, h: 0.4, fontSize: 11, color: ACCENT, bold: true });
+    s2.addText(c.vision, { x: 0.8, y: 1.0, w: 11.4, h: 2.5, fontSize: 22, color: WHITE, italic: true, align: 'center', valign: 'middle' });
+
+    // Slide 3: Strategic pillars
+    const s3 = pptx.addSlide();
+    s3.background = { color: DARK };
+    s3.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: 0.08, fill: { color: ACCENT } });
+    s3.addText('STRATEGIC PILLARS', { x: 0.5, y: 0.4, w: 12, h: 0.4, fontSize: 11, color: ACCENT, bold: true });
+    c.pillars.forEach((p, i) => {
+      const xPos = 0.3 + (i * 4.3);
+      s3.addShape(pptx.ShapeType.rect, { x: xPos, y: 1.0, w: 4.0, h: 2.8, fill: { color: '1a1d27' }, line: { color: ACCENT, width: 1 } });
+      s3.addText(`${i+1}`, { x: xPos+0.15, y: 1.15, w: 0.6, h: 0.6, fontSize: 20, color: ACCENT, bold: true });
+      const parts = p.split(':');
+      s3.addText(parts[0] || p, { x: xPos+0.15, y: 1.8, w: 3.7, h: 0.5, fontSize: 13, color: WHITE, bold: true });
+      if (parts[1]) s3.addText(parts[1].trim(), { x: xPos+0.15, y: 2.35, w: 3.7, h: 1.2, fontSize: 11, color: DIM });
+    });
+
+    // Slide 4: KPIs
+    const s4 = pptx.addSlide();
+    s4.background = { color: DARK };
+    s4.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: 0.08, fill: { color: ACCENT } });
+    s4.addText('KEY PERFORMANCE INDICATORS', { x: 0.5, y: 0.4, w: 12, h: 0.4, fontSize: 11, color: ACCENT, bold: true });
+    c.kpis.forEach((k, i) => {
+      const yPos = 1.0 + (i * 0.9);
+      s4.addShape(pptx.ShapeType.rect, { x: 0.5, y: yPos, w: 12, h: 0.75, fill: { color: '1a1d27' }, line: { color: '2e3248', width: 1 } });
+      s4.addText(k.name, { x: 0.7, y: yPos+0.1, w: 6, h: 0.3, fontSize: 12, color: WHITE, bold: true });
+      s4.addText(`${k.baseline} → ${k.target} ${k.unit}`, { x: 0.7, y: yPos+0.4, w: 8, h: 0.25, fontSize: 10, color: DIM });
+    });
+  } else {
+    // Roadmap slides
+    const s2 = pptx.addSlide();
+    s2.background = { color: DARK };
+    s2.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: 0.08, fill: { color: ACCENT } });
+    s2.addText('DELIVERY EPICS', { x: 0.5, y: 0.4, w: 12, h: 0.4, fontSize: 11, color: ACCENT, bold: true });
+    c.epics.forEach((e, i) => {
+      const yPos = 1.0 + (i * 1.0);
+      s2.addShape(pptx.ShapeType.rect, { x: 0.5, y: yPos, w: 12, h: 0.85, fill: { color: '1a1d27' }, line: { color: '2e3248', width: 1 } });
+      s2.addText(`Epic ${i+1}: ${e.name}`, { x: 0.7, y: yPos+0.08, w: 8, h: 0.3, fontSize: 13, color: WHITE, bold: true });
+      s2.addText(`${e.duration_weeks} weeks`, { x: 10.5, y: yPos+0.08, w: 2, h: 0.3, fontSize: 12, color: ACCENT, bold: true, align: 'right' });
+      s2.addText(e.description, { x: 0.7, y: yPos+0.42, w: 11, h: 0.3, fontSize: 10, color: DIM });
+    });
+
+    // Gantt-style timeline slide
+    const s3 = pptx.addSlide();
+    s3.background = { color: DARK };
+    s3.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: 0.08, fill: { color: ACCENT } });
+    s3.addText('DELIVERY TIMELINE', { x: 0.5, y: 0.4, w: 12, h: 0.4, fontSize: 11, color: ACCENT, bold: true });
+    const totalWeeks = c.epics.reduce((a,e) => a + e.duration_weeks, 0);
+    const barW = 11.5;
+    let startX = 0.5;
+    const barColors = ['4f46e5','7c3aed','0891b2','059669'];
+    c.epics.forEach((e, i) => {
+      const w = (e.duration_weeks / totalWeeks) * barW;
+      s3.addShape(pptx.ShapeType.rect, { x: startX, y: 1.2 + (i*0.8), w: w - 0.05, h: 0.6, fill: { color: barColors[i % 4] } });
+      s3.addText(`${e.name} (${e.duration_weeks}w)`, { x: startX+0.1, y: 1.25 + (i*0.8), w: w-0.2, h: 0.5, fontSize: 10, color: WHITE, bold: true });
+    });
+  }
+
+  pptx.writeFile({ fileName: f.name + '.pptx' });
+}
+
+function downloadXlsx(f) {
+  if (typeof XLSX === 'undefined') {
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js', () => buildXlsx(f));
+  } else {
+    buildXlsx(f);
+  }
+}
+
+function buildXlsx(f) {
+  const wb = XLSX.utils.book_new();
+  const c = f.content;
+
+  if (c.cost_items) {
+    // CBA workbook — two tabs
+    const costRows = [
+      ['Cost Item', 'Category', 'Year 1 (SGD)', 'Year 2 (SGD)', 'Year 3 (SGD)', '3-Year Total (SGD)'],
+      ...c.cost_items.map(i => [i.item, i.category, i.year1, i.year2, i.year3, i.year1+i.year2+i.year3]),
+      [],
+      ['TOTAL', '', c.cost_items.reduce((a,i)=>a+i.year1,0), c.cost_items.reduce((a,i)=>a+i.year2,0), c.cost_items.reduce((a,i)=>a+i.year3,0), c.cost_items.reduce((a,i)=>a+i.year1+i.year2+i.year3,0)]
+    ];
+    const wsC = XLSX.utils.aoa_to_sheet(costRows);
+    wsC['!cols'] = [{wch:40},{wch:25},{wch:16},{wch:16},{wch:16},{wch:18}];
+    XLSX.utils.book_append_sheet(wb, wsC, 'Implementation Costs');
+
+    const totalCostY1 = c.cost_items.reduce((a,i)=>a+i.year1,0);
+    const totalCostY2 = c.cost_items.reduce((a,i)=>a+i.year2,0);
+    const totalCostY3 = c.cost_items.reduce((a,i)=>a+i.year3,0);
+    const totalBenY1 = c.benefit_items.reduce((a,i)=>a+i.year1,0);
+    const totalBenY2 = c.benefit_items.reduce((a,i)=>a+i.year2,0);
+    const totalBenY3 = c.benefit_items.reduce((a,i)=>a+i.year3,0);
+
+    const benRows = [
+      ['Benefit', 'Type', 'Year 1 (SGD)', 'Year 2 (SGD)', 'Year 3 (SGD)', '3-Year Total (SGD)'],
+      ...c.benefit_items.map(i => [i.benefit, i.type, i.year1, i.year2, i.year3, i.year1+i.year2+i.year3]),
+      [],
+      ['TOTAL BENEFITS', '', totalBenY1, totalBenY2, totalBenY3, totalBenY1+totalBenY2+totalBenY3],
+      ['TOTAL COSTS', '', totalCostY1, totalCostY2, totalCostY3, totalCostY1+totalCostY2+totalCostY3],
+      ['NET VALUE', '', totalBenY1-totalCostY1, totalBenY2-totalCostY2, totalBenY3-totalCostY3, (totalBenY1+totalBenY2+totalBenY3)-(totalCostY1+totalCostY2+totalCostY3)],
+      [],
+      ['KPI TARGETS', '', '', '', '', ''],
+      ['KPI Name', 'Baseline', 'Target', 'Unit', '', ''],
+      ...c.kpis.map(k => [k.name, k.baseline, k.target, k.unit, '', ''])
+    ];
+    const wsB = XLSX.utils.aoa_to_sheet(benRows);
+    wsB['!cols'] = [{wch:45},{wch:20},{wch:16},{wch:16},{wch:16},{wch:18}];
+    XLSX.utils.book_append_sheet(wb, wsB, 'Benefits & KPIs');
+
+  } else {
+    // Roadmap epic breakdown
+    const epicRows = [
+      ['Epic', 'Description', 'Duration (weeks)', 'Est. Start Week', 'Est. End Week'],
+      ...c.epics.map((e,i) => {
+        const start = c.epics.slice(0,i).reduce((a,x)=>a+x.duration_weeks,1);
+        return [e.name, e.description, e.duration_weeks, start, start + e.duration_weeks - 1];
+      }),
+      [],
+      ['TOTAL', '', c.epics.reduce((a,e)=>a+e.duration_weeks,0), '', '']
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(epicRows);
+    ws['!cols'] = [{wch:30},{wch:50},{wch:18},{wch:18},{wch:18}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Epic Breakdown');
+
+    // Sprint plan tab
+    const sprintRows = [['Sprint', 'Epic', 'Focus Area', 'Deliverable']];
+    let sprintNum = 1;
+    c.epics.forEach(e => {
+      const sprints = Math.ceil(e.duration_weeks / 2);
+      for (let s=0; s<sprints; s++) {
+        sprintRows.push([`Sprint ${sprintNum}`, e.name, s===0 ? 'Kickoff & setup' : s===sprints-1 ? 'Testing & sign-off' : 'Development', e.description]);
+        sprintNum++;
+      }
+    });
+    const ws2 = XLSX.utils.aoa_to_sheet(sprintRows);
+    ws2['!cols'] = [{wch:12},{wch:30},{wch:20},{wch:50}];
+    XLSX.utils.book_append_sheet(wb, ws2, 'Sprint Plan');
+  }
+
+  XLSX.writeFile(wb, f.name + '.xlsx');
+}
+
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function loadScript(src, cb) {
+  const s = document.createElement('script');
+  s.src = src; s.onload = cb;
+  document.head.appendChild(s);
+}
+
+async function downloadAllFiles() {
+  if (typeof JSZip === 'undefined') {
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', () => setTimeout(downloadAllFiles, 500));
+    return;
+  }
+  showToast('Preparing ZIP — this may take a moment…', 'success');
+  // Download each file individually (ZIP of mixed binary types is complex client-side)
+  for (let i = 0; i < generatedFiles.length; i++) {
+    await new Promise(r => setTimeout(r, 300));
+    await downloadFile(i);
+  }
+  showToast('All files downloaded.', 'success');
+}
+
 
 // Close modals on overlay click
 document.querySelectorAll('.modal-overlay').forEach(o => {
