@@ -68,6 +68,18 @@
       "dest": "/api/approvals.js"
     },
     {
+      "src": "/hub",
+      "dest": "/public/hub.html"
+    },
+    {
+      "src": "/use-cases",
+      "dest": "/public/use-cases.html"
+    },
+    {
+      "src": "/architecture",
+      "dest": "/public/architecture.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/public/$1"
     }
