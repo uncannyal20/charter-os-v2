@@ -1730,6 +1730,18 @@ function toggleTheme() {
   localStorage.setItem('charter_os_theme', isLight ? 'light' : 'dark');
 }
 
+function navigateToRevision(section) {
+  const sectionMap = {
+    tor:     () => { navigate('team');    setTimeout(() => switchTab('team','tor'), 100); },
+    problem: () => { navigate('problem'); setTimeout(() => switchTab('problem','refine'), 100); },
+    vision:  () => { navigate('vision');  setTimeout(() => switchTab('vision','refine'), 100); },
+    kpis:    () => { navigate('kpis');    setTimeout(() => switchTab('kpis','table'), 100); },
+    roadmap: () => { navigate('roadmap'); setTimeout(() => switchTab('roadmap','phases'), 100); },
+    cba:     () => { navigate('kpis');    setTimeout(() => switchTab('kpis','cba'), 100); },
+  };
+  if (sectionMap[section]) sectionMap[section]();
+}
+
 function navigate(id) {
   screens.forEach(s => {
     document.getElementById('screen-'+s).classList.toggle('active', s===id);
@@ -1894,7 +1906,7 @@ function renderDashboard() {
     if (revisions.length > 0) {
       const items = revisions.map(([key, ap]) => {
         const commentCount = (ap.annotations || []).length;
-        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(245,166,35,0.06);border-radius:6px;margin-bottom:6px">
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.3);border-radius:6px;margin-bottom:6px">
           <div style="display:flex;align-items:center;gap:10px">
             <span style="font-size:16px">🟠</span>
             <div>
@@ -1902,13 +1914,13 @@ function renderDashboard() {
               <div style="font-size:11px;color:var(--text3);margin-top:2px">${commentCount} inline comment${commentCount!==1?'s':''} from Product Owner${ap.comment ? ' · "' + ap.comment.substring(0,60) + (ap.comment.length>60?'…':'') + '"' : ''}</div>
             </div>
           </div>
-          <button onclick="navigate('${key === 'tor' ? 'team' : key}')" style="background:rgba(245,166,35,0.15);border:1px solid rgba(245,166,35,0.3);color:var(--amber);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer">View & Revise →</button>
+          <button onclick="navigateToRevision('${key}')" style="background:rgba(245,166,35,0.15);border:1px solid rgba(245,166,35,0.3);color:var(--amber);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer">View & Revise →</button>
         </div>`;
       }).join('');
 
       notifEl.style.display = 'block';
       notifEl.innerHTML = `
-        <div style="background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.25);border-radius:10px;padding:16px 18px">
+        <div style="background:rgba(245,166,35,0.18);border:2px solid rgba(245,166,35,0.5);border-radius:10px;padding:16px 18px;box-shadow:0 0 0 4px rgba(245,166,35,0.06)">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
             <span style="font-size:14px">🔔</span>
             <span style="font-size:13px;font-weight:700;color:var(--amber)">Product Owner Feedback — ${revisions.length} section${revisions.length!==1?'s':''} need${revisions.length===1?'s':''} revision</span>
