@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CharterOS — Super Admin</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222536;
+    --border: #2e3248;
+    --accent: #6c63ff;
+    --accent-dim: #3d3878;
+    --danger: #e05252;
+    --success: #3ecf8e;
+    --warning: #f5a623;
+    --text: #e8eaf0;
+    --text-dim: #8b90a8;
+    --text-muted: #555a72;
+    --font-ui: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-ui);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* ── LOGIN ─────────────────────────────────────────────── */
+  #login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+  }
+
+  .login-box {
+    width: 360px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px 36px;
+  }
+
+  .login-box .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .login-box .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800; color: #fff;
+    letter-spacing: -1px;
+  }
+
+  .login-box .logo-text {
+    font-size: 15px; font-weight: 600; color: var(--text);
+    line-height: 1.2;
+  }
+
+  .login-box .logo-sub {
+    font-size: 10px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  .login-box h2 {
+    font-size: 20px; font-weight: 700; margin-bottom: 6px;
+  }
+
+  .login-box p {
+    font-size: 13px; color: var(--text-dim); margin-bottom: 28px;
+  }
+
+  .field { margin-bottom: 16px; }
+
+  .field label {
+    display: block; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    color: var(--text-dim); margin-bottom: 6px;
+  }
+
+  .field input {
+    width: 100%; padding: 10px 12px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text);
+    font-family: var(--font-ui); font-size: 14px;
+    outline: none; transition: border-color 0.15s;
+  }
+
+  .field input:focus { border-color: var(--accent); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 16px; border-radius: 6px; border: none;
+    font-family: var(--font-ui); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn:active { transform: scale(0.98); }
+
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-ghost {
+    background: transparent; color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text-dim); opacity: 1; }
+  .btn-success { background: var(--success); color: #0f1117; }
+  .btn-full { width: 100%; justify-content: center; }
+
+  .error-msg {
+    background: rgba(224,82,82,0.12); border: 1px solid rgba(224,82,82,0.3);
+    color: var(--danger); padding: 10px 12px; border-radius: 6px;
+    font-size: 13px; margin-top: 12px; display: none;
+  }
+
+  /* ── APP SHELL ─────────────────────────────────────────── */
+  #app { display: none; min-height: 100vh; }
+
+  .topbar {
+    height: 56px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+    position: sticky; top: 0; z-index: 100;
+  }
+
+  .topbar-logo {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; font-weight: 700; color: var(--text);
+    flex-shrink: 0;
+  }
+
+  .topbar-logo-icon {
+    width: 28px; height: 28px; background: var(--accent);
+    border-radius: 6px; display: flex; align-items: center;
+    justify-content: center; font-size: 12px; font-weight: 800; color: #fff;
+  }
+
+  .topbar-badge {
+    font-size: 10px; font-weight: 700; padding: 2px 7px;
+    border-radius: 20px; background: rgba(108,99,255,0.2);
+    color: var(--accent); text-transform: uppercase; letter-spacing: 0.8px;
+    border: 1px solid var(--accent-dim);
+  }
+
+  .topbar-user {
+    margin-left: auto; display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--text-dim);
+  }
+
+  .topbar-user span { color: var(--text); font-weight: 500; }
+
+  /* ── TABS ──────────────────────────────────────────────── */
+  .tabs {
+    display: flex; gap: 2px;
+    padding: 16px 24px 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .tab {
+    padding: 10px 18px; font-size: 13px; font-weight: 500;
+    color: var(--text-dim); cursor: pointer; border-radius: 6px 6px 0 0;
+    border: 1px solid transparent; border-bottom: none;
+    transition: color 0.15s, background 0.15s;
+    position: relative; bottom: -1px;
+  }
+
+  .tab:hover { color: var(--text); }
+
+  .tab.active {
+    color: var(--text); background: var(--bg);
+    border-color: var(--border);
+  }
+
+  /* ── CONTENT ───────────────────────────────────────────── */
+  .content { padding: 28px 24px; max-width: 1000px; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .panel-header h2 {
+    font-size: 18px; font-weight: 700;
+  }
+
+  .panel-header p {
+    font-size: 13px; color: var(--text-dim); margin-top: 2px;
+  }
+
+  /* ── TABLE ─────────────────────────────────────────────── */
+  .data-table {
+    width: 100%; border-collapse: collapse;
+    background: var(--surface); border-radius: 10px;
+    overflow: hidden; border: 1px solid var(--border);
+  }
+
+  .data-table th {
+    text-align: left; padding: 11px 16px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.8px; color: var(--text-muted);
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+  }
+
+  .data-table td {
+    padding: 13px 16px; border-bottom: 1px solid var(--border);
+    font-size: 13px; vertical-align: middle;
+  }
+
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(108,99,255,0.04); }
+
+  .td-mono {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--accent); background: rgba(108,99,255,0.08);
+    padding: 3px 7px; border-radius: 4px; display: inline-block;
+  }
+
+  .td-dim { color: var(--text-dim); }
+
+  .row-actions { display: flex; gap: 6px; }
+
+  /* ── MODAL ─────────────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: none; align-items: center; justify-content: center;
+    z-index: 200; padding: 20px;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; width: 480px; max-width: 100%;
+    padding: 28px;
+  }
+
+  .modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 20px; }
+
+  .modal-actions {
+    display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px;
+  }
+
+  /* ── TOAST ─────────────────────────────────────────────── */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 12px 18px; border-radius: 8px;
+    font-size: 13px; font-weight: 500; opacity: 0;
+    transform: translateY(8px); transition: all 0.2s;
+    pointer-events: none; z-index: 999; max-width: 320px;
+  }
+
+  #toast.show { opacity: 1; transform: translateY(0); }
+  #toast.success { border-color: var(--success); color: var(--success); }
+  #toast.error { border-color: var(--danger); color: var(--danger); }
+
+  /* ── LOADING ───────────────────────────────────────────── */
+  .loading {
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px; color: var(--text-muted); font-size: 13px; gap: 10px;
+  }
+
+  .spinner {
+    width: 16px; height: 16px; border: 2px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state {
+    text-align: center; padding: 48px 24px; color: var(--text-muted);
+  }
+  .empty-state p { margin-top: 8px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ──────────────────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="logo">
+      <div class="logo-icon">C</div>
+      <div>
+        <div class="logo-text">CharterOS</div>
+        <div class="logo-sub">Super Admin</div>
+      </div>
+    </div>
+    <h2>Sign in</h2>
+    <p>Account management access only.</p>
+    <div class="field">
+      <label>User ID</label>
+      <input type="text" id="login-email" placeholder="superadmin" autocomplete="off"/>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••"/>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()">Sign in</button>
+    <div class="error-msg" id="login-error">Incorrect email or password.</div>
+  </div>
+</div>
+
+<!-- ── APP ────────────────────────────────────────────────────── -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">C</div>
+      CharterOS
+    </div>
+    <div class="topbar-badge">Super Admin</div>
+    <div class="topbar-user">
+      Signed in as <span id="admin-name-display">—</span>
+      <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px;" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('teams')">Teams</div>
+    <div class="tab" onclick="switchTab('pos')">Product Owners</div>
+    <div class="tab" onclick="switchTab('admins')">Admins</div>
+  </div>
+
+  <div class="content">
+
+    <!-- TEAMS PANEL -->
+    <div class="panel active" id="panel-teams">
+      <div class="panel-header">
+        <div>
+          <h2>Teams</h2>
+          <p>Manage team accounts used on the main CharterOS login.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('team')">+ Add team</button>
+      </div>
+      <div id="teams-table-wrap"><div class="loading"><div class="spinner"></div> Loading…</div></div>
+    </div>
+
+    <!-- PRODUCT OWNERS PANEL -->
+    <div class="panel" id="panel-pos">
+      <div class="panel-header">
+        <div>
+          <h2>Product Owners</h2>
+          <p>Manage PO accounts used on the Approval portal.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('po')">+ Add product owner</button>
+      </div>
+      <div id="pos-table-wrap"><div class="loading"><div class="spinner"></div> Loading…</div></div>
+    </div>
+
+    <!-- ADMINS PANEL -->
+    <div class="panel" id="panel-admins">
+      <div class="panel-header">
+        <div>
+          <h2>Admins</h2>
+          <p>Manage accounts used on the TPO Admin portal.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('admin')">+ Add admin</button>
+      </div>
+      <div id="admins-table-wrap"><div class="loading"><div class="spinner"></div> Loading…</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── MODALS ──────────────────────────────────────────────────── -->
+
+<!-- Team modal -->
+<div class="modal-overlay" id="modal-team">
+  <div class="modal">
+    <h3 id="team-modal-title">Add team</h3>
+    <input type="hidden" id="team-edit-id"/>
+    <div class="field">
+      <label>Team ID</label>
+      <input type="text" id="team-id" placeholder="e.g. team-f"/>
+    </div>
+    <div class="field">
+      <label>Team / Charter name</label>
+      <input type="text" id="team-name" placeholder="e.g. Digital Permit Services Platform"/>
+    </div>
+    <div class="field">
+      <label>Department</label>
+      <input type="text" id="team-dept" placeholder="e.g. Building Services Group"/>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="text" id="team-password" placeholder="e.g. teamF2026"/>
+    </div>
+    <div class="error-msg" id="team-modal-error"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('team')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTeam()">Save team</button>
+    </div>
+  </div>
+</div>
+
+<!-- PO modal -->
+<div class="modal-overlay" id="modal-po">
+  <div class="modal">
+    <h3 id="po-modal-title">Add product owner</h3>
+    <input type="hidden" id="po-edit-team-id"/>
+    <div class="field">
+      <label>Team</label>
+      <select id="po-team-id" style="width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:14px;outline:none;">
+        <option value="">Select a team…</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Name</label>
+      <input type="text" id="po-name" placeholder="e.g. Sarah Tan"/>
+    </div>
+    <div class="field">
+      <label>Login email</label>
+      <input type="text" id="po-email" placeholder="e.g. po.teamf@charteros.app"/>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="text" id="po-password" placeholder="e.g. poF2026"/>
+    </div>
+    <div class="error-msg" id="po-modal-error"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('po')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePO()">Save product owner</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin modal -->
+<div class="modal-overlay" id="modal-admin">
+  <div class="modal">
+    <h3 id="admin-modal-title">Add admin</h3>
+    <input type="hidden" id="admin-edit-id"/>
+    <div class="field">
+      <label>Name</label>
+      <input type="text" id="admin-name" placeholder="e.g. TPO Admin 2"/>
+    </div>
+    <div class="field">
+      <label>Login email</label>
+      <input type="text" id="admin-email" placeholder="e.g. admin2@charteros.app"/>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="text" id="admin-password" placeholder="e.g. admin2026"/>
+    </div>
+    <div class="error-msg" id="admin-modal-error"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('admin')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAdmin()">Save admin</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm modal -->
+<div class="modal-overlay" id="modal-delete">
+  <div class="modal">
+    <h3>Delete account</h3>
+    <p style="color:var(--text-dim);font-size:14px;margin-bottom:20px;">
+      Are you sure? This cannot be undone.
+    </p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('delete')">Cancel</button>
+      <button class="btn btn-danger" id="delete-confirm-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────
+const SUPERADMIN_EMAIL = 'superadmin';
+const SUPERADMIN_PASSWORD = 'superadmin2026';
+const API_BASE = '/api';
+
+// ── STATE ─────────────────────────────────────────────────────
+let currentAdmin = null;
+let teamsData = [];
+let posData = [];
+let adminsData = [];
+
+// ── LOGIN ─────────────────────────────────────────────────────
+function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+
+  if (email === SUPERADMIN_EMAIL && password === SUPERADMIN_PASSWORD) {
+    currentAdmin = { email, name: 'Super Admin' };
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('admin-name-display').textContent = currentAdmin.name;
+    loadAll();
+  } else {
+    err.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  currentAdmin = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-password').value = '';
+}
+
+document.getElementById('login-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+// ── TABS ──────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-' + (tab === 'pos' ? 'pos' : tab === 'admins' ? 'admins' : 'teams')).classList.add('active');
+}
+
+// ── LOAD ALL ──────────────────────────────────────────────────
+async function loadAll() {
+  await Promise.all([loadTeams(), loadPOs(), loadAdmins()]);
+}
+
+// ── TEAMS ─────────────────────────────────────────────────────
+async function loadTeams() {
+  const wrap = document.getElementById('teams-table-wrap');
+  wrap.innerHTML = '<div class="loading"><div class="spinner"></div> Loading…</div>';
+  try {
+    const r = await fetch(`${API_BASE}/teams?action=list`);
+    teamsData = await r.json();
+    renderTeamsTable();
+  } catch(e) {
+    wrap.innerHTML = '<div class="loading">Failed to load teams.</div>';
+  }
+}
+
+function renderTeamsTable() {
+  const wrap = document.getElementById('teams-table-wrap');
+  if (!teamsData.length) {
+    wrap.innerHTML = '<div class="empty-state"><strong>No teams yet</strong><p>Add the first team to get started.</p></div>';
+    return;
+  }
+  wrap.innerHTML = `
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Team ID</th>
+          <th>Charter name</th>
+          <th>Department</th>
+          <th>Password</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${teamsData.map(t => `
+          <tr>
+            <td><span class="td-mono">${t.team_id}</span></td>
+            <td>${t.team_name}</td>
+            <td class="td-dim">${t.department}</td>
+            <td><span class="td-mono">${t.password}</span></td>
+            <td>
+              <div class="row-actions">
+                <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px;" onclick="editTeam('${t.team_id}')">Edit</button>
+                <button class="btn btn-danger" style="padding:5px 10px;font-size:12px;" onclick="confirmDelete('team','${t.team_id}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>`;
+}
+
+function openModal(type, data = null) {
+  if (type === 'team') {
+    document.getElementById('team-modal-title').textContent = data ? 'Edit team' : 'Add team';
+    document.getElementById('team-edit-id').value = data ? data.team_id : '';
+    document.getElementById('team-id').value = data ? data.team_id : '';
+    document.getElementById('team-id').disabled = !!data;
+    document.getElementById('team-name').value = data ? data.team_name : '';
+    document.getElementById('team-dept').value = data ? data.department : '';
+    document.getElementById('team-password').value = data ? data.password : '';
+    document.getElementById('team-modal-error').style.display = 'none';
+    document.getElementById('modal-team').classList.add('open');
+  } else if (type === 'po') {
+    document.getElementById('po-modal-title').textContent = data ? 'Edit product owner' : 'Add product owner';
+    document.getElementById('po-edit-team-id').value = data ? data.team_id : '';
+    // populate team select
+    const sel = document.getElementById('po-team-id');
+    sel.innerHTML = '<option value="">Select a team…</option>' +
+      teamsData.map(t => `<option value="${t.team_id}" ${data && data.team_id === t.team_id ? 'selected' : ''}>${t.team_id} — ${t.team_name}</option>`).join('');
+    sel.disabled = !!data;
+    document.getElementById('po-name').value = data ? data.name : '';
+    document.getElementById('po-email').value = data ? data.email : '';
+    document.getElementById('po-password').value = data ? data.password : '';
+    document.getElementById('po-modal-error').style.display = 'none';
+    document.getElementById('modal-po').classList.add('open');
+  } else if (type === 'admin') {
+    document.getElementById('admin-modal-title').textContent = data ? 'Edit admin' : 'Add admin';
+    document.getElementById('admin-edit-id').value = data ? data.id : '';
+    document.getElementById('admin-name').value = data ? data.name : '';
+    document.getElementById('admin-email').value = data ? data.email : '';
+    document.getElementById('admin-password').value = data ? data.password || '' : '';
+    document.getElementById('admin-modal-error').style.display = 'none';
+    document.getElementById('modal-admin').classList.add('open');
+  }
+}
+
+function closeModal(type) {
+  document.getElementById('modal-' + type).classList.remove('open');
+}
+
+function editTeam(team_id) {
+  const t = teamsData.find(x => x.team_id === team_id);
+  if (t) openModal('team', t);
+}
+
+async function saveTeam() {
+  const editId = document.getElementById('team-edit-id').value;
+  const team_id = document.getElementById('team-id').value.trim();
+  const team_name = document.getElementById('team-name').value.trim();
+  const department = document.getElementById('team-dept').value.trim();
+  const password = document.getElementById('team-password').value.trim();
+  const errEl = document.getElementById('team-modal-error');
+  errEl.style.display = 'none';
+
+  if (!team_id || !team_name || !department || !password) {
+    errEl.textContent = 'All fields are required.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    let r;
+    if (editId) {
+      r = await fetch(`${API_BASE}/teams?action=update`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_id: editId, team_name, department, password })
+      });
+    } else {
+      r = await fetch(`${API_BASE}/teams?action=create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_id, team_name, department, password })
+      });
+    }
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Save failed');
+    closeModal('team');
+    showToast(editId ? 'Team updated.' : 'Team created.', 'success');
+    await loadTeams();
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+// ── PRODUCT OWNERS ────────────────────────────────────────────
+async function loadPOs() {
+  const wrap = document.getElementById('pos-table-wrap');
+  wrap.innerHTML = '<div class="loading"><div class="spinner"></div> Loading…</div>';
+  try {
+    const r = await fetch(`${API_BASE}/product-owners?action=list`);
+    posData = await r.json();
+    renderPOsTable();
+  } catch(e) {
+    wrap.innerHTML = '<div class="loading">Failed to load product owners.</div>';
+  }
+}
+
+function renderPOsTable() {
+  const wrap = document.getElementById('pos-table-wrap');
+  if (!posData.length) {
+    wrap.innerHTML = '<div class="empty-state"><strong>No product owners yet</strong><p>Add a product owner for each team.</p></div>';
+    return;
+  }
+  wrap.innerHTML = `
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Team</th>
+          <th>Name</th>
+          <th>Login email</th>
+          <th>Password</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${posData.map(p => `
+          <tr>
+            <td><span class="td-mono">${p.team_id}</span></td>
+            <td>${p.name}</td>
+            <td class="td-dim">${p.email}</td>
+            <td><span class="td-mono">${p.password}</span></td>
+            <td>
+              <div class="row-actions">
+                <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px;" onclick="editPO('${p.team_id}')">Edit</button>
+                <button class="btn btn-danger" style="padding:5px 10px;font-size:12px;" onclick="confirmDelete('po','${p.team_id}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>`;
+}
+
+function editPO(team_id) {
+  const p = posData.find(x => x.team_id === team_id);
+  if (p) openModal('po', p);
+}
+
+async function savePO() {
+  const editTeamId = document.getElementById('po-edit-team-id').value;
+  const team_id = document.getElementById('po-team-id').value;
+  const name = document.getElementById('po-name').value.trim();
+  const email = document.getElementById('po-email').value.trim();
+  const password = document.getElementById('po-password').value.trim();
+  const errEl = document.getElementById('po-modal-error');
+  errEl.style.display = 'none';
+
+  if (!team_id || !name || !email || !password) {
+    errEl.textContent = 'All fields are required.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    let r;
+    if (editTeamId) {
+      r = await fetch(`${API_BASE}/product-owners?action=update`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_id: editTeamId, name, email, password })
+      });
+    } else {
+      r = await fetch(`${API_BASE}/product-owners?action=create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_id, name, email, password })
+      });
+    }
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Save failed');
+    closeModal('po');
+    showToast(editTeamId ? 'Product owner updated.' : 'Product owner created.', 'success');
+    await loadPOs();
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+// ── ADMINS ────────────────────────────────────────────────────
+async function loadAdmins() {
+  const wrap = document.getElementById('admins-table-wrap');
+  wrap.innerHTML = '<div class="loading"><div class="spinner"></div> Loading…</div>';
+  try {
+    const r = await fetch(`${API_BASE}/admins?action=list`);
+    adminsData = await r.json();
+    renderAdminsTable();
+  } catch(e) {
+    wrap.innerHTML = '<div class="loading">Failed to load admins.</div>';
+  }
+}
+
+function renderAdminsTable() {
+  const wrap = document.getElementById('admins-table-wrap');
+  if (!adminsData.length) {
+    wrap.innerHTML = '<div class="empty-state"><strong>No admins yet</strong></div>';
+    return;
+  }
+  wrap.innerHTML = `
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Login email</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${adminsData.map(a => `
+          <tr>
+            <td>${a.name}</td>
+            <td class="td-dim">${a.email}</td>
+            <td class="td-dim">${new Date(a.created_at).toLocaleDateString('en-SG', {day:'numeric',month:'short',year:'numeric'})}</td>
+            <td>
+              <div class="row-actions">
+                <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px;" onclick="editAdmin('${a.id}')">Edit / Reset pw</button>
+                <button class="btn btn-danger" style="padding:5px 10px;font-size:12px;" onclick="confirmDelete('admin','${a.id}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>`;
+}
+
+function editAdmin(id) {
+  const a = adminsData.find(x => x.id === id);
+  if (a) openModal('admin', a);
+}
+
+async function saveAdmin() {
+  const editId = document.getElementById('admin-edit-id').value;
+  const name = document.getElementById('admin-name').value.trim();
+  const email = document.getElementById('admin-email').value.trim();
+  const password = document.getElementById('admin-password').value.trim();
+  const errEl = document.getElementById('admin-modal-error');
+  errEl.style.display = 'none';
+
+  if (!name || !email || !password) {
+    errEl.textContent = 'All fields are required.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    let r;
+    if (editId) {
+      r = await fetch(`${API_BASE}/admins?action=update`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: editId, name, email, password })
+      });
+    } else {
+      r = await fetch(`${API_BASE}/admins?action=create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+    }
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Save failed');
+    closeModal('admin');
+    showToast(editId ? 'Admin updated.' : 'Admin created.', 'success');
+    await loadAdmins();
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+// ── DELETE ────────────────────────────────────────────────────
+function confirmDelete(type, id) {
+  const btn = document.getElementById('delete-confirm-btn');
+  btn.onclick = () => doDelete(type, id);
+  document.getElementById('modal-delete').classList.add('open');
+}
+
+async function doDelete(type, id) {
+  closeModal('delete');
+  try {
+    let r;
+    if (type === 'team') {
+      r = await fetch(`${API_BASE}/teams?action=delete&team_id=${id}`, { method: 'DELETE' });
+      await loadTeams();
+    } else if (type === 'po') {
+      r = await fetch(`${API_BASE}/product-owners?action=delete&team_id=${id}`, { method: 'DELETE' });
+      await loadPOs();
+    } else if (type === 'admin') {
+      r = await fetch(`${API_BASE}/admins?action=delete&id=${id}`, { method: 'DELETE' });
+      await loadAdmins();
+    }
+    if (!r.ok) throw new Error('Delete failed');
+    showToast('Account deleted.', 'success');
+  } catch(e) {
+    showToast('Delete failed. Try again.', 'error');
+  }
+}
+
+// ── TOAST ─────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  setTimeout(() => { t.className = ''; }, 3000);
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => {
+    if (e.target === o) o.classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>
