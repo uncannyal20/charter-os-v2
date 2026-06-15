@@ -396,6 +396,34 @@ function renderSection(key) {
     </div>` : '';
 
   const commentCount = (pendingComments[key] || []).length;
+  // Build team replies display if any exist
+  const teamReplies = ap.team_replies || {};
+  const hasReplies = Object.keys(teamReplies).length > 0;
+  const teamRepliesHtml = hasReplies && (status === 'pending' || status === 'approved') ? (() => {
+    const prevAnnotations = ap.annotations || [];
+    let html = '<div style="background:rgba(79,124,255,0.08);border:1px solid rgba(79,124,255,0.2);border-left:3px solid #4f7cff;border-radius:0 8px 8px 0;padding:14px 16px;margin:0 0 16px 0">';
+    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#4f7cff;margin-bottom:10px">Team Responses to PO Comments</div>';
+    if (teamReplies['overall'] && ap.comment) {
+      html += '<div style="background:rgba(79,124,255,0.08);border-radius:6px;padding:10px 12px;margin-bottom:8px">';
+      html += '<div style="font-size:11px;font-weight:700;color:#4f7cff;margin-bottom:4px">Re: Overall note</div>';
+      html += '<div style="font-size:12px;color:#8b90a8;margin-bottom:6px;font-style:italic">"' + ap.comment + '"</div>';
+      html += '<div style="font-size:13px;color:#a5b4fc;line-height:1.6"><strong style="color:#4f7cff">Team:</strong> ' + teamReplies['overall'] + '</div>';
+      html += '</div>';
+    }
+    prevAnnotations.forEach((a, i) => {
+      const replyKey = 'annotation-' + i;
+      if (teamReplies[replyKey]) {
+        html += '<div style="background:rgba(79,124,255,0.08);border-radius:6px;padding:10px 12px;margin-bottom:8px">';
+        html += '<div style="font-size:11px;color:#8b90a8;margin-bottom:4px"><span style="color:#4f7cff;font-weight:700">Re: </span><em>' + (a.snippetText||'') + '…</em></div>';
+        html += '<div style="font-size:12px;color:#8b90a8;margin-bottom:6px;padding-left:8px;border-left:2px solid rgba(239,68,68,0.3);font-style:italic">' + a.text + '</div>';
+        html += '<div style="font-size:13px;color:#a5b4fc;line-height:1.6"><strong style="color:#4f7cff">Team:</strong> ' + teamReplies[replyKey] + '</div>';
+        html += '</div>';
+      }
+    });
+    html += '</div>';
+    return html;
+  })() : '';
+
   const poToolbar = !isApproved && isSubmitted ? `
     <div class="po-toolbar">
       <strong>PO Review Mode</strong> — hover over any paragraph and click + to add a comment
@@ -414,6 +442,7 @@ function renderSection(key) {
       </div>
       ${actionBar}
       ${submittedBanner}
+      ${teamRepliesHtml}
       ${poToolbar}
       ${contentHtml}
     </div>`;

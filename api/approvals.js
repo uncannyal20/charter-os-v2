@@ -39,12 +39,14 @@ export default async function handler(req, res) {
     const existing = await fetch(`${SUPABASE_URL}/rest/v1/approvals?team_id=eq.${team_id}&section=eq.${section}&select=id`, { headers });
     const existingData = await existing.json();
 
+    const { team_replies } = req.body;
     const payload = {
       status: 'pending',
       submitted_by: submitted_by || 'Team',
       submitted_at: new Date().toISOString(),
       comment: null,
       annotations: [],
+      team_replies: team_replies || {},
       reviewed_at: null
     };
 
