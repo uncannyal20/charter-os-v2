@@ -636,8 +636,48 @@ async function sendBackSection(key) {
   }
 }
 
+function stripEditColours(html) {
+  if (!html) return html;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  tmp.querySelectorAll('span[style*="color"]').forEach(span => {
+    const parent = span.parentNode;
+    while (span.firstChild) parent.insertBefore(span.firstChild, span);
+    parent.removeChild(span);
+  });
+  return tmp.innerHTML;
+}
+
 async function approveSection(key) {
   try {
+    // Strip team edit colours from charter state before approving
+    const cr = await fetch(`${API}/load-charter?team_id=${currentPO.team_id}`);
+    const cd = await cr.json();
+    if (cd.state) {
+      const state = typeof cd.state === 'string' ? JSON.parse(cd.state) : cd.state;
+      if (key === 'tor' && state.tor) {
+        state.tor = stripEditColours(state.tor);
+      } else if (state[key] && state[key].draft) {
+        state[key].draft = stripEditColours(state[key].draft);
+      }
+      await fetch(`${API}/save-charter`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          team_id: currentPO.team_id,
+          charter_name: cd.charter_name || 'Untitled Charter',
+          state,
+          progress_team: cd.progress_team || 0,
+          progress_problem: cd.progress_problem || 0,
+          progress_vision: cd.progress_vision || 0,
+          progress_kpis: cd.progress_kpis || 0,
+          progress_roadmap: cd.progress_roadmap || 0,
+          progress_overall: cd.progress_overall || 0
+        })
+      });
+      charterState = state;
+    }
+
     const r = await fetch(`${API}/approvals?action=update`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -653,7 +693,7 @@ async function approveSection(key) {
     if (!r.ok) throw new Error('Save failed');
     approvals[key] = { ...(approvals[key] || {}), status: 'approved', comment: '', annotations: [] };
     pendingComments[key] = [];
-    showToast('Section approved ✓', 'success');
+    showToast('Section approved ✓ — edit colours removed', 'success');
     renderSection(key);
     renderSidebar();
   } catch(e) {
