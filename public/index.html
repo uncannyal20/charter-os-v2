@@ -696,20 +696,73 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
   function getRevisionComments(section) {
     const ap = APPROVALS[section];
     if (!ap || ap.status !== 'revision') return '';
+    if (!window._teamReplies) window._teamReplies = {};
+    if (!window._teamReplies[section]) window._teamReplies[section] = {};
+
     let html = '<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-left:3px solid #ef4444;border-radius:0 8px 8px 0;padding:14px 16px;margin:0 0 16px 0">';
-    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#ef4444;margin-bottom:8px">PO Review — Revision Required</div>';
+    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#ef4444;margin-bottom:12px">PO Review — Revision Required</div>';
+
     if (ap.comment) {
-      html += '<div style="font-size:13px;color:#fca5a5;margin-bottom:8px;line-height:1.6"><strong>Overall note:</strong> ' + ap.comment + '</div>';
+      const overallReply = (window._teamReplies[section]['overall'] || '');
+      html += '<div style="background:rgba(239,68,68,0.08);border-radius:6px;padding:10px 12px;margin-bottom:10px">';
+      html += '<div style="font-size:11px;font-weight:700;color:#ef4444;margin-bottom:4px">Overall note from PO</div>';
+      html += '<div style="font-size:13px;color:#fca5a5;line-height:1.6;margin-bottom:8px">' + ap.comment + '</div>';
+      html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#8b90a8;margin-bottom:4px">Your response</div>';
+      html += '<textarea id="reply-' + section + '-overall" onchange="saveTeamReply('' + section + '','overall',this.value)" placeholder="Acknowledge or respond to this note…" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(239,68,68,0.2);border-radius:6px;padding:8px 10px;font-size:12px;color:#e8eaf0;font-family:var(--font-body);resize:vertical;min-height:56px;outline:none">' + overallReply + '</textarea>';
+      html += '</div>';
     }
+
     const annotations = ap.annotations || [];
     if (annotations.length > 0) {
-      html += '<div style="font-size:11px;font-weight:600;color:#fca5a5;margin-bottom:6px">' + annotations.length + ' inline comment' + (annotations.length > 1 ? 's' : '') + ':</div>';
-      annotations.forEach((a, i) => {
-        html += '<div style="background:rgba(239,68,68,0.1);border-radius:6px;padding:8px 10px;margin-bottom:6px;font-size:12px;color:#fca5a5"><span style="color:#ef4444;font-weight:700">On: </span><em>' + (a.snippetText || '') + '…</em><br><span style="color:#fca5a5;margin-top:4px;display:block">' + a.text + '</span></div>';
+      html += '<div style="font-size:11px;font-weight:600;color:#fca5a5;margin-bottom:8px">' + annotations.length + ' inline comment' + (annotations.length > 1 ? 's' : '') + '</div>';
+      annotations.forEach(function(a, i) {
+        const replyKey = 'annotation-' + i;
+        const existingReply = (window._teamReplies[section][replyKey] || '');
+        html += '<div style="background:rgba(239,68,68,0.08);border-radius:6px;padding:10px 12px;margin-bottom:8px">';
+        html += '<div style="font-size:11px;color:#fca5a5;margin-bottom:6px"><span style="color:#ef4444;font-weight:700">On: </span><em>' + (a.snippetText||'') + '…</em></div>';
+        html += '<div style="font-size:12px;color:#fca5a5;line-height:1.6;margin-bottom:8px;padding-left:8px;border-left:2px solid rgba(239,68,68,0.3)">' + a.text + '</div>';
+        html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#8b90a8;margin-bottom:4px">Your response</div>';
+        html += '<textarea id="reply-' + section + '-' + replyKey + '" onchange="saveTeamReply('' + section + '','' + replyKey + '',this.value)" placeholder="How will you address this?…" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(239,68,68,0.2);border-radius:6px;padding:8px 10px;font-size:12px;color:#e8eaf0;font-family:var(--font-body);resize:vertical;min-height:56px;outline:none">' + existingReply + '</textarea>';
+        html += '</div>';
       });
     }
+
+    html += '<div style="display:flex;justify-content:flex-end;margin-top:10px">';
+    html += '<button onclick="saveAllReplies('' + section + '')" style="background:var(--accent);color:white;border:none;border-radius:6px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer">💬 Save responses & resubmit</button>';
+    html += '</div>';
     html += '</div>';
     return html;
+  }
+
+  function saveTeamReply(section, key, value) {
+    if (!window._teamReplies) window._teamReplies = {};
+    if (!window._teamReplies[section]) window._teamReplies[section] = {};
+    window._teamReplies[section][key] = value;
+  }
+
+  async function saveAllReplies(section) {
+    if (!CURRENT_TEAM) return;
+    const replies = (window._teamReplies && window._teamReplies[section]) || {};
+    try {
+      const r = await fetch('/api/approvals?action=submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_id: CURRENT_TEAM.id, section, submitted_by: 'Product Manager' })
+      });
+      if (!r.ok) throw new Error('Resubmit failed');
+      APPROVALS[section] = { ...(APPROVALS[section]||{}), status: 'pending', submitted_by: 'Product Manager', submitted_at: new Date().toISOString(), team_replies: replies };
+      if (window._teamReplies) window._teamReplies[section] = {};
+      const labelMap = { tor:'Terms of Reference', problem:'Problem Statement', vision:'Vision & Strategy', kpis:'KPIs & Metrics', roadmap:'Roadmap', cba:'Cost-Benefit Analysis' };
+      logActivity('<strong>' + (labelMap[section]||section) + '</strong> revised and resubmitted to PO', 'var(--accent)');
+      toast('Responses saved — section resubmitted to PO ✓', 'success');
+      if (section === 'tor') renderTOR();
+      else if (['problem','vision'].includes(section)) renderDraftArea(section, S[section].draft);
+      else if (section === 'kpis') renderKPITable();
+      else if (section === 'roadmap') renderRoadmapPhases();
+      renderDashboard();
+    } catch(e) {
+      toast('Failed: ' + e.message, 'error');
+    }
   }
 
   // ── Supabase auto-save ──────────────────────────────────────────
