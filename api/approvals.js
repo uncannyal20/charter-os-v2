@@ -44,10 +44,9 @@ export default async function handler(req, res) {
       status: 'pending',
       submitted_by: submitted_by || 'Team',
       submitted_at: new Date().toISOString(),
-      comment: null,
-      annotations: [],
       team_replies: team_replies || {},
       reviewed_at: null
+      // Note: annotations and comment are NOT reset here — PO's original comments are preserved
     };
 
     let r;
