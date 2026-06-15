@@ -1377,7 +1377,10 @@ function teamLogout() {
       <!-- KPI Table Tab -->
       <div class="tab-panel" id="kpis-tab-table">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-          <div style="font-size:13px;color:var(--text2)" id="kpi-count-label">0 KPIs defined</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="font-size:13px;color:var(--text2)" id="kpi-count-label">0 KPIs defined</div>
+            <button onclick="navigateToRevision('kpis')" title="Edit KPIs" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.6;padding:0 2px;line-height:1;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✏️</button>
+          </div>
           <button class="btn btn-ghost btn-sm" onclick="openAddKPI()">+ Add KPI manually</button>
         </div>
         <div class="card" style="padding:0;overflow:hidden">
@@ -2512,6 +2515,7 @@ function renderTOR() {
     <div class="draft-box-label" style="display:flex;align-items:center;gap:8px">
       ✓ AI-Generated TOR — ${new Date().toLocaleDateString()}
       ${getApprovalStatusBadge('tor')}
+      <button onclick="navigateToRevision('tor')" title="Edit TOR" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.6;padding:0 2px;line-height:1;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✏️</button>
     </div>
     ${getRevisionComments('tor')}
     <div class="tor-html-output" style="font-size:13.5px;line-height:1.8;color:var(--text2)">${clean}</div>
@@ -2623,7 +2627,7 @@ function switchCBATab(tab) {
 
         document.getElementById('cba-output').innerHTML = `
           <div class="draft-box">
-            <div class="draft-box-label">✓ CBA Summary — ${new Date(S.cba.approved ? Date.now() : Date.now()).toLocaleDateString()}</div>
+            <div class="draft-box-label" style="display:flex;align-items:center;gap:6px">✓ CBA Summary — ${new Date().toLocaleDateString()} <button onclick="navigateToRevision('cba')" title="Edit CBA" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.6;padding:0 2px;line-height:1;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✏️</button></div>
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
               ${[['Total Investment','SGD '+(p.totalY1||0).toLocaleString(),'var(--red)'],['Annual Benefit','SGD '+totalBenAnnual.toLocaleString(),'var(--green)'],['Payback Period',paybackMths+' months','var(--amber)'],['3-Year ROI',roi3yr+'%','var(--accent)']].map(([label,val,color])=>`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">${label}</div><div style="font-family:var(--font-head);font-size:18px;font-weight:800;color:${color}">${val}</div></div>`).join('')}
             </div>
@@ -3647,7 +3651,10 @@ function renderDraftArea(section, text) {
   const clean = isHtmlSection ? text.replace(/```html|```/g,'').trim() : text;
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:6px">
-      <div class="draft-box-label" style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)">● AI Draft — ${new Date().toLocaleDateString()}</div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="draft-box-label" style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)">● AI Draft — ${new Date().toLocaleDateString()}</div>
+        <button onclick="navigateToRevision('${section}')" title="Edit this section" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.6;padding:0 2px;line-height:1;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✏️</button>
+      </div>
       ${getApprovalStatusBadge(section)}
     </div>
     ${getRevisionComments(section)}
@@ -3750,7 +3757,7 @@ function approveKPIs() {
 function renderRoadmapPhases() {
   const el = document.getElementById('rm-phases-view');
   if (!S.roadmap.phases_data || !S.roadmap.phases_data.length) return;
-  el.innerHTML = S.roadmap.phases_data.map((ph, pi) => `
+  el.innerHTML = `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)">● Roadmap Phases</span><button onclick="navigateToRevision('roadmap')" title="Edit roadmap" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.6;padding:0 2px;line-height:1;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✏️</button></div>` + S.roadmap.phases_data.map((ph, pi) => `
     <div class="card" style="border-left:3px solid ${ph.color||'var(--accent)'}">
       <div class="card-title" style="color:${ph.color||'var(--accent)'}">
         Phase ${pi+1}: ${ph.name}
