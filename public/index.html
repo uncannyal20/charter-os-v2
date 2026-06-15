@@ -2229,6 +2229,30 @@ async function clearCharter() {
       });
     } catch(e) { console.warn('Cloud clear failed:', e.message); }
   }
+  // Reset all approval statuses back to draft in Supabase
+  if (CURRENT_TEAM) {
+    try {
+      const sections = ['tor', 'problem', 'vision', 'kpis', 'roadmap', 'cba'];
+      await Promise.all(sections.map(section =>
+        fetch('/api/approvals?action=update', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            team_id: CURRENT_TEAM.id,
+            section,
+            status: 'draft',
+            comment: '',
+            annotations: [],
+            reviewed_at: null
+          })
+        })
+      ));
+      // Reset local approvals state
+      window.APPROVALS = {};
+      sections.forEach(s => { window.APPROVALS[s] = { status: 'draft' }; });
+    } catch(e) { console.warn('Approval reset failed:', e.message); }
+  }
+
   saveState();
   if (typeof renderAll === 'function') renderAll();
   logActivity('Charter cleared and reset', 'var(--red)');

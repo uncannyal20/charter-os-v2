@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charter OS — Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:    #0d0f14; --bg1: #111318; --bg2: #181b22; --bg3: #1e2230;
+    --border: rgba(255,255,255,0.08);
+    --text: #eceef2; --text2: #8a90a0; --text3: #555d70;
+    --blue: #4f7cff; --blue2: #6c3cff;
+    --green: #1fd68a; --amber: #f5a623; --purp: #b06cfb;
+    --teal: #2dd4bf; --red: #ff5c5c;
+    --font-h: 'Nunito', sans-serif;
+    --font-b: 'DM Sans', sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-b);
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; overflow-x: hidden;
+    display: flex; flex-direction: column;
+  }
+
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(rgba(79,124,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,124,255,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .orb {
+    position: fixed; border-radius: 50%; filter: blur(110px);
+    pointer-events: none; z-index: 0;
+    animation: drift 20s ease-in-out infinite alternate;
+  }
+  .orb-1 { width:500px; height:500px; background:rgba(79,124,255,0.09);  top:-100px; left:-80px; }
+  .orb-2 { width:400px; height:400px; background:rgba(108,60,255,0.07);  bottom:0;   right:-60px; animation-delay:-10s; }
+  @keyframes drift { to { transform: translate(20px,30px) scale(1.05); } }
+
+  /* NAV */
+  nav {
+    position: relative; z-index: 10;
+    height: 64px; background: rgba(13,15,20,0.8); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 48px;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .nav-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg,var(--blue),var(--blue2)); display: flex; align-items: center; justify-content: center; font-family: var(--font-h); font-weight: 900; font-size: 16px; color: white; }
+  .nav-title { font-family: var(--font-h); font-weight: 800; font-size: 16px; }
+  .nav-badge { font-size: 10px; color: var(--text3); background: var(--bg3); border: 1px solid var(--border); border-radius: 100px; padding: 2px 9px; margin-left: 4px; }
+  .nav-time { font-size: 12px; color: var(--text3); }
+
+  /* MAIN */
+  main { flex: 1; position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; width: 100%; padding: 64px 48px 80px; }
+
+  /* HERO */
+  .hub-hero { text-align: center; margin-bottom: 64px; }
+  .hub-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--blue); margin-bottom: 16px; }
+  .hub-title { font-family: var(--font-h); font-weight: 900; font-size: clamp(32px,5vw,52px); line-height: 1.1; letter-spacing: -.02em; margin-bottom: 14px; }
+  .hub-sub { font-size: 16px; color: var(--text2); line-height: 1.65; max-width: 480px; margin: 0 auto; }
+
+  /* PRIMARY CARDS */
+  .cards-primary { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .card {
+    background: var(--bg1); border: 1px solid var(--border);
+    border-radius: 18px; padding: 32px; text-decoration: none;
+    display: flex; flex-direction: column; gap: 0;
+    transition: border-color .2s, box-shadow .2s, transform .15s;
+    position: relative; overflow: hidden;
+    cursor: pointer;
+  }
+  .card::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at top left, var(--card-glow, rgba(79,124,255,0)) 0%, transparent 60%);
+    pointer-events: none; opacity: 0; transition: opacity .3s;
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(0,0,0,.4); }
+  .card:hover::before { opacity: 1; }
+
+  .card-accent { width: 100%; height: 3px; border-radius: 100px; margin-bottom: 24px; }
+
+  .card-icon-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .card-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .card-arrow { font-size: 20px; color: var(--text3); transition: transform .2s, color .2s; }
+  .card:hover .card-arrow { transform: translate(3px,-3px); color: var(--text2); }
+
+  .card-tag { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
+  .card-title { font-family: var(--font-h); font-weight: 800; font-size: 20px; margin-bottom: 8px; }
+  .card-desc { font-size: 13px; color: var(--text2); line-height: 1.6; flex: 1; }
+  .card-route { font-family: 'Courier New', monospace; font-size: 11px; color: var(--text3); margin-top: 18px; padding: 6px 12px; background: var(--bg3); border-radius: 6px; border: 1px solid var(--border); display: inline-block; }
+
+  /* SECONDARY CARDS row */
+  .cards-secondary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  /* DIVIDER */
+  .hub-divider { display: flex; align-items: center; gap: 16px; margin: 40px 0 32px; }
+  .hub-divider-line { flex: 1; height: 1px; background: var(--border); }
+  .hub-divider-text { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); white-space: nowrap; }
+
+  /* QUICK LINKS */
+  .quick-links { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 48px; }
+  .ql {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 16px;
+    text-decoration: none; color: var(--text2);
+    font-size: 13px; transition: all .2s;
+  }
+  .ql:hover { background: var(--bg3); border-color: rgba(255,255,255,.15); color: var(--text); }
+  .ql-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+  /* STATUS ROW */
+  .status-row {
+    background: var(--bg1); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px 24px;
+    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  }
+  .status-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s ease infinite; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+  .status-label { color: var(--text2); }
+  .status-val { color: var(--text); font-weight: 500; }
+  .status-divider { width: 1px; height: 20px; background: var(--border); }
+
+  /* FOOTER */
+  footer { position: relative; z-index: 1; border-top: 1px solid var(--border); padding: 28px 48px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  footer p { font-size: 12px; color: var(--text3); }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)} }
+  .hub-hero { animation: fadeUp .6s ease both; }
+  .cards-primary { animation: fadeUp .6s .1s ease both; }
+  .cards-secondary { animation: fadeUp .6s .2s ease both; }
+  .quick-links { animation: fadeUp .6s .3s ease both; }
+  .status-row { animation: fadeUp .6s .4s ease both; }
+
+  @media(max-width: 768px) {
+    nav { padding: 0 20px; }
+    main { padding: 48px 20px 60px; }
+    .cards-primary { grid-template-columns: 1fr; }
+    .cards-secondary { grid-template-columns: 1fr; }
+    footer { padding: 20px; flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<nav>
+  <a href="/hub" class="nav-logo">
+    <div class="nav-icon">C</div>
+    <span class="nav-title">Charter OS</span>
+    <span class="nav-badge">Hub</span>
+  </a>
+  <div class="nav-time" id="clock"></div>
+</nav>
+
+<main>
+
+  <!-- HERO -->
+  <div class="hub-hero">
+    <div class="hub-eyebrow">Product Office · Internal</div>
+    <h1 class="hub-title">CharterOS Hub</h1>
+    <p class="hub-sub">All CharterOS pages and tools in one place. Select where you want to go.</p>
+  </div>
+
+  <!-- PRIMARY: App + Admin + Approval + SuperAdmin -->
+  <div class="cards-primary">
+
+    <a href="/" class="card" style="--card-glow:rgba(79,124,255,0.08); border-color:rgba(79,124,255,0.15)">
+      <div class="card-accent" style="background:linear-gradient(to right,var(--blue),var(--blue2))"></div>
+      <div class="card-icon-row">
+        <div class="card-icon" style="background:rgba(79,124,255,0.15)">📋</div>
+        <div class="card-arrow">↗</div>
+      </div>
+      <div class="card-tag" style="color:var(--blue)">Primary App</div>
+      <div class="card-title">Charter OS</div>
+      <div class="card-desc">The main product charter platform. Login with your team password and build your AI-powered Product Charter through all 5 components.</div>
+      <div class="card-route">/</div>
+    </a>
+
+    <a href="/approval" class="card" style="--card-glow:rgba(31,214,138,0.08); border-color:rgba(31,214,138,0.15)">
+      <div class="card-accent" style="background:linear-gradient(to right,var(--green),var(--teal))"></div>
+      <div class="card-icon-row">
+        <div class="card-icon" style="background:rgba(31,214,138,0.15)">✅</div>
+        <div class="card-arrow">↗</div>
+      </div>
+      <div class="card-tag" style="color:var(--green)">Product Owners</div>
+      <div class="card-title">Approval Portal</div>
+      <div class="card-desc">Product Owner review portal. Review submitted charter sections, add inline comments, send back for revision or approve. Full content rendered for sign-off.</div>
+      <div class="card-route">/approval</div>
+    </a>
+
+    <a href="/admin" class="card" style="--card-glow:rgba(176,108,251,0.08); border-color:rgba(176,108,251,0.15)">
+      <div class="card-accent" style="background:linear-gradient(to right,var(--purp),var(--blue2))"></div>
+      <div class="card-icon-row">
+        <div class="card-icon" style="background:rgba(176,108,251,0.15)">🛡</div>
+        <div class="card-arrow">↗</div>
+      </div>
+      <div class="card-tag" style="color:var(--purp)">TPO Administrators</div>
+      <div class="card-title">Admin Portal</div>
+      <div class="card-desc">Real-time oversight dashboard. Monitor all departments and charters. Drill down to section-level completion and approval status. Open any charter in read-only view.</div>
+      <div class="card-route">/admin</div>
+    </a>
+
+    <a href="/superadmin" class="card" style="--card-glow:rgba(245,166,35,0.08); border-color:rgba(245,166,35,0.15)">
+      <div class="card-accent" style="background:linear-gradient(to right,var(--amber),var(--red))"></div>
+      <div class="card-icon-row">
+        <div class="card-icon" style="background:rgba(245,166,35,0.15)">⚙️</div>
+        <div class="card-arrow">↗</div>
+      </div>
+      <div class="card-tag" style="color:var(--amber)">System</div>
+      <div class="card-title">Super Admin</div>
+      <div class="card-desc">Account management backend. Create and manage team accounts, Product Owner logins, and admin credentials. Generate AI-powered demo use cases with sample files.</div>
+      <div class="card-route">/superadmin</div>
+    </a>
+
+  </div>
+
+  <!-- SECONDARY: Promo + Learning + Use Cases + Architecture -->
+  <div class="cards-secondary" style="grid-template-columns:1fr 1fr 1fr 1fr">
+
+    <a href="/promo" class="card" style="--card-glow:rgba(31,214,138,0.06); border-color:rgba(31,214,138,0.12)">
+      <div class="card-accent" style="background:linear-gradient(to right,var(--green),var(--teal))"></div>
+      <div class="card-icon-row">
+        <div class="card-icon" style="background:rgba(31,214,138,0.12); font-size:18px">🌐</div>
+        <div class="card-arrow" style="font-size:16px">↗</div>
+      </div>
+      <div class="card-tag" style="color:var(--green); font-size:9px">Marketing</div>
+      <div class="card-title" style="font-size:17px">Promo Site</div>
+      <div class="card-desc" style="font-size:12px">Platform overview, feature carousel, video introduction, and downloadable resources — deck and brochure.</div>
+      <div class="card-route">/promo</div>
+    </a>
+
+    <a href="/learning" class="card" style="--card-glow:rgba(45,212,191,0.06); border-color:rgba(45,212,191,0.12)">
+      <div class="card-accent" style="background:linear-gradient(to right,var(--teal),var(--blue))"></div>
+      <div class="card-icon-row">
+        <div class="card-icon" style="background:rgba(45,212,191,0.12); font-size:18px">📚</div>
+        <div class="card-arrow" style="font-size:16px">↗</div>
+      </div>
+      <div class="card-tag" style="color:var(--teal); font-size:9px">Onboarding</div>
+      <div class="card-title" style="font-size:17px">Learning Hub</div>
+      <div class="card-desc" style="font-size:12px">5 expandable modules covering every charter step with instructions, key fields, chips and FAQ. Quick Start Guide download.</div>
+      <div class="card-route">/learning</div>
+    </a>
+
+    <a href="/use-cases" class="card" style="--card-glow:rgba(245,166,35,0.06); border-color:rgba(245,166,35,0.12)">
+      <div class="card-accent" style="background:linear-gradient(to right,var(--amber),var(--purp))"></div>
+      <div class="card-icon-row">
+        <div class="card-icon" style="background:rgba(245,166,35,0.12); font-size:18px">💡</div>
+        <div class="card-arrow" style="font-size:16px">↗</div>
+      </div>
+      <div class="card-tag" style="color:var(--amber); font-size:9px">Reference</div>
+      <div class="card-title" style="font-size:17px">Use Cases</div>
+      <div class="card-desc" style="font-size:12px">5 real-world HDB charter examples with downloadable sample input files for each team. Use as reference or demo material.</div>
+      <div class="card-route">/use-cases</div>
+    </a>
+
+    <a href="/architecture" class="card" style="--card-glow:rgba(255,92,92,0.06); border-color:rgba(255,92,92,0.12)">
+      <div class="card-accent" style="background:linear-gradient(to right,var(--red),var(--amber))"></div>
+      <div class="card-icon-row">
+        <div class="card-icon" style="background:rgba(255,92,92,0.12); font-size:18px">🏗</div>
+        <div class="card-arrow" style="font-size:16px">↗</div>
+      </div>
+      <div class="card-tag" style="color:var(--red); font-size:9px">Technical</div>
+      <div class="card-title" style="font-size:17px">Architecture</div>
+      <div class="card-desc" style="font-size:12px">System architecture reference — frontend, Vercel API routes, Anthropic integration, Supabase schema, data flows and env vars.</div>
+      <div class="card-route">/architecture</div>
+    </a>
+
+  </div>
+
+  <!-- DIVIDER -->
+  <div class="hub-divider">
+    <div class="hub-divider-line"></div>
+    <div class="hub-divider-text">Quick Links</div>
+    <div class="hub-divider-line"></div>
+  </div>
+
+  <!-- QUICK LINKS -->
+  <div class="quick-links">
+    <a href="/CharterOS_Introduction_Deck.pptx" download class="ql">
+      <div class="ql-dot" style="background:var(--blue)"></div>
+      📊 Introduction Deck (.pptx)
+    </a>
+    <a href="/CharterOS_Brochure.pdf" download class="ql">
+      <div class="ql-dot" style="background:var(--green)"></div>
+      📄 Product Brochure (.pdf)
+    </a>
+    <a href="/CharterOS_QuickStartGuide.pdf" download class="ql">
+      <div class="ql-dot" style="background:var(--teal)"></div>
+      📖 Quick Start Guide (.pdf)
+    </a>
+    <a href="/?team=team-a&readonly=true" target="_blank" class="ql">
+      <div class="ql-dot" style="background:var(--amber)"></div>
+      👁 View Team A Charter (read-only)
+    </a>
+    <a href="/?team=team-b&readonly=true" target="_blank" class="ql">
+      <div class="ql-dot" style="background:var(--amber)"></div>
+      👁 View Team B Charter (read-only)
+    </a>
+    <a href="/?team=team-c&readonly=true" target="_blank" class="ql">
+      <div class="ql-dot" style="background:var(--amber)"></div>
+      👁 View Team C Charter (read-only)
+    </a>
+    <a href="/?team=team-d&readonly=true" target="_blank" class="ql">
+      <div class="ql-dot" style="background:var(--amber)"></div>
+      👁 View Team D Charter (read-only)
+    </a>
+    <a href="/?team=team-e&readonly=true" target="_blank" class="ql">
+      <div class="ql-dot" style="background:var(--amber)"></div>
+      👁 View Team E Charter (read-only)
+    </a>
+  </div>
+
+  <!-- STATUS ROW -->
+  <div class="status-row">
+    <div class="status-item">
+      <div class="status-dot"></div>
+      <span class="status-label">Platform</span>
+      <span class="status-val">Live on Vercel</span>
+    </div>
+    <div class="status-divider"></div>
+    <div class="status-item">
+      <span class="status-label">Portals</span>
+      <span class="status-val">5 live</span>
+    </div>
+    <div class="status-divider"></div>
+    <div class="status-item">
+      <span class="status-label">Teams</span>
+      <span class="status-val">5 active</span>
+    </div>
+    <div class="status-divider"></div>
+    <div class="status-item">
+      <span class="status-label">AI Agents</span>
+      <span class="status-val">6 (claude-sonnet-4-6)</span>
+    </div>
+    <div class="status-divider"></div>
+    <div class="status-item">
+      <span class="status-label">Database</span>
+      <span class="status-val">Supabase PostgreSQL</span>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <p>Charter OS · Product Office · Confidential — Internal Use Only</p>
+  <p id="footer-date"></p>
+</footer>
+
+<script>
+  // Live clock
+  function tick() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toLocaleString('en-SG', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+  }
+  tick(); setInterval(tick, 1000);
+
+  // Footer date
+  document.getElementById('footer-date').textContent =
+    new Date().toLocaleDateString('en-SG', { day:'numeric', month:'long', year:'numeric' });
+</script>
+</body>
+</html>

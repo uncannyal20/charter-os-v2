@@ -79,7 +79,7 @@ export default async function handler(req, res) {
       status,
       comment: comment || null,
       annotations: annotations || [],
-      reviewed_at: reviewed_at || new Date().toISOString()
+      reviewed_at: reviewed_at === null ? null : (reviewed_at || new Date().toISOString())
     };
 
     const r = await fetch(`${SUPABASE_URL}/rest/v1/approvals?team_id=eq.${team_id}&section=eq.${section}`, {
