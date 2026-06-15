@@ -301,7 +301,7 @@
     // Group by department
     const depts = {};
     teams.forEach(t => {
-      const dept = DEPT_MAP[t.team_id] || t.team_name;
+      const dept = t.department || DEPT_MAP[t.team_id] || t.team_name;
       if (!depts[dept]) depts[dept] = [];
       depts[dept].push(t);
     });
@@ -329,9 +329,13 @@
         const shortName = t.charter_name && t.charter_name !== 'Not started'
           ? (t.charter_name.length > 38 ? t.charter_name.slice(0,36)+'…' : t.charter_name)
           : 'Not started';
-        return `<div class="dept-product-row">
-          <div class="dept-product-name">${shortName}</div>
-          <div class="dept-product-pct" style="color:${pc}">${pct}%</div>
+        const summaryLine = approvalSummaryLine(t.approvals);
+        return `<div class="dept-product-row" style="flex-direction:column;align-items:flex-start;gap:2px">
+          <div style="display:flex;width:100%;align-items:center;justify-content:space-between">
+            <div class="dept-product-name">${shortName}</div>
+            <div class="dept-product-pct" style="color:${pc}">${pct}%</div>
+          </div>
+          ${summaryLine}
         </div>`;
       }).join('');
 
@@ -366,6 +370,27 @@
     return `${r},${g},${b}`;
   }
 
+  function approvalBadge(status) {
+    const map = {
+      approved: { label: '✅ Approved', color: '#1fd68a', bg: 'rgba(31,214,138,0.12)', border: 'rgba(31,214,138,0.3)' },
+      pending:  { label: '⏳ Pending',  color: '#a5b4fc', bg: 'rgba(108,99,255,0.12)', border: 'rgba(108,99,255,0.3)' },
+      revision: { label: '🟠 Revision', color: '#f5a623', bg: 'rgba(245,166,35,0.12)', border: 'rgba(245,166,35,0.3)' },
+      draft:    { label: 'Draft',       color: '#555d70', bg: 'rgba(85,90,114,0.1)',   border: 'rgba(85,90,114,0.2)' },
+    };
+    return map[status] || map.draft;
+  }
+
+  function approvalSummaryLine(approvals) {
+    if (!approvals || !Object.keys(approvals).length) return '';
+    const counts = { approved: 0, pending: 0, revision: 0, draft: 0 };
+    Object.values(approvals).forEach(s => { counts[s] = (counts[s]||0) + 1; });
+    const parts = [];
+    if (counts.approved) parts.push(`<span style="color:#1fd68a;font-weight:700">${counts.approved} approved</span>`);
+    if (counts.pending)  parts.push(`<span style="color:#a5b4fc">${counts.pending} pending</span>`);
+    if (counts.revision) parts.push(`<span style="color:#f5a623;font-weight:700">${counts.revision} needs revision</span>`);
+    return parts.length ? '<div style="font-size:11px;margin-top:6px;display:flex;gap:8px;flex-wrap:wrap">' + parts.join('') + '</div>' : '';
+  }
+
   // ── Modal ─────────────────────────────────────────────────────
   function openModal(deptName) {
     const teams = ALL_TEAMS.filter(t => (DEPT_MAP[t.team_id] || t.team_name) === deptName);
@@ -379,12 +404,17 @@
       const overall = t.progress_overall || 0;
       const color   = progColor(overall);
       const badge   = statusBadge(overall);
+      const sectionKeyMap = { team: 'tor', problem: 'problem', vision: 'vision', kpis: 'kpis', roadmap: 'roadmap' };
       const sectionCells = SECTIONS.map(s => {
         const pct = t[`progress_${s.id}`] || 0;
-        return `<div class="section-cell">
+        const approvalKey = sectionKeyMap[s.id];
+        const approvalStatus = (t.approvals && t.approvals[approvalKey]) || 'draft';
+        const ab = approvalBadge(approvalStatus);
+        return `<div class="section-cell" style="position:relative">
           <div class="section-cell-icon">${s.icon}</div>
           <div class="section-cell-label">${s.label}</div>
           <div class="section-cell-pct" style="color:${progColor(pct)}">${pct}%</div>
+          <div style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;background:${ab.bg};color:${ab.color};border:1px solid ${ab.border};margin-top:4px;white-space:nowrap">${ab.label}</div>
         </div>`;
       }).join('');
 
@@ -439,7 +469,7 @@
     document.getElementById('admin-gate').style.display = 'none';
     loadData();
   }
-  setInterval(() => { if (sessionStorage.getItem(ADMIN_SESSION) === 'true') loadData(); }, 60000);
+  setInterval(() => { if (sessionStorage.getItem(ADMIN_SESSION)) loadData(); }, 60000);
 </script>
 </body>
 </html>
