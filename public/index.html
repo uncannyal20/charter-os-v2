@@ -1379,7 +1379,7 @@ function teamLogout() {
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
           <div style="display:flex;align-items:center;gap:6px">
             <div style="font-size:13px;color:var(--text2)" id="kpi-count-label">0 KPIs defined</div>
-            <button onclick="navigateToRevision('kpis')" title="Edit KPIs" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.6;padding:0 2px;line-height:1;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✏️</button>
+            <button onclick="switchTab('kpis','generate')" title="Edit KPIs — go to AI Recommend tab" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.6;padding:0 2px;line-height:1;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✏️</button>
           </div>
           <button class="btn btn-ghost btn-sm" onclick="openAddKPI()">+ Add KPI manually</button>
         </div>
@@ -2515,12 +2515,13 @@ function renderTOR() {
     <div class="draft-box-label" style="display:flex;align-items:center;gap:8px">
       ✓ AI-Generated TOR — ${new Date().toLocaleDateString()}
       ${getApprovalStatusBadge('tor')}
-      <button onclick="navigateToRevision('tor')" title="Edit TOR" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.6;padding:0 2px;line-height:1;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✏️</button>
+      <button id="tor-edit-btn" onclick="toggleInlineEdit('tor')" title="Edit TOR" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.6;padding:0 2px;line-height:1;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✏️</button>
     </div>
     ${getRevisionComments('tor')}
-    <div class="tor-html-output" style="font-size:13.5px;line-height:1.8;color:var(--text2)">${clean}</div>
+    <div id="tor-edit-area" class="tor-html-output" style="font-size:13.5px;line-height:1.8;color:var(--text2)">${clean}</div>
     <div class="draft-actions">
       <button class="btn btn-ghost btn-sm" onclick="copyText(S.tor)">📋 Copy</button>
+      <button id="tor-save-edit-btn" class="btn btn-green btn-sm" onclick="saveInlineEdit('tor')" style="display:none;color:#0f1117">💾 Save edits</button>
       ${torStatus === 'approved'
         ? `<button class="btn btn-ghost btn-sm" style="color:var(--green);border-color:var(--green);cursor:default" disabled>✅ Approved by PO</button>`
         : torStatus === 'pending'
@@ -3653,7 +3654,7 @@ function renderDraftArea(section, text) {
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:6px">
       <div style="display:flex;align-items:center;gap:6px">
         <div class="draft-box-label" style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)">● AI Draft — ${new Date().toLocaleDateString()}</div>
-        <button onclick="navigateToRevision('${section}')" title="Edit this section" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.6;padding:0 2px;line-height:1;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✏️</button>
+        <button id="${section}-edit-btn" onclick="toggleInlineEdit('${section}')" title="Edit section" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.6;padding:0 2px;line-height:1;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✏️</button>
       </div>
       ${getApprovalStatusBadge(section)}
     </div>
@@ -4855,6 +4856,72 @@ document.getElementById('rm-start-date').value = new Date().toISOString().slice(
 // Init
 renderAll();
 mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+
+// ── INLINE EDIT ───────────────────────────────────────────────
+function toggleInlineEdit(section) {
+  const areaId = section === 'tor' ? 'tor-edit-area' : section + '-edit-area';
+  const btnId = section + '-edit-btn';
+  const saveBtnId = section + '-save-edit-btn';
+  const area = document.getElementById(areaId);
+  const saveBtn = document.getElementById(saveBtnId);
+  const editBtn = document.getElementById(btnId);
+  if (!area) return;
+
+  const isEditing = area.contentEditable === 'true';
+  if (!isEditing) {
+    // Enter edit mode
+    area.contentEditable = 'true';
+    area.style.outline = '2px solid var(--accent)';
+    area.style.borderRadius = '6px';
+    area.style.padding = '12px';
+    area.focus();
+    if (saveBtn) saveBtn.style.display = 'inline-flex';
+    if (editBtn) { editBtn.textContent = '✕'; editBtn.title = 'Cancel editing'; editBtn.style.opacity = '1'; }
+    toast('Editing mode on — make your changes then click 💾 Save edits', 'info');
+  } else {
+    // Cancel edit mode — restore original
+    area.contentEditable = 'false';
+    area.style.outline = '';
+    area.style.borderRadius = '';
+    area.style.padding = '';
+    if (saveBtn) saveBtn.style.display = 'none';
+    if (editBtn) { editBtn.textContent = '✏️'; editBtn.title = 'Edit section'; editBtn.style.opacity = '0.6'; }
+    // Restore original content
+    if (section === 'tor') area.innerHTML = cleanDraft(S.tor);
+    else area.innerHTML = cleanDraft(S[section].draft);
+  }
+}
+
+function saveInlineEdit(section) {
+  const areaId = section === 'tor' ? 'tor-edit-area' : section + '-edit-area';
+  const btnId = section + '-edit-btn';
+  const saveBtnId = section + '-save-edit-btn';
+  const area = document.getElementById(areaId);
+  const saveBtn = document.getElementById(saveBtnId);
+  const editBtn = document.getElementById(btnId);
+  if (!area) return;
+
+  const newContent = area.innerHTML;
+  if (section === 'tor') {
+    S.tor = newContent;
+  } else {
+    S[section].draft = newContent;
+  }
+
+  // Exit edit mode
+  area.contentEditable = 'false';
+  area.style.outline = '';
+  area.style.borderRadius = '';
+  area.style.padding = '';
+  if (saveBtn) saveBtn.style.display = 'none';
+  if (editBtn) { editBtn.textContent = '✏️'; editBtn.title = 'Edit section'; editBtn.style.opacity = '0.6'; }
+
+  saveState();
+  scheduleSave();
+  logActivity('<strong>' + section.charAt(0).toUpperCase() + section.slice(1) + '</strong> edited and saved', 'var(--accent)');
+  toast('Edits saved ✓', 'success');
+}
+
 </script>
 </body>
 </html>
