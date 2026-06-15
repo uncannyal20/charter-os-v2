@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charter OS — Use Cases</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:    #0d0f14; --bg1: #111318; --bg2: #181b22; --bg3: #1e2230;
+    --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.12);
+    --text: #eceef2; --text2: #8a90a0; --text3: #555d70;
+    --blue: #4f7cff; --blue2: #6c3cff;
+    --green: #1fd68a; --amber: #f5a623; --purp: #b06cfb;
+    --teal: #2dd4bf; --red: #ff5c5c;
+    --font-h: 'Nunito', sans-serif;
+    --font-b: 'DM Sans', sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--font-b); background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(rgba(79,124,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,124,255,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .orb { position: fixed; border-radius: 50%; filter: blur(110px); pointer-events: none; z-index: 0; animation: drift 18s ease-in-out infinite alternate; }
+  .orb-1 { width: 500px; height: 500px; background: rgba(79,124,255,0.09);  top: -80px;  left: -80px; }
+  .orb-2 { width: 380px; height: 380px; background: rgba(176,108,251,0.07); bottom: 10%; right: -60px; animation-delay: -9s; }
+  .orb-3 { width: 300px; height: 300px; background: rgba(31,214,138,0.06);  top: 40%;    left: 30%;   animation-delay: -15s; }
+  @keyframes drift { to { transform: translate(22px, 32px) scale(1.05); } }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: 64px; background: rgba(13,15,20,0.88); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 48px;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .nav-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--blue), var(--blue2)); display: flex; align-items: center; justify-content: center; font-family: var(--font-h); font-weight: 900; font-size: 16px; color: white; }
+  .nav-title { font-family: var(--font-h); font-weight: 800; font-size: 16px; }
+  .nav-links { display: flex; align-items: center; gap: 28px; }
+  .nav-links a { color: var(--text2); text-decoration: none; font-size: 14px; transition: color .2s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta { background: var(--blue); color: white; border: none; border-radius: 8px; padding: 8px 18px; font-size: 14px; font-weight: 600; font-family: var(--font-b); cursor: pointer; text-decoration: none; transition: all .2s; }
+  .nav-cta:hover { background: #3d6ef0; transform: translateY(-1px); }
+
+  section { position: relative; z-index: 1; }
+
+  /* HERO */
+  #hero { padding: 120px 48px 72px; text-align: center; max-width: 860px; margin: 0 auto; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(245,166,35,0.1); border: 1px solid rgba(245,166,35,0.25); border-radius: 100px; padding: 6px 16px; font-size: 12px; font-weight: 600; color: var(--amber); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 24px; animation: fadeUp .6s ease both; }
+  .hero-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--amber); }
+  .hero-title { font-family: var(--font-h); font-weight: 900; font-size: clamp(34px,5vw,58px); line-height: 1.1; letter-spacing: -.02em; margin-bottom: 18px; animation: fadeUp .6s .1s ease both; }
+  .hero-title span { background: linear-gradient(135deg, var(--amber), var(--red)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero-sub { font-size: 17px; color: var(--text2); line-height: 1.65; max-width: 560px; margin: 0 auto 32px; animation: fadeUp .6s .2s ease both; }
+  .hero-note { font-size: 13px; color: var(--text3); line-height: 1.6; max-width: 500px; margin: 0 auto; padding: 16px 20px; background: var(--bg1); border: 1px solid var(--border); border-radius: 10px; animation: fadeUp .6s .3s ease both; }
+  .hero-note strong { color: var(--amber); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* SECTION HEADS */
+  .sec-head { text-align: center; margin-bottom: 48px; }
+  .sec-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--blue); margin-bottom: 12px; }
+  .sec-title { font-family: var(--font-h); font-weight: 800; font-size: clamp(26px,3vw,36px); line-height: 1.2; }
+  .sec-sub { font-size: 15px; color: var(--text2); max-width: 520px; margin: 12px auto 0; line-height: 1.6; }
+
+  /* DEPT PILLS */
+  .dept-nav { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 48px; }
+  .dept-pill { padding: 8px 18px; border-radius: 100px; font-size: 13px; font-weight: 600; border: 1px solid var(--border); background: var(--bg1); color: var(--text2); cursor: pointer; text-decoration: none; transition: all .2s; }
+  .dept-pill:hover { color: var(--text); border-color: var(--border2); }
+  .dept-pill.active { color: white; border-color: transparent; }
+
+  /* USE CASE CARDS */
+  #cases { padding: 0 48px 100px; max-width: 1040px; margin: 0 auto; }
+
+  .case-card {
+    background: var(--bg1); border: 1px solid var(--border);
+    border-radius: 20px; margin-bottom: 32px; overflow: hidden;
+    transition: box-shadow .2s;
+  }
+  .case-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,.4); }
+
+  /* Card header */
+  .case-header {
+    padding: 32px 36px 28px;
+    display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: start;
+    border-bottom: 1px solid var(--border);
+  }
+  .case-num-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .case-num {
+    width: 52px; height: 52px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-h); font-weight: 900; font-size: 20px; color: white;
+    flex-shrink: 0;
+  }
+  .case-dept-badge { font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 100px; white-space: nowrap; }
+  .case-info {}
+  .case-tag { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; }
+  .case-title { font-family: var(--font-h); font-weight: 800; font-size: 22px; margin-bottom: 10px; line-height: 1.2; }
+  .case-desc { font-size: 14px; color: var(--text2); line-height: 1.65; max-width: 600px; }
+  .case-password { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .password-label { font-size: 10px; color: var(--text3); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+  .password-val { font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border2); background: var(--bg3); }
+
+  /* Card body — problem/vision/kpis */
+  .case-body { padding: 28px 36px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; border-bottom: 1px solid var(--border); }
+  .case-section {}
+  .cs-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 10px; }
+  .cs-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .cs-points { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+  .cs-points li { font-size: 12px; color: var(--text2); display: flex; gap: 7px; line-height: 1.4; }
+  .cs-points li::before { content: '·'; color: var(--text3); flex-shrink: 0; }
+
+  /* Card footer — download */
+  .case-footer { padding: 20px 36px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  .case-files { display: flex; flex-wrap: wrap; gap: 8px; }
+  .file-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 5px 11px; font-size: 11px; color: var(--text2);
+  }
+  .file-chip span { font-size: 12px; }
+  .btn-download {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 22px; border-radius: 10px; font-size: 13px; font-weight: 700;
+    font-family: var(--font-b); text-decoration: none; transition: all .2s;
+    flex-shrink: 0;
+  }
+  .btn-download:hover { transform: translateY(-2px); }
+  .btn-download svg { flex-shrink: 0; }
+
+  /* INTRO SECTION */
+  #how { padding: 80px 48px; max-width: 1040px; margin: 0 auto; }
+  .how-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 40px; }
+  .how-card { background: var(--bg1); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+  .how-icon { font-size: 28px; margin-bottom: 14px; }
+  .how-title { font-family: var(--font-h); font-weight: 800; font-size: 15px; margin-bottom: 8px; }
+  .how-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+  /* FOOTER */
+  footer { position: relative; z-index: 1; border-top: 1px solid var(--border); padding: 32px 48px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  footer p { font-size: 12px; color: var(--text3); }
+  .footer-links { display: flex; gap: 20px; }
+  .footer-links a { font-size: 12px; color: var(--text3); text-decoration: none; transition: color .2s; }
+  .footer-links a:hover { color: var(--text2); }
+
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .55s ease, transform .55s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 768px) {
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    #hero, #how, #cases { padding-left: 20px; padding-right: 20px; }
+    .case-header { grid-template-columns: auto 1fr; }
+    .case-password { display: none; }
+    .case-body { grid-template-columns: 1fr; }
+    .how-grid { grid-template-columns: 1fr; }
+    footer { padding: 24px 20px; flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="nav-icon">C</div>
+    <span class="nav-title">Charter OS</span>
+  </a>
+  <div class="nav-links">
+    <a href="#how">How to Use</a>
+    <a href="#cases">Use Cases</a>
+    <a href="/learning">Learning Hub</a>
+    <a href="/hub">Hub</a>
+  </div>
+  <a href="/" class="nav-cta">Launch App →</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-badge">Sample Use Cases</div>
+  <h1 class="hero-title">5 Real Charter<br><span>Scenarios.</span> Ready to Try.</h1>
+  <p class="hero-sub">Download the sample input files for any team, upload them into CharterOS, and watch the AI build a complete Product Charter from real research notes.</p>
+  <div class="hero-note">
+    <strong>How it works:</strong> Each team has a set of raw notes, research files and Excel templates — the same kind of documents a real Product Office team would have. Upload them into CharterOS and generate the full charter. No preparation needed.
+  </div>
+</section>
+
+<!-- HOW TO USE -->
+<section id="how">
+  <div class="sec-head reveal">
+    <div class="sec-eyebrow">Getting Started</div>
+    <h2 class="sec-title">How to Use These Files</h2>
+    <p class="sec-sub">Three steps from download to AI-generated charter.</p>
+  </div>
+  <div class="how-grid reveal">
+    <div class="how-card">
+      <div class="how-icon">📥</div>
+      <div class="how-title">1. Download a team's input pack</div>
+      <div class="how-desc">Each ZIP contains the raw notes, research files and Excel templates for that team's charter. Pick the use case most relevant to you.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-icon">🚀</div>
+      <div class="how-title">2. Login to CharterOS with the team password</div>
+      <div class="how-desc">Use the password shown on each use case card to log in. You'll land on that team's charter workspace, ready to go.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-icon">🤖</div>
+      <div class="how-title">3. Upload the files and generate each section</div>
+      <div class="how-desc">On each charter section, upload the relevant files from the ZIP. Click Generate — watch the AI synthesise your notes into a structured charter.</div>
+    </div>
+  </div>
+</section>
+
+<!-- USE CASES -->
+<section id="cases">
+  <div class="sec-head reveal">
+    <div class="sec-eyebrow">5 Teams · 5 Departments · 5 Charters</div>
+    <h2 class="sec-title">The Use Cases</h2>
+    <p class="sec-sub">Each case is based on a real Singapore public housing challenge — grounded in field research and stakeholder interviews.</p>
+  </div>
+
+  <!-- TEAM A -->
+  <div class="case-card reveal">
+    <div class="case-header">
+      <div class="case-num-wrap">
+        <div class="case-num" style="background:linear-gradient(135deg,#4f7cff,#6c3cff)">A</div>
+        <span class="case-dept-badge" style="background:rgba(79,124,255,.15);color:var(--blue)">Digital Services</span>
+      </div>
+      <div class="case-info">
+        <div class="case-tag" style="color:var(--blue)">Team A · Digital Services Office</div>
+        <div class="case-title">HDB Maintenance & Estate Services<br>Digital Transformation</div>
+        <div class="case-desc">Singapore's HDB estate maintenance operates through 5 disconnected channels — phone, email, myHDBPage, WhatsApp and walk-ins. Officers spend 2-3 hours daily on manual triage. Residents have no visibility. This charter defines a unified AI-powered platform to transform the experience for residents, TC officers and contractors.</div>
+      </div>
+      <div class="case-password">
+        <span class="password-label">Team Password</span>
+        <span class="password-val" style="color:var(--blue)">teamA2026</span>
+      </div>
+    </div>
+    <div class="case-body">
+      <div class="case-section">
+        <div class="cs-label" style="color:var(--blue)">Core Problem</div>
+        <ul class="cs-points">
+          <li>3.2-day average acknowledgement time for maintenance requests</li>
+          <li>38% duplicate report rate across 5 channels</li>
+          <li>Resident satisfaction score 2.9/5</li>
+          <li>TC officers spend 2-3 hours/day on manual triage</li>
+          <li>Zero visibility for contractors on job status</li>
+        </ul>
+      </div>
+      <div class="case-section">
+        <div class="cs-label" style="color:var(--blue)">Key KPIs to Generate</div>
+        <ul class="cs-points">
+          <li>Duplicate request reduction rate</li>
+          <li>Request acknowledgement time (3+ days → 6 hours)</li>
+          <li>Officer manual triage time saved</li>
+          <li>Resident satisfaction score improvement</li>
+          <li>Platform adoption rate by residents</li>
+        </ul>
+      </div>
+      <div class="case-section">
+        <div class="cs-label" style="color:var(--blue)">What's in the Pack</div>
+        <ul class="cs-points">
+          <li>Problem statement discovery notes (field research)</li>
+          <li>Vision and strategic analysis worksheets</li>
+          <li>Vision workshop notes (DOCX)</li>
+          <li>Strategic analysis spreadsheet (XLSX)</li>
+          <li>Roadmap epics and notes</li>
+          <li>CBA benefit values and cost estimates (XLSX)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="case-footer">
+      <div class="case-files">
+        <div class="file-chip"><span>📝</span> 3× TXT notes</div>
+        <div class="file-chip"><span>📄</span> 1× DOCX workshop</div>
+        <div class="file-chip"><span>📊</span> 3× XLSX data files</div>
+        <div class="file-chip"><span>🗂</span> 8 files total</div>
+      </div>
+      <a href="/sample-inputs/Team_A_Digital_Services_Office_Inputs.zip" download
+         class="btn-download" style="background:var(--blue);color:white;box-shadow:0 4px 20px rgba(79,124,255,.3)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7l3 3 3-3M2 12h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Download Team A Pack
+      </a>
+    </div>
+  </div>
+
+  <!-- TEAM B -->
+  <div class="case-card reveal">
+    <div class="case-header">
+      <div class="case-num-wrap">
+        <div class="case-num" style="background:linear-gradient(135deg,#f5a623,#e08000)">B</div>
+        <span class="case-dept-badge" style="background:rgba(245,166,35,.15);color:var(--amber)">Estate Mgmt</span>
+      </div>
+      <div class="case-info">
+        <div class="case-tag" style="color:var(--amber)">Team B · Estate Management Division</div>
+        <div class="case-title">Resident Feedback &<br>Engagement Platform</div>
+        <div class="case-desc">HDB residents have no structured way to provide ongoing feedback about estate quality, events or management decisions. Feedback arrives via MP meet-the-people sessions, Facebook groups and ad hoc calls — untracked and unanalysed. This charter defines a proactive resident engagement platform that closes the feedback loop and builds community trust.</div>
+      </div>
+      <div class="case-password">
+        <span class="password-label">Team Password</span>
+        <span class="password-val" style="color:var(--amber)">teamB2026</span>
+      </div>
+    </div>
+    <div class="case-body">
+      <div class="case-section">
+        <div class="cs-label" style="color:var(--amber)">Core Problem</div>
+        <ul class="cs-points">
+          <li>Resident feedback is unstructured and untracked</li>
+          <li>MP escalations used as primary feedback channel</li>
+          <li>No mechanism to close the loop with residents</li>
+          <li>Community events poorly attended due to lack of awareness</li>
+          <li>TC decisions made without resident input data</li>
+        </ul>
+      </div>
+      <div class="case-section">
+        <div class="cs-label" style="color:var(--amber)">Key KPIs to Generate</div>
+        <ul class="cs-points">
+          <li>Resident feedback submission rate</li>
+          <li>Feedback response rate and time</li>
+          <li>MP escalation reduction</li>
+          <li>Community event attendance uplift</li>
+          <li>Resident satisfaction with TC communication</li>
+        </ul>
+      </div>
+      <div class="case-section">
+        <div class="cs-label" style="color:var(--amber)">What's in the Pack</div>
+        <ul class="cs-points">
+          <li>Problem discovery notes (resident interviews)</li>
+          <li>Vision raw notes from stakeholder workshops</li>
+          <li>Vision workshop documentation (DOCX)</li>
+          <li>Strategic analysis and benchmarking (XLSX)</li>
+          <li>Roadmap epics and phasing notes</li>
+        </ul>
+      </div>
+    </div>
+    <div class="case-footer">
+      <div class="case-files">
+        <div class="file-chip"><span>📝</span> 3× TXT notes</div>
+        <div class="file-chip"><span>📄</span> 1× DOCX workshop</div>
+        <div class="file-chip"><span>📊</span> 1× XLSX analysis</div>
+        <div class="file-chip"><span>🗂</span> 5 files total</div>
+      </div>
+      <a href="/sample-inputs/Team_B_Estate_Management_Division_Inputs.zip" download
+         class="btn-download" style="background:var(--amber);color:#1a1d24;box-shadow:0 4px 20px rgba(245,166,35,.25)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7l3 3 3-3M2 12h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Download Team B Pack
+      </a>
+    </div>
+  </div>
+
+  <!-- TEAM C -->
+  <div class="case-card reveal">
+    <div class="case-header">
+      <div class="case-num-wrap">
+        <div class="case-num" style="background:linear-gradient(135deg,#b06cfb,#7c3aed)">C</div>
+        <span class="case-dept-badge" style="background:rgba(176,108,251,.15);color:var(--purp)">Estate Mgmt</span>
+      </div>
+      <div class="case-info">
+        <div class="case-tag" style="color:var(--purp)">Team C · Estate Management Division</div>
+        <div class="case-title">Municipal Smart Sensor<br>& IoT Network Platform</div>
+        <div class="case-desc">Singapore's 1.1 million HDB flats have no estate-wide sensor network. Flooding corridors go undetected until residents call. Dengue clusters are identified weeks after outbreak. Lift anomalies surface only after breakdown. This charter defines Singapore's first residential IoT sensor platform — enabling proactive estate management through real-time environmental and infrastructure monitoring.</div>
+      </div>
+      <div class="case-password">
+        <span class="password-label">Team Password</span>
+        <span class="password-val" style="color:var(--purp)">teamC2026</span>
+      </div>
+    </div>
+    <div class="case-body">
+      <div class="case-section">
+        <div class="cs-label" style="color:var(--purp)">Core Problem</div>
+        <ul class="cs-points">
+          <li>Zero early warning for infrastructure stress events</li>
+          <li>Dengue cluster detection weeks after outbreak begins</li>
+          <li>Lift anomalies undetected until full breakdown</li>
+          <li>Estate managers making decisions on gut feel, not data</li>
+          <li>Smart Nation infrastructure not reaching residential estates</li>
+        </ul>
+      </div>
+      <div class="case-section">
+        <div class="cs-label" style="color:var(--purp)">Key KPIs to Generate</div>
+        <ul class="cs-points">
+          <li>Reduction in unplanned infrastructure incidents</li>
+          <li>Dengue cluster early detection lead time</li>
+          <li>Lift breakdown prediction accuracy</li>
+          <li>Estate manager response time to anomalies</li>
+          <li>Sensor uptime and data coverage rate</li>
+        </ul>
+      </div>
+      <div class="case-section">
+        <div class="cs-label" style="color:var(--purp)">What's in the Pack</div>
+        <ul class="cs-points">
+          <li>Field visit notes from 3 estates (Punggol, Sengkang, Tampines)</li>
+          <li>Smart Nation PMO stakeholder interview notes</li>
+          <li>Vision workshop notes with strategic pillars</li>
+          <li>Roadmap epics and phasing constraints</li>
+        </ul>
+      </div>
+    </div>
+    <div class="case-footer">
+      <div class="case-files">
+        <div class="file-chip"><span>📝</span> 3× TXT notes</div>
+        <div class="file-chip"><span>🗂</span> 3 files total</div>
+      </div>
+      <a href="/sample-inputs/Team_C_Smart_Sensor_IoT_Inputs.zip" download
+         class="btn-download" style="background:var(--purp);color:white;box-shadow:0 4px 20px rgba(176,108,251,.25)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7l3 3 3-3M2 12h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Download Team C Pack
+      </a>
+    </div>
+  </div>
+
+  <!-- TEAM D -->
+  <div class="case-card reveal">
+    <div class="case-header">
+      <div class="case-num-wrap">
+        <div class="case-num" style="background:linear-gradient(135deg,#2dd4bf,#0891b2)">D</div>
+        <span class="case-dept-badge" style="background:rgba(45,212,191,.15);color:var(--teal)">Citizen Exp</span>
+      </div>
+      <div class="case-info">
+        <div class="case-tag" style="color:var(--teal)">Team D · Citizen Experience Group</div>
+        <div class="case-title">Community Space Booking<br>& Management System</div>
+        <div class="case-desc">Booking a BBQ pit or function room at an HDB estate requires phone calls during office hours, paper calendars and manual coordination — often resulting in double-bookings and disputes. Across 17 Town Councils, every TC uses a different system. This charter defines a unified digital booking platform that gives every resident real-time access to community spaces across Singapore.</div>
+      </div>
+      <div class="case-password">
+        <span class="password-label">Team Password</span>
+        <span class="password-val" style="color:var(--teal)">teamD2026</span>
+      </div>
+    </div>
+    <div class="case-body">
+      <div class="case-section">
+        <div class="cs-label" style="color:var(--teal)">Core Problem</div>
+        <ul class="cs-points">
+          <li>67% of residents find booking process confusing</li>
+          <li>43% have experienced a double-booking dispute</li>
+          <li>Each TC uses a different booking method</li>
+          <li>No real-time availability view for any space type</li>
+          <li>Seniors excluded by phone-only booking for many spaces</li>
+        </ul>
+      </div>
+      <div class="case-section">
+        <div class="cs-label" style="color:var(--teal)">Key KPIs to Generate</div>
+        <ul class="cs-points">
+          <li>Booking completion rate (digital vs phone)</li>
+          <li>Double-booking dispute reduction</li>
+          <li>TC staff time saved on manual coordination</li>
+          <li>Resident satisfaction with booking experience</li>
+          <li>Space utilisation rate across TCs</li>
+        </ul>
+      </div>
+      <div class="case-section">
+        <div class="cs-label" style="color:var(--teal)">What's in the Pack</div>
+        <ul class="cs-points">
+          <li>Field visit notes from 5 Town Councils</li>
+          <li>Resident survey findings (200 respondents)</li>
+          <li>Vision workshop notes with strategic pillars</li>
+          <li>Roadmap epics and phasing plan</li>
+        </ul>
+      </div>
+    </div>
+    <div class="case-footer">
+      <div class="case-files">
+        <div class="file-chip"><span>📝</span> 3× TXT notes</div>
+        <div class="file-chip"><span>🗂</span> 3 files total</div>
+      </div>
+      <a href="/sample-inputs/Team_D_Community_Space_Booking_Inputs.zip" download
+         class="btn-download" style="background:var(--teal);color:#0a1a16;box-shadow:0 4px 20px rgba(45,212,191,.2)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7l3 3 3-3M2 12h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Download Team D Pack
+      </a>
+    </div>
+  </div>
+
+  <!-- TEAM E -->
+  <div class="case-card reveal">
+    <div class="case-header">
+      <div class="case-num-wrap">
+        <div class="case-num" style="background:linear-gradient(135deg,#1fd68a,#059669)">E</div>
+        <span class="case-dept-badge" style="background:rgba(31,214,138,.15);color:var(--green)">Infra & Ops</span>
+      </div>
+      <div class="case-info">
+        <div class="case-tag" style="color:var(--green)">Team E · Building Infrastructure & Ops</div>
+        <div class="case-title">Predictive Lift Maintenance<br>Intelligence System</div>
+        <div class="case-desc">Singapore has 79,000+ HDB lifts with an average age of 18 years. All maintenance is purely reactive — no telemetry, no sensors, no predictive capability. When a lift in a single-lift block fails, elderly residents are completely isolated. Average downtime is 4.2 hours per incident. This charter defines an AI-powered predictive maintenance system using IoT sensors to detect failure signatures weeks before breakdown.</div>
+      </div>
+      <div class="case-password">
+        <span class="password-label">Team Password</span>
+        <span class="password-val" style="color:var(--green)">teamE2026</span>
+      </div>
+    </div>
+    <div class="case-body">
+      <div class="case-section">
+        <div class="cs-label" style="color:var(--green)">Core Problem</div>
+        <ul class="cs-points">
+          <li>79,000+ lifts with zero predictive monitoring</li>
+          <li>Average breakdown downtime: 4.2 hours</li>
+          <li>Contractors use paper job cards and WhatsApp</li>
+          <li>When technician leaves, maintenance knowledge leaves too</li>
+          <li>Reactive maintenance costs 3-5× more than predictive</li>
+        </ul>
+      </div>
+      <div class="case-section">
+        <div class="cs-label" style="color:var(--green)">Key KPIs to Generate</div>
+        <ul class="cs-points">
+          <li>Unplanned lift downtime reduction</li>
+          <li>Predictive maintenance accuracy rate</li>
+          <li>Maintenance cost per lift per year</li>
+          <li>Resident satisfaction with lift reliability</li>
+          <li>Contractor job completion time</li>
+        </ul>
+      </div>
+      <div class="case-section">
+        <div class="cs-label" style="color:var(--green)">What's in the Pack</div>
+        <ul class="cs-points">
+          <li>Contractor interview notes (4 contractors)</li>
+          <li>HDB lift fleet data and breakdown statistics</li>
+          <li>Vision workshop notes with impact targets</li>
+          <li>Roadmap epics with sensor deployment plan</li>
+        </ul>
+      </div>
+    </div>
+    <div class="case-footer">
+      <div class="case-files">
+        <div class="file-chip"><span>📝</span> 3× TXT notes</div>
+        <div class="file-chip"><span>🗂</span> 3 files total</div>
+      </div>
+      <a href="/sample-inputs/Team_E_Predictive_Lift_Maintenance_Inputs.zip" download
+         class="btn-download" style="background:var(--green);color:#0a1a0f;box-shadow:0 4px 20px rgba(31,214,138,.2)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7l3 3 3-3M2 12h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Download Team E Pack
+      </a>
+    </div>
+  </div>
+
+</section>
+
+<footer>
+  <p>Charter OS · Use Cases · Confidential — Internal Use Only</p>
+  <div class="footer-links">
+    <a href="/">Launch App</a>
+    <a href="/learning">Learning Hub</a>
+    <a href="/promo">Promo</a>
+    <a href="/hub">Hub</a>
+  </div>
+</footer>
+
+<script>
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.06 });
+  document.querySelectorAll('.reveal').forEach((el, i) => {
+    el.style.transitionDelay = `${i * 0.05}s`;
+    obs.observe(el);
+  });
+</script>
+</body>
+</html>
