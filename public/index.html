@@ -1019,7 +1019,10 @@ function teamLogout() {
       try {
         CURRENT_TEAM = JSON.parse(savedSession);
         document.getElementById('password-gate').style.display = 'none';
-        window.addEventListener('DOMContentLoaded', onTeamLoggedIn);
+        window.addEventListener('DOMContentLoaded', async () => {
+          await loadApprovals();
+          onTeamLoggedIn();
+        });
       } catch(e) {
         document.getElementById('password-gate').style.display = 'flex';
       }
@@ -2203,6 +2206,12 @@ function renderDashboard() {
 function renderActivity() {
   const el = document.getElementById('activity-items');
   if (!el) return;
+  // Preserve collapsed state
+  const wrap = document.getElementById('activity-items-wrap');
+  const icon = document.getElementById('activity-toggle-icon');
+  const isCollapsed = localStorage.getItem('charter_os_activity_collapsed') === '1';
+  if (wrap) wrap.style.display = isCollapsed ? 'none' : 'block';
+  if (icon) icon.textContent = isCollapsed ? '▸' : '▾';
   if (!S.activity.length) {
     el.innerHTML = '<div class="empty-state"><div class="es-icon">📋</div><p>No activity yet. Start building your charter.</p></div>';
     return;
