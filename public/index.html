@@ -1442,6 +1442,41 @@ function teamLogout() {
         <p>Define how you will measure success and demonstrate value. AI recommends KPIs based on your approved Problem Statement and Vision — your team reviews and approves. Then upload your cost/benefit estimates for a full CBA.</p>
       </div>
 
+      <!-- KPI Flow Banner -->
+      <div id="kpi-flow-banner" style="display:flex;align-items:stretch;gap:0;background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:18px">
+        <!-- Step 1 -->
+        <div id="kpi-step-1" style="flex:1;padding:14px 16px;border-right:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <div id="kpi-step-1-dot" style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:rgba(139,144,168,0.2);color:var(--text3)">1</div>
+            <span style="font-size:12px;font-weight:700;color:var(--text)">Generate & Review KPIs</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.5;padding-left:30px">AI recommends KPIs from your approved Problem Statement and Vision. Review each one carefully.</div>
+          <div id="kpi-step-1-status" style="margin-top:8px;padding-left:30px;font-size:11px;font-weight:600"></div>
+        </div>
+        <!-- Arrow -->
+        <div style="display:flex;align-items:center;padding:0 6px;color:var(--text3);font-size:16px;flex-shrink:0">›</div>
+        <!-- Step 2 -->
+        <div id="kpi-step-2" style="flex:1;padding:14px 16px;border-right:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <div id="kpi-step-2-dot" style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:function;font-size:11px;font-weight:700;flex-shrink:0;background:rgba(139,144,168,0.2);color:var(--text3)">2</div>
+            <span style="font-size:12px;font-weight:700;color:var(--text)">Submit for PO Approval</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.5;padding-left:30px">Once happy with your KPIs, submit them for Product Owner review and approval.</div>
+          <div id="kpi-step-2-status" style="margin-top:8px;padding-left:30px;font-size:11px;font-weight:600"></div>
+        </div>
+        <!-- Arrow -->
+        <div style="display:flex;align-items:center;padding:0 6px;color:var(--text3);font-size:16px;flex-shrink:0">›</div>
+        <!-- Step 3 -->
+        <div id="kpi-step-3" style="flex:1;padding:14px 16px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <div id="kpi-step-3-dot" style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:rgba(139,144,168,0.2);color:var(--text3)">3</div>
+            <span style="font-size:12px;font-weight:700;color:var(--text)">Cost-Benefit Analysis</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.5;padding-left:30px">After KPIs are approved, assign benefit values and generate a full CBA with ROI projections.</div>
+          <div id="kpi-step-3-status" style="margin-top:8px;padding-left:30px;font-size:11px;font-weight:600"></div>
+        </div>
+      </div>
+
       <div class="tabs-row">
         <button class="tab-btn active" onclick="switchTab('kpis','generate')">🤖 AI Recommend</button>
         <button class="tab-btn" onclick="switchTab('kpis','table')">📊 KPI Table</button>
@@ -1899,7 +1934,7 @@ function navigate(id) {
   if (screenNameEl) screenNameEl.textContent = screenTitles[id] || id;
   document.querySelector('.main').scrollTo({top:0, behavior:'smooth'});
   if (id==='dashboard') renderDashboard();
-  if (id==='kpis') { renderKPISourceCards(); renderCBAKPITable(); }
+  if (id==='kpis') { renderKPISourceCards(); renderCBAKPITable(); renderKPIBanner(); }
   if (id==='export') renderExport();
 }
 
@@ -3907,6 +3942,74 @@ function deleteKPI(idx) {
   saveState();
   renderKPITable();
 }
+function renderKPIBanner() {
+  const kpiAP = (window.APPROVALS || {})['kpis'] || {};
+  const kpiStatus = kpiAP.status || 'draft';
+  const hasKPIs = S.kpis && S.kpis.items && S.kpis.items.length > 0;
+  const hasCBA = S.cba && S.cba.draft;
+
+  const dot1 = document.getElementById('kpi-step-1-dot');
+  const dot2 = document.getElementById('kpi-step-2-dot');
+  const dot3 = document.getElementById('kpi-step-3-dot');
+  const st1  = document.getElementById('kpi-step-1-status');
+  const st2  = document.getElementById('kpi-step-2-status');
+  const st3  = document.getElementById('kpi-step-3-status');
+  const s1   = document.getElementById('kpi-step-1');
+  const s2   = document.getElementById('kpi-step-2');
+  const s3   = document.getElementById('kpi-step-3');
+  if (!dot1) return;
+
+  const GREEN  = 'rgba(31,214,138,0.15)'; const GDOT = '#1fd68a';
+  const AMBER  = 'rgba(245,166,35,0.12)'; const ADOT = '#f5a623';
+  const BLUE   = 'rgba(79,124,255,0.12)'; const BDOT = '#4f7cff';
+  const GREY   = 'rgba(139,144,168,0.15)'; const GRDOT = '#8b90a8';
+
+  // Step 1 — KPIs generated
+  if (hasKPIs) {
+    dot1.style.background = GREEN; dot1.style.color = GDOT; dot1.textContent = '✓';
+    s1.style.borderLeft = '3px solid ' + GDOT;
+    st1.innerHTML = '<span style="color:' + GDOT + '">' + S.kpis.items.length + ' KPIs defined</span>';
+  } else {
+    dot1.style.background = BLUE; dot1.style.color = BDOT; dot1.textContent = '1';
+    s1.style.borderLeft = '3px solid ' + BDOT;
+    st1.innerHTML = '<span style="color:' + BDOT + '">← Start here</span>';
+  }
+
+  // Step 2 — Submit/approve
+  if (kpiStatus === 'approved') {
+    dot2.style.background = GREEN; dot2.style.color = GDOT; dot2.textContent = '✓';
+    s2.style.borderLeft = '3px solid ' + GDOT;
+    st2.innerHTML = '<span style="color:' + GDOT + '">✅ Approved by PO</span>';
+  } else if (kpiStatus === 'pending') {
+    dot2.style.background = AMBER; dot2.style.color = ADOT; dot2.textContent = '2';
+    s2.style.borderLeft = '3px solid ' + ADOT;
+    st2.innerHTML = '<span style="color:' + ADOT + '">⏳ Awaiting PO review</span>';
+  } else if (hasKPIs) {
+    dot2.style.background = BLUE; dot2.style.color = BDOT; dot2.textContent = '2';
+    s2.style.borderLeft = '3px solid ' + BDOT;
+    st2.innerHTML = '<span style="color:' + BDOT + '">← Submit when ready</span>';
+  } else {
+    dot2.style.background = GREY; dot2.style.color = GRDOT; dot2.textContent = '2';
+    s2.style.borderLeft = 'none';
+    st2.innerHTML = '<span style="color:' + GRDOT + '">Complete Step 1 first</span>';
+  }
+
+  // Step 3 — CBA
+  if (hasCBA) {
+    dot3.style.background = GREEN; dot3.style.color = GDOT; dot3.textContent = '✓';
+    s3.style.borderLeft = '3px solid ' + GDOT;
+    st3.innerHTML = '<span style="color:' + GDOT + '">CBA generated</span>';
+  } else if (kpiStatus === 'approved') {
+    dot3.style.background = BLUE; dot3.style.color = BDOT; dot3.textContent = '3';
+    s3.style.borderLeft = '3px solid ' + BDOT;
+    st3.innerHTML = '<span style="color:' + BDOT + '">← KPIs approved — start CBA</span>';
+  } else {
+    dot3.style.background = GREY; dot3.style.color = GRDOT; dot3.textContent = '3';
+    s3.style.borderLeft = 'none';
+    st3.innerHTML = '<span style="color:' + GRDOT + '">Complete Steps 1 & 2 first</span>';
+  }
+}
+
 function renderKPITable() {
   const tbody = document.getElementById('kpi-table-body');
   const empty = document.getElementById('kpi-empty');
@@ -4977,6 +5080,7 @@ function renderAll() {
   renderMeetings();
   renderTOR();
   renderKPITable();
+  renderKPIBanner();
   renderDashboard();
   // Restore persisted file text indicators
   ['problem','vision','kpis','roadmap'].forEach(section => {
