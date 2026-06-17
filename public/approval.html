@@ -124,20 +124,6 @@
   .task-chip { font-size: 11px; padding: 3px 9px; border-radius: 4px; background: rgba(255,255,255,0.05); color: var(--text-dim); border: 1px solid var(--border); }
   .phase-milestone { font-size: 12px; color: var(--green); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
 
-  /* ── ROADMAP INNER TABS ── */
-  .rm-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
-  .rm-tab-btn { padding: 7px 16px; font-size: 12px; font-weight: 600; border: none; background: none; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; font-family: var(--font-ui); transition: color 0.15s; }
-  .rm-tab-btn:hover { color: var(--text); }
-  .rm-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .rm-panel { display: none; }
-  .rm-panel.active { display: block; }
-  .gantt-wrap { overflow-x: auto; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
-  .gantt-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; min-width: 700px; }
-  .gantt-label { width: 180px; flex-shrink: 0; font-size: 11px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .gantt-track { flex: 1; height: 22px; background: var(--bg); border-radius: 4px; position: relative; }
-  .gantt-bar { height: 100%; border-radius: 4px; position: absolute; display: flex; align-items: center; padding-left: 6px; font-size: 10px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; }
-  .gantt-milestone-row { font-size: 10px; color: var(--green); font-weight: 700; padding: 2px 0 6px 0; }
-
   /* ── PO COMMENT SYSTEM ── */
   .po-toolbar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: rgba(245,158,11,0.06); border: 1px solid var(--orange-border); border-radius: 8px; margin-bottom: 16px; font-size: 12px; color: var(--orange); }
   .po-toolbar strong { color: var(--orange); }
@@ -200,6 +186,7 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--text-muted); font-size: 13px; gap: 10px; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -467,6 +454,9 @@ function renderSection(key) {
 
   // Inject saved comments
   injectSavedComments(key);
+
+  // Render CBA charts after DOM is ready
+  if (key === 'cba') setTimeout(renderCBACharts, 150);
 }
 
 function renderActionBar(key, status, ap) {
@@ -535,7 +525,7 @@ function renderRoadmap() {
   const phases = charterState.roadmap?.phases_data || [];
   if (!phases.length) return `<div class="empty-state"><h3>No roadmap defined yet</h3></div>`;
 
-  // Phase cards HTML
+  // Phase cards
   const phaseCards = phases.map((ph,i) => `
     <div class="phase-card commentable" id="phase-${i}">
       <div class="phase-header">
@@ -552,29 +542,52 @@ function renderRoadmap() {
       <div class="phase-milestone">✦ ${ph.milestone}</div>
     </div>`).join('');
 
-  // Gantt HTML
+  // Build Gantt with date headers
   const COLORS = ['4f7cff','1fd68a','f5a623','b06cfb','2dd4bf','ff5c5c'];
+  const startDateStr = charterState.roadmap?.start_date || new Date().toISOString().slice(0,10);
+  const startDate = new Date(startDateStr);
+
   function parseWeeks(dur) {
     if (!dur) return 4;
     const m = String(dur).match(/(\d+)/);
     return m ? parseInt(m[1]) : 4;
   }
-  let allTasks = [], weekOffset = 0, totalWeeks = 0;
+
+  // Build task list
+  let allTasks = [], weekOffset = 0;
   phases.forEach((ph, pi) => {
     const color = COLORS[pi % COLORS.length];
-    (ph.tasks||[]).forEach((t, ti) => {
+    (ph.tasks||[]).forEach(t => {
       const w = parseWeeks(t.duration);
-      allTasks.push({ name: t.name||t, weeks: w, weekStart: weekOffset, color, phaseName: ph.name, isMilestone: false });
+      allTasks.push({ name: t.name||t, weeks: w, weekStart: weekOffset, color, isMilestone: false });
       weekOffset += w;
     });
     allTasks.push({ name: '✦ ' + (ph.milestone||''), weekStart: weekOffset, weeks: 0, color, isMilestone: true });
   });
-  totalWeeks = weekOffset || 1;
+  const totalWeeks = weekOffset || 1;
+
+  // Build month headers
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let monthHeaders = [];
+  let cur = new Date(startDate);
+  cur.setDate(1);
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + totalWeeks * 7);
+  while (cur <= endDate) {
+    const weekPos = Math.max(0, (cur - startDate) / (7 * 24 * 3600 * 1000));
+    const pct = (weekPos / totalWeeks * 100).toFixed(1);
+    monthHeaders.push({ label: MONTHS[cur.getMonth()] + ' ' + cur.getFullYear(), pct });
+    cur.setMonth(cur.getMonth() + 1);
+  }
+
+  const monthHeaderHtml = monthHeaders.map(m =>
+    `<div style="position:absolute;left:${m.pct}%;font-size:9px;color:#8b90a8;white-space:nowrap;transform:translateX(-50%)">${m.label}</div>`
+  ).join('');
 
   const ganttRows = allTasks.map(t => {
-    if (t.isMilestone) return `<div class="gantt-milestone-row" style="padding-left:188px">${t.name}</div>`;
+    if (t.isMilestone) return `<div style="font-size:10px;color:var(--green);font-weight:700;padding:3px 0 6px 188px">${t.name}</div>`;
     const left = (t.weekStart / totalWeeks * 100).toFixed(1);
-    const width = Math.max((t.weeks / totalWeeks * 100), 2).toFixed(1);
+    const width = Math.max((t.weeks / totalWeeks * 100), 1.5).toFixed(1);
     return `<div class="gantt-row">
       <div class="gantt-label" title="${t.name}">${t.name}</div>
       <div class="gantt-track">
@@ -593,7 +606,10 @@ function renderRoadmap() {
         <div class="charter-content">${phaseCards}</div>
       </div>
       <div class="rm-panel" id="rm-panel-gantt">
-        <div class="gantt-wrap">${ganttRows}</div>
+        <div class="gantt-wrap">
+          <div style="position:relative;height:22px;margin-left:188px;margin-bottom:8px;border-bottom:1px solid var(--border)">${monthHeaderHtml}</div>
+          ${ganttRows}
+        </div>
       </div>
     </div>`;
 }
@@ -605,7 +621,119 @@ function switchRMTab(tab) {
 
 function renderCBA() {
   const html = charterState.cba?.draft || charterState.cba_parsed?.clean || '';
-  return `<div class="charter-content" id="section-content-cba">${wrapParagraphs(html, 'cba')}</div>`;
+  const p = charterState.cba_parsed || {};
+  const kpis = charterState.kpis?.items || [];
+  const bVals = charterState.cba_benefit_values || {};
+
+  // Build benefit data per KPI
+  const benefitLabels = [], benefitData = [];
+  kpis.forEach((k, i) => {
+    const v = parseFloat(bVals[i]) || 0;
+    if (v > 0) { benefitLabels.push(k.name.length > 28 ? k.name.slice(0,26)+'…' : k.name); benefitData.push(v); }
+  });
+  const totalBen = p.totalBenAnnual || benefitData.reduce((a,b)=>a+b,0) || 0;
+  const totalOneOff = p.totalOneOff || 0;
+  const totalRecurring = p.totalRecurring || 0;
+  const y1cost = p.totalY1 || (totalOneOff + totalRecurring);
+  const y1net = p.y1net || (totalBen - y1cost);
+  const y2net = p.y2net || (totalBen - totalRecurring);
+  const y3net = p.y3net || (totalBen - totalRecurring);
+  const payback = p.paybackMths || '—';
+  const roi = p.roi3yr || '—';
+
+  const hasCharts = totalBen > 0 || totalOneOff > 0;
+
+  return `
+    <div class="charter-content" id="section-content-cba">
+      ${wrapParagraphs(html, 'cba')}
+      ${hasCharts ? `
+      <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--accent);margin-bottom:16px">CBA Charts</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px">
+            <div style="font-size:10px;font-weight:700;color:#2dd4bf;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Cost vs Annual Benefit</div>
+            <div style="position:relative;height:180px"><canvas id="ap-cba-bar"></canvas></div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px">
+            <div style="font-size:10px;font-weight:700;color:#2dd4bf;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Benefit by KPI</div>
+            <div style="position:relative;height:180px"><canvas id="ap-cba-donut"></canvas></div>
+          </div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px">
+          <div style="font-size:10px;font-weight:700;color:#2dd4bf;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">3-Year Cumulative Net Position</div>
+          <div style="position:relative;height:140px"><canvas id="ap-cba-waterfall"></canvas></div>
+        </div>
+      </div>` : ''}
+    </div>`;
+}
+
+function renderCBACharts() {
+  const p = charterState.cba_parsed || {};
+  const kpis = charterState.kpis?.items || [];
+  const bVals = charterState.cba_benefit_values || {};
+
+  const benefitLabels = [], benefitData = [];
+  kpis.forEach((k, i) => {
+    const v = parseFloat(bVals[i]) || 0;
+    if (v > 0) { benefitLabels.push(k.name.length > 28 ? k.name.slice(0,26)+'…' : k.name); benefitData.push(v); }
+  });
+  const totalBen = p.totalBenAnnual || benefitData.reduce((a,b)=>a+b,0) || 0;
+  const totalOneOff = p.totalOneOff || 0;
+  const totalRecurring = p.totalRecurring || 0;
+  const y1cost = p.totalY1 || (totalOneOff + totalRecurring);
+  const y1net = p.y1net || (totalBen - y1cost);
+  const y2net = p.y2net || (totalBen - totalRecurring);
+  const y3net = p.y3net || (totalBen - totalRecurring);
+
+  const COLORS = ['4f7cff','1fd68a','f5a623','b06cfb','2dd4bf','ff5c5c','e879f9','fb923c'];
+  const chartDefaults = { responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' SGD ' + ctx.raw.toLocaleString() } } },
+    scales: { x: { ticks: { color: '#8b90a8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+              y: { ticks: { color: '#8b90a8', font: { size: 10 }, callback: v => 'SGD ' + (v/1000).toFixed(0)+'K' }, grid: { color: 'rgba(255,255,255,0.06)' } } }
+  };
+
+  // Bar chart
+  const barEl = document.getElementById('ap-cba-bar');
+  if (barEl && typeof Chart !== 'undefined') {
+    const existing = Chart.getChart(barEl); if (existing) existing.destroy();
+    new Chart(barEl, { type: 'bar',
+      data: { labels: ['One-off Cost', 'Year 1 Total', 'Annual Benefit', 'Net Year 2', 'Net Year 3'],
+              datasets: [{ data: [totalOneOff, y1cost, totalBen, y2net, y3net],
+                backgroundColor: [totalOneOff>0?'rgba(239,68,68,0.7)':'rgba(99,102,241,0.3)', 'rgba(239,68,68,0.7)', 'rgba(31,214,138,0.7)',
+                  y2net>=0?'rgba(31,214,138,0.7)':'rgba(239,68,68,0.7)', y3net>=0?'rgba(31,214,138,0.7)':'rgba(239,68,68,0.7)'],
+                borderRadius: 4 }] },
+      options: { ...chartDefaults, plugins: { ...chartDefaults.plugins, legend: { display: false } } }
+    });
+  }
+
+  // Donut chart
+  const donutEl = document.getElementById('ap-cba-donut');
+  if (donutEl && benefitData.length && typeof Chart !== 'undefined') {
+    const existing = Chart.getChart(donutEl); if (existing) existing.destroy();
+    new Chart(donutEl, { type: 'doughnut',
+      data: { labels: benefitLabels, datasets: [{ data: benefitData,
+        backgroundColor: COLORS.slice(0, benefitData.length).map(c => '#'+c), borderWidth: 2, borderColor: '#1a1d27' }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '65%',
+        plugins: { legend: { display: true, position: 'bottom', labels: { color: '#8b90a8', font: { size: 9 }, boxWidth: 10, padding: 8 } },
+          tooltip: { callbacks: { label: ctx => ' SGD ' + ctx.raw.toLocaleString() } } } }
+    });
+  }
+
+  // Waterfall chart
+  const wfEl = document.getElementById('ap-cba-waterfall');
+  if (wfEl && typeof Chart !== 'undefined') {
+    const existing = Chart.getChart(wfEl); if (existing) existing.destroy();
+    const cumY1 = -y1cost + totalBen;
+    const cumY2 = cumY1 + totalBen - totalRecurring;
+    const cumY3 = cumY2 + totalBen - totalRecurring;
+    new Chart(wfEl, { type: 'bar',
+      data: { labels: ['Year 0 (Investment)', 'Year 1', 'Year 2', 'Year 3'],
+              datasets: [{ data: [-totalOneOff, cumY1, cumY2, cumY3],
+                backgroundColor: [-totalOneOff, cumY1, cumY2, cumY3].map(v => v >= 0 ? 'rgba(31,214,138,0.7)' : 'rgba(239,68,68,0.7)'),
+                borderRadius: 4 }] },
+      options: { ...chartDefaults, plugins: { ...chartDefaults.plugins } }
+    });
+  }
 }
 
 // ── WRAP PARAGRAPHS (makes them commentable) ──────────────────
