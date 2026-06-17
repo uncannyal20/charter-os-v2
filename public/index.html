@@ -943,6 +943,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (main) main.style.marginLeft = '0';
     if (btn) { btn.style.left = '0'; btn.textContent = '▶'; btn.title = 'Show sidebar'; }
   }
+  if (localStorage.getItem('charter_os_activity_collapsed') === '1') {
+    const wrap = document.getElementById('activity-items-wrap');
+    const icon = document.getElementById('activity-toggle-icon');
+    if (wrap) wrap.style.display = 'none';
+    if (icon) icon.textContent = '▸';
+  }
 });
 
 function teamLogout() {
@@ -1184,11 +1190,16 @@ function teamLogout() {
 
       <div class="activity-list" id="activity-list">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <div class="al-title" style="margin-bottom:0">Activity Log</div>
+          <div style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="toggleActivityLog()">
+            <div class="al-title" style="margin-bottom:0">Activity Log</div>
+            <span id="activity-toggle-icon" style="font-size:11px;color:var(--text3);transition:transform 0.2s">▾</span>
+          </div>
           <button onclick="clearActivityLog()" class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 10px">🗑 Clear</button>
         </div>
+        <div id="activity-items-wrap">
         <div id="activity-items">
           <div class="empty-state"><div class="es-icon">📋</div><p>Your charter activity will appear here.<br>Start by adding your team members.</p></div>
+        </div>
         </div>
       </div>
     </div>
@@ -1880,6 +1891,16 @@ function loadState() {
 
 function saveState() {
   try { localStorage.setItem(getStorageKey(), JSON.stringify(S)); } catch(e) {}
+}
+
+function toggleActivityLog() {
+  const wrap = document.getElementById('activity-items-wrap');
+  const icon = document.getElementById('activity-toggle-icon');
+  if (!wrap) return;
+  const collapsed = wrap.style.display === 'none';
+  wrap.style.display = collapsed ? 'block' : 'none';
+  icon.textContent = collapsed ? '▾' : '▸';
+  localStorage.setItem('charter_os_activity_collapsed', collapsed ? '0' : '1');
 }
 
 function clearActivityLog() {
