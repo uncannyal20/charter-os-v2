@@ -651,6 +651,15 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
       if (Array.isArray(data)) {
         window.APPROVALS = {};
         data.forEach(a => { window.APPROVALS[a.section] = a; });
+        // Sync tor_approved into state so getProgress reflects PO approval
+        const torAP = window.APPROVALS['tor'];
+        if (torAP && torAP.status === 'approved' && !S.tor_approved) {
+          S.tor_approved = true;
+          saveState();
+        } else if (torAP && torAP.status !== 'approved' && S.tor_approved) {
+          S.tor_approved = false;
+          saveState();
+        }
       }
     } catch(e) { console.warn('Could not load approvals:', e.message); }
   }
