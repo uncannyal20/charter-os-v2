@@ -3368,7 +3368,14 @@ Use <strong> for all financial figures.`;
         </div>
 
         <div class="draft-actions">
-          <button class="btn btn-green btn-sm" onclick="approveCBA()">✓ Approve CBA</button>
+          ${(()=>{
+            const _cbaAP = window.APPROVALS['cba']||{};
+            const _cst = _cbaAP.status||'draft';
+            const _rev = _cbaAP.reviewed_at ? new Date(_cbaAP.reviewed_at).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'}) : '';
+            if(_cst==='approved') return '<div style="display:inline-flex;align-items:center;gap:8px;background:rgba(31,214,138,0.1);border:1.5px solid rgba(31,214,138,0.4);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;color:var(--green)">✅ Approved by PO' + (_rev ? ' · ' + _rev : '') + '</div>';
+            if(_cst==='pending') return '<button class="btn btn-ghost btn-sm" style="color:#a5b4fc;border-color:rgba(108,99,255,0.3);cursor:default" disabled>⏳ Awaiting PO Review</button>';
+            return '<button class="btn btn-accent btn-sm" onclick="approveCBA()" style="background:var(--accent);color:white;border:none">📤 Submit CBA for PO Review</button>';
+          })()}
           <button class="btn btn-primary btn-sm" onclick="downloadCBAExcel()">⬇ Download Full CBA Excel</button>
           <button class="btn btn-ghost btn-sm" onclick="generateCBA()">↻ Regenerate</button>
         </div>
