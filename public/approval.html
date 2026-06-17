@@ -376,7 +376,16 @@ function renderSection(key) {
     return;
   }
 
-  const isSubmitted = status === 'pending' || status === 'approved' || status === 'revision';
+  // Show action bar for any section that has content — not just submitted ones
+  const hasContent = !!(charterState && (
+    (key === 'tor' && charterState.tor) ||
+    (key === 'problem' && charterState.problem?.draft) ||
+    (key === 'vision' && charterState.vision?.draft) ||
+    (key === 'kpis' && charterState.kpis?.items?.length > 0) ||
+    (key === 'roadmap' && charterState.roadmap?.phases_data?.length > 0) ||
+    (key === 'cba' && (charterState.cba?.draft || charterState.cba_parsed?.clean))
+  ));
+  const isSubmitted = status === 'pending' || status === 'approved' || status === 'revision' || hasContent;
   const isApproved = status === 'approved';
 
   let contentHtml = '';
