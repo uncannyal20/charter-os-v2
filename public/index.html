@@ -954,6 +954,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function teamLogout() {
     if (!confirm('Sign out of CharterOS?')) return;
     sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem('approval_notif_dismissed');
     location.reload();
   }
 
