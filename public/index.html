@@ -728,7 +728,14 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
       else if (section === 'vision') renderDraftArea('vision', S.vision.draft);
       else if (section === 'kpis') renderKPITable();
       else if (section === 'roadmap') { renderRoadmapPhases(); renderGantt(); }
-      else if (section === 'cba') { /* CBA re-render not needed — output stays visible */ }
+      else if (section === 'cba') {
+        // Update the CBA submit button directly without re-running the expensive generateCBA()
+        const cbaActions = document.querySelector('#cba-output .draft-actions');
+        if (cbaActions) {
+          const submitBtn = cbaActions.querySelector('[onclick="approveCBA()"]');
+          if (submitBtn) submitBtn.outerHTML = '<button class="btn btn-ghost btn-sm" style="color:#a5b4fc;border-color:rgba(108,99,255,0.3);cursor:default" disabled>⏳ Awaiting PO Review</button>';
+        }
+      }
     } catch(e) {
       toast('Submit failed: ' + e.message, 'error');
     }
