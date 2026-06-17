@@ -728,7 +728,7 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
       else if (section === 'vision') renderDraftArea('vision', S.vision.draft);
       else if (section === 'kpis') renderKPITable();
       else if (section === 'roadmap') { renderRoadmapPhases(); renderGantt(); }
-      else if (section === 'cba') renderCBADraft();
+      else if (section === 'cba') { /* CBA re-render not needed — output stays visible */ }
     } catch(e) {
       toast('Submit failed: ' + e.message, 'error');
     }
@@ -3361,9 +3361,9 @@ Use <strong> for all financial figures.`;
         </div>
 
         <div class="draft-actions">
+          <button class="btn btn-green btn-sm" onclick="approveCBA()">✓ Approve CBA</button>
           <button class="btn btn-primary btn-sm" onclick="downloadCBAExcel()">⬇ Download Full CBA Excel</button>
           <button class="btn btn-ghost btn-sm" onclick="generateCBA()">↻ Regenerate</button>
-          <button class="btn btn-accent btn-sm" onclick="approveCBA()" style="background:var(--accent);color:white;border:none">📤 Submit CBA for PO Review</button>
         </div>
       </div>`;
 
