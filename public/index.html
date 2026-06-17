@@ -1242,7 +1242,7 @@ function teamLogout() {
 
       <div class="tab-panel active" id="problem-tab-input">
         <div class="card">
-          <div class="card-title"><span class="ct-icon">📁</span> Upload Source Materials</div>
+          <div class="card-title" style="justify-content:space-between"><span><span class="ct-icon">📁</span> Upload Source Materials</span><button class="btn btn-ghost btn-sm" onclick="loadFromZip('problem')" title="Auto-load files from 02_Problem/ folder in your sample ZIP">📦 Load from ZIP</button></div>
           <div class="upload-zone" id="prob-upload-zone">
             <input type="file" multiple accept=".txt,.doc,.docx,.pdf,.csv,.xlsx,.md" onchange="handleFiles('problem', this.files)">
             <div class="uz-icon">📂</div>
@@ -1304,7 +1304,7 @@ function teamLogout() {
 
       <div class="tab-panel active" id="vision-tab-input">
         <div class="card">
-          <div class="card-title"><span class="ct-icon">📁</span> Upload Strategic Documents</div>
+          <div class="card-title" style="justify-content:space-between"><span><span class="ct-icon">📁</span> Upload Strategic Documents</span><button class="btn btn-ghost btn-sm" onclick="loadFromZip('vision')" title="Auto-load files from 03_Vision/ folder in your sample ZIP">📦 Load from ZIP</button></div>
           <div class="upload-zone" id="vis-upload-zone">
             <input type="file" multiple accept=".txt,.doc,.docx,.pdf,.csv,.xlsx,.md" onchange="handleFiles('vision', this.files)">
             <div class="uz-icon">📂</div>
@@ -1424,7 +1424,7 @@ function teamLogout() {
         </div>
 
         <div class="card">
-          <div class="card-title"><span class="ct-icon">📁</span> Upload Additional Documents (optional)</div>
+          <div class="card-title" style="justify-content:space-between"><span><span class="ct-icon">📁</span> Upload Additional Documents (optional)</span><button class="btn btn-ghost btn-sm" onclick="loadFromZip('kpis')" title="Auto-load files from 04_KPIs/ folder in your sample ZIP">📦 Load from ZIP</button></div>
           <div class="upload-zone" id="kpi-upload-zone" style="padding:18px">
             <input type="file" multiple accept=".txt,.doc,.docx,.pdf,.csv,.xlsx,.md" onchange="handleFiles('kpis', this.files)">
             <div class="uz-text">Drop files here or click to browse</div>
@@ -1660,7 +1660,7 @@ COSTS:
         </div>
         <br>
         <div class="card">
-          <div class="card-title"><span class="ct-icon">📁</span> Upload Existing Plans (optional)</div>
+          <div class="card-title" style="justify-content:space-between"><span><span class="ct-icon">📁</span> Upload Existing Plans (optional)</span><button class="btn btn-ghost btn-sm" onclick="loadFromZip('roadmap')" title="Auto-load files from 05_Roadmap/ folder in your sample ZIP">📦 Load from ZIP</button></div>
           <div class="upload-zone" id="rm-upload-zone" style="padding:18px">
             <input type="file" multiple accept=".txt,.doc,.docx,.pdf,.csv,.xlsx,.md,.pptx,.ppt" onchange="handleFiles('roadmap', this.files)">
             <div class="uz-text">Drop backlog, sprint plans, or epics files here</div>
@@ -5022,6 +5022,72 @@ function toggleInlineEdit(section) {
     if (section === 'tor') area.innerHTML = cleanDraft(S.tor);
     else area.innerHTML = cleanDraft(S[section].draft);
   }
+}
+
+// ── LOAD FROM ZIP ─────────────────────────────────────────────
+const ZIP_FOLDER_MAP = {
+  problem: '02_Problem/',
+  vision:  '03_Vision/',
+  kpis:    '04_KPIs/',
+  roadmap: '05_Roadmap/'
+};
+
+async function loadFromZip(section) {
+  if (typeof JSZip === 'undefined') { toast('JSZip not loaded', 'error'); return; }
+
+  // Create a hidden file input and trigger it
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.zip';
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+    try {
+      toast('Reading ZIP…', 'success');
+      const ab = await readAsArrayBuffer(file);
+      const zip = await JSZip.loadAsync(ab);
+      const folder = ZIP_FOLDER_MAP[section];
+      const matched = [];
+
+      zip.forEach((path, entry) => {
+        if (!entry.dir && path.startsWith(folder)) {
+          matched.push({ path, entry });
+        }
+      });
+
+      if (!matched.length) {
+        toast(`No files found in ${folder} inside this ZIP.`, 'error');
+        return;
+      }
+
+      const fileListIds = { problem:'prob-file-list', vision:'vis-file-list', roadmap:'rm-file-list', kpis:'kpi-file-list' };
+      const listEl = document.getElementById(fileListIds[section]);
+      let loaded = 0;
+
+      for (const { path, entry } of matched) {
+        const fileName = path.split('/').pop();
+        const ext = fileName.split('.').pop().toLowerCase();
+        const blob = await entry.async('blob');
+        const f = new File([blob], fileName, { type: blob.type });
+        try {
+          const text = await extractFileText(f);
+          sectionFiles[section].push({ file: f, name: fileName, size: f.size, text });
+          loaded++;
+        } catch(e) {
+          toast(`Could not read ${fileName}: ${e.message}`, 'error');
+        }
+      }
+
+      renderFileList(section, listEl);
+      if (loaded > 0) {
+        persistFileTexts(section);
+        toast(`${loaded} file(s) loaded from ZIP ✓`, 'success');
+      }
+    } catch(e) {
+      toast('Failed to read ZIP: ' + e.message, 'error');
+    }
+  };
+  input.click();
 }
 
 function saveInlineEdit(section) {
