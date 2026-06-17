@@ -656,9 +656,11 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
         if (torAP && torAP.status === 'approved' && !S.tor_approved) {
           S.tor_approved = true;
           saveState();
+          renderDashboard();
         } else if (torAP && torAP.status !== 'approved' && S.tor_approved) {
           S.tor_approved = false;
           saveState();
+          renderDashboard();
         }
       }
     } catch(e) { console.warn('Could not load approvals:', e.message); }
