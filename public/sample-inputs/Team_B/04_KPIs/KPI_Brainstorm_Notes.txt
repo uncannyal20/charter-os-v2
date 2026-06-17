@@ -1,0 +1,7 @@
+KPIs:
+1. Avg resolution time — target ≤5 working days
+2. Resident satisfaction — target ≥80/100
+3. AI triage rate — target ≥75%
+4. Contractor SLA compliance — target ≥90%
+5. First-time resolution rate — target ≥92%
+6. Officer hours saved — target ≥1,500 hrs/month

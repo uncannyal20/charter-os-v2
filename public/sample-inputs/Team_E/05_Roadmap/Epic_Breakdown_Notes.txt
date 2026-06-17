@@ -1,0 +1,6 @@
+Epics:
+1. Lift Telemetry Infrastructure (4 months, HIGH) — sensors on 500 pilot lifts
+2. Predictive ML Engine (4 months, HIGH) — daily health scores at 88%+ precision
+3. Maintenance Operations Dashboard (2 months, HIGH) — live lift health map
+4. Contractor Mobile App (2 months, MEDIUM) — digital work orders and SLA tracking
+5. Resident Communication Module (1 month, MEDIUM) — proactive SMS with ETR

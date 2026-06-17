@@ -1,0 +1,19 @@
+Team: Predictive Lift Maintenance Intelligence System
+Dept: Building Infrastructure & Ops
+
+Members:
+1. Steven Quek — Product Owner — Product strategy, lift contractor relationships, HDB alignment
+2. Vivian Chua — Product Manager — Sensor product roadmap, predictive feature delivery
+3. Hafiz Ibrahim — Tech Lead — Lift telemetry architecture, ML failure prediction models
+4. Claudia Tan — Data Scientist — Predictive maintenance models, sensor anomaly detection
+5. Ryan Lim — Senior Developer — Sensor data ingestion, contractor dispatch system
+6. Adeline Yap — UX/UI Designer — Maintenance dashboard UX, alert notification design
+7. Jun Wei Ng — Full-Stack Developer — Lift monitoring dashboard, work order system, mobile app
+
+Meetings:
+- Daily Standup: Mon–Fri, 15 min
+- Data & Model Review: Wednesday, 1.5 hrs
+- Product Review: Tuesday, 1 hr
+- Contractor Sync: Fortnightly Thursday, 45 min
+- Sprint Planning: Fortnightly Monday, 2 hrs
+- Steering Committee: Monthly last Wednesday, 1 hr

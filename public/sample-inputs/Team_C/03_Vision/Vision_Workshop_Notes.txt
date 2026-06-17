@@ -1,0 +1,9 @@
+Vision: To transform HDB estate management through a living sensor network — where real-time data from every block, corridor, and facility drives faster, smarter, and more sustainable maintenance decisions.
+
+Pillars:
+1. Real-time infrastructure monitoring at estate scale
+2. Predictive maintenance powered by AI anomaly detection
+3. Energy and resource optimisation
+4. Smart Nation data ecosystem participation
+
+North Star: Deploy IoT across 5 pilot estates by Dec 2026 and reduce reactive maintenance calls by 30% within 18 months.

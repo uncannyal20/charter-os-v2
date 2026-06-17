@@ -1,0 +1,7 @@
+Director Building Infrastructure: every breakdown is preventable, wants daily predictive failure score per lift, concern about contractor resistance, target reduce breakdown rate from 60 to 35 within 2 years.
+
+Senior Lift Engineer: currently schedule-based inspections, wants mobile anomaly alerts for unusual vibration or door fault patterns, wants system to learn from experienced engineers' instinct, suggests historical maintenance data as training data.
+
+Contractor (Otis): open to digital work orders — currently uses fax, concerned about liability for wrong predictions, wants clear SLA definitions, sees performance benefit if dispatched earlier.
+
+Resident Welfare Group: elderly in high-rise most affected, wants proactive notification for scheduled maintenance, estimated restoration time via SMS, even knowing fix time helps.

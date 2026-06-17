@@ -1,0 +1,7 @@
+Director Building & Infrastructure: needs condition-based maintenance, anomaly alerts on mobile, GeBIZ compliant procurement, target 30% reactive reduction in 18 months.
+
+SNDGO Liaison: HDB selected as pilot for Smart Nation Sensor Platform, data sharing required with SNDGO, interoperability with SGTS, bidirectional data flow needed.
+
+Senior Estate Manager Punggol: wants real-time dashboard, mobile alerts for anomalies, concern about false positives — suggests tiered alert system (info/warning/critical).
+
+Energy & Sustainability: interested in lighting sensors, 15% energy reduction target, integration with existing Building Management System (BMS).

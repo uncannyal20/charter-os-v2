@@ -1,0 +1,5 @@
+HDB manages ~8,500 community spaces. Booking done via phone or counter during office hours only. No online system. TC staff use Excel or paper calendars. Cash or GIRO payment only.
+
+Pain points: Residents can't check availability without calling. Double-bookings (~45 incidents in 2025). TC staff spend 15 hours/week on bookings. No standard pricing across 16 TCs. Facilities underutilised — no usage data.
+
+Business impact: 3,200 calls/month to TCs for enquiries. 2,400 staff hours/month across all TCs on booking admin. SGD 120K/year revenue leakage from unreconciled cash deposits. 72% of residents unaware of available spaces.

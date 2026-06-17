@@ -1,0 +1,6 @@
+Epics:
+1. Digital Intake & Triage Engine (3 months, HIGH) — AI classifies 75%+ requests
+2. Resident Status Visibility (2 months, HIGH) — real-time SMS/push updates
+3. Officer Operations Dashboard (3 months, MEDIUM) — mobile app + AI queue
+4. Contractor Digital Integration (3 months, MEDIUM) — digital work orders
+5. Analytics & Continuous Improvement (2 months, LOW) — estate dashboards

@@ -1,0 +1,7 @@
+KPIs:
+1. % reduction in reactive maintenance calls — target ≥30% by month 18
+2. Sensor network uptime — target ≥99.5%
+3. Anomaly detection precision — target ≥92%, false positive ≤8%
+4. Mean time to resolve critical fault — target ≤4 hours
+5. Estate energy consumption reduction — target ≥15% in pilot estates
+6. Estates with live IoT coverage — target 5 by Dec 2026, 24 by 2028

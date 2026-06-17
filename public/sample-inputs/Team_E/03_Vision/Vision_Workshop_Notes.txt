@@ -1,0 +1,9 @@
+Vision: To make lift breakdowns in HDB estates a thing of the past — through an intelligent maintenance system that sees failure coming, acts before it happens, and keeps every resident moving safely.
+
+Pillars:
+1. Real-time lift health telemetry at scale
+2. AI-powered predictive failure detection
+3. Proactive contractor dispatch and SLA management
+4. Resident safety and communication
+
+North Star: Reduce lift breakdown rate from 60 to 35 per 1,000 lifts within 24 months of platform go-live.

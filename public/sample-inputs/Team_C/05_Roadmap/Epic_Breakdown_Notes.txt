@@ -1,0 +1,6 @@
+Epics:
+1. Sensor Infrastructure & Deployment (4 months, HIGH) — 2 pilot estates live
+2. Real-Time Data Platform (3 months, HIGH) — dashboard and digital twin
+3. AI Anomaly Detection Engine (3 months, HIGH) — 92%+ precision
+4. Field Officer Mobile App (2 months, MEDIUM) — push alerts and GPS fault reporting
+5. Energy Optimisation Module (2 months, LOW) — 15% reduction in pilot estates

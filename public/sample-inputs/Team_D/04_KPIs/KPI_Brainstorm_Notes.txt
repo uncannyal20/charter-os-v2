@@ -1,0 +1,7 @@
+KPIs:
+1. % bookings made online — target ≥60% within 12 months
+2. TC staff time saved — target ≥1,500 hours/month reduction
+3. Resident satisfaction (booking) — target ≥82/100
+4. Double-booking incidents — target 0 after launch
+5. Digital payment adoption — target ≥85%
+6. Facility utilisation rate — target ≥65%

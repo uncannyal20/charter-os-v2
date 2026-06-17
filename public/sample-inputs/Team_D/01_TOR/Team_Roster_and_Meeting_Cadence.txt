@@ -1,0 +1,19 @@
+Team: Community Space Booking & Management System
+Dept: Citizen Experience Group
+
+Members:
+1. Pauline Goh — Product Owner — Product vision, TC facility manager relationships, governance
+2. Marcus Toh — Product Manager — Booking UX, resident journey, feature delivery
+3. Jasmine Lee — Product Manager — TC onboarding, payment integration, compliance
+4. Darren Sim — Tech Lead — Booking engine architecture, payment gateway, APIs
+5. Hui Min Tan — Senior Developer — Booking calendar, real-time availability, mobile app
+6. Zul Ariffin — UX/UI Designer — Booking UX, facility discovery UI, accessibility
+7. Dawn Chong — Full-Stack Developer — Frontend booking flows, TC admin portal, notifications
+
+Meetings:
+- Daily Standup: Mon–Fri, 15 min
+- Product Review: Tue & Thu, 1 hr
+- TC Facility Manager Sync: Wednesday, 45 min
+- Payment & Compliance: Fortnightly Tuesday, 1 hr
+- Sprint Planning: Fortnightly Monday, 2 hrs
+- Stakeholder Demo: Monthly last Friday, 1 hr

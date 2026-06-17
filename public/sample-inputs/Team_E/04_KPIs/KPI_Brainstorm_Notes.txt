@@ -1,0 +1,7 @@
+KPIs:
+1. Lift breakdown rate per 1,000 lifts — target ≤35 (from 60)
+2. % breakdowns predicted and prevented — target ≥55% within 18 months
+3. Avg breakdown response time — target ≤2 hours (from 4.2)
+4. Predictive model precision — target ≥88%
+5. Contractor SLA compliance — target ≥92%
+6. Resident satisfaction (lift reliability) — target ≥80/100

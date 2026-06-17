@@ -1,0 +1,5 @@
+HDB manages 1.1M flats across 24 towns. Infrastructure monitoring done manually on fixed schedules. Reactive maintenance model. No real-time sensor data. Smart Nation IoT pilot required by Q4 2026.
+
+Pain points: 35% of faults discovered after resident complaint. Manual inspection misses intermittent faults. No facility usage pattern data. Energy consumption not monitored in real time. Officers spend 30% of time on inspection walks.
+
+Business impact: SGD 4.2M annual cost of reactive vs preventive maintenance. 18% of lighting faults reported by residents before officer detection. 8M litres water wastage from undetected leaks/year. Risk of missing Smart Nation KPI targets.

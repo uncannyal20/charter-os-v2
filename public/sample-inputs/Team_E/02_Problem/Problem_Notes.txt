@@ -1,0 +1,5 @@
+HDB maintains ~30,000 lifts — highest density in Southeast Asia. Maintenance on fixed schedules regardless of condition. Reactive model. Avg breakdown response 4.2 hours. Contractor performance tracked in Excel.
+
+Pain points: 1,800 breakdowns in 2025 — 62% considered preventable. Fixed schedules miss early failure signals. Contractors not incentivised to flag deteriorating lift health. No real-time telemetry. Elderly residents on high floors severely impacted.
+
+Business impact: SGD 6.8M annual cost of emergency vs planned maintenance. 7,560 hours of disruption/year. 3 ministerial feedback cases in 2025. Lift breakdown rate at 60 per 1,000 lifts (target 35).

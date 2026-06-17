@@ -1,0 +1,7 @@
+Director Citizen Experience: booking should be as easy as Chope, single platform across all 16 TCs, concern about TC autonomy on pricing, target 60% online bookings within 12 months.
+
+TC Ops Manager (Jurong East): 200 enquiries/month via phone, wants online calendar replacing Excel, digital deposit collection and refund needed, needs ability to block dates for maintenance.
+
+Resident (young family, Sengkang): didn't know about function room, wants browse by type/capacity/availability, expects mobile app experience, wants facility photos before booking.
+
+HDB Finance: cash deposit reconciliation burden, wants PayNow and credit card integration, automated deposit refund for cancellations, monthly revenue reports by TC and facility.

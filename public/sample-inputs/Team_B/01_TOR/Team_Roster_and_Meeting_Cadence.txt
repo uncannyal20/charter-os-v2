@@ -1,0 +1,20 @@
+Team: HDB Maintenance & Estate Services Digital Transformation
+Dept: Digital Services Office
+
+Members:
+1. David Lee — Product Owner — Product strategy, stakeholder alignment, backlog ownership
+2. Cindy Tan — Product Manager — Roadmap, user research, acceptance criteria
+3. Max Koh — Product Manager — Feature streams, user stories, sprint coordination
+4. Mohd Jamal — Tech Lead — Architecture, AI/ML pipeline, technical feasibility
+5. Jerald Koh — Senior Developer — Core feature development, code reviews, tech debt
+6. Rachel Wong — UX/UI Designer — UX strategy, wireframes, usability testing
+7. Siti Farhana — UX/UI Designer — Interface design, design system, dev handoff
+8. Eric Teoh — Full-Stack Developer — Frontend & backend, AI integrations
+
+Meetings:
+- Daily Standup: Mon–Fri, 15 min
+- Product Review: Tue & Thu, 1 hr
+- UX Design Review: Mon & Wed, 1 hr
+- Tech & Architecture: Wed & Fri, 1 hr
+- Sprint Planning: Fortnightly Monday, 2 hrs
+- Stakeholder Showcase: Fortnightly Friday, 1 hr

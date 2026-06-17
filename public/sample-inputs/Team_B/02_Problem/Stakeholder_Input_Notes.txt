@@ -1,0 +1,7 @@
+DD Estate Management: needs live dashboard, reduce resolution to 5 days, concern about contractor tech literacy.
+
+Senior Manager Digital Services: wants AI triage, existing contractor system integration, phased rollout, pilot 3 estates first.
+
+Branch Manager Toa Payoh: spike in requests during festive seasons, wants mobile app for officers, keep phone option for elderly, support auto SMS to residents.
+
+Contractor rep (OTIS): currently uses fax/email, wants mobile app, digital completion photos, easy to use is key for adoption.

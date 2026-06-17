@@ -1,0 +1,7 @@
+Problem is: maintenance requests submitted via phone, email, walk-ins. Average 8-12 days resolution. Officers spend 40% time on manual triage. 3 legacy systems. No resident visibility.
+
+Resident survey (Jan 2026, n=1200): 67% don't know what happens after submission. 43% submit duplicates. 38% feel process not transparent.
+
+Officer pain points: manual routing 1-2 days per request, no automated prioritisation, contractors submit via email, manual Excel reporting.
+
+Business impact: Resident satisfaction 62/100 (target 80). 2,400 officer-hours/month on admin. 15% requests re-opened. Contractor SLA at 71% (target 90%).

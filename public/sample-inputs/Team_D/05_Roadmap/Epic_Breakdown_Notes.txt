@@ -1,0 +1,6 @@
+Epics:
+1. Facility Discovery Portal (2 months, HIGH) — search, photos, real-time availability
+2. Online Booking & Payment Engine (3 months, HIGH) — PayNow/card, auto deposit
+3. TC Admin Portal (2 months, HIGH) — full facility management for TC staff
+4. Mobile App iOS & Android (3 months, MEDIUM) — QR check-in, push notifications
+5. Analytics & Optimisation (2 months, LOW) — utilisation heatmaps, TC benchmarking

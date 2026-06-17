@@ -1,0 +1,18 @@
+Team: Municipal Smart Sensor & IoT Network Platform
+Dept: Estate Management Division
+
+Members:
+1. Bernard Tan — Product Owner — Product strategy, Smart Nation alignment, executive reporting
+2. Liying Chen — Product Manager — IoT product roadmap, sensor vendor management
+3. Ravi Kumar — Tech Lead — IoT architecture, data ingestion pipeline, edge computing
+4. Sharon Ng — Data Engineer — Real-time data streams, anomaly detection models
+5. Ali Hassan — Senior Developer — Dashboard development, API design, sensor integration
+6. Mei Xuan — UX/UI Designer — Operations dashboard UX, alert interface design
+7. Thomas Loh — Full-Stack Developer — Frontend dashboards, estate digital twin
+
+Meetings:
+- Daily Standup: Mon–Fri, 15 min
+- IoT Architecture Review: Wednesday, 1.5 hrs
+- Product & Data Review: Tuesday, 1 hr
+- Sprint Planning: Fortnightly Monday, 2 hrs
+- Smart Nation Sync: Monthly last Friday, 1 hr
