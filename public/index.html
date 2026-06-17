@@ -877,6 +877,25 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
       const data = await res.json();
       if (data && data.state && typeof data.state === 'object') {
         Object.assign(S, data.state);
+
+        // ── Re-apply PO approval statuses AFTER cloud load overwrites S ──
+        // loadApprovals runs before loadFromCloud, so Object.assign above
+        // resets approved flags from Supabase charter state (which may be stale).
+        // Re-sync from window.APPROVALS (which is always fresh from approvals table).
+        const _AP = window.APPROVALS || {};
+        S.tor_approved = !!(_AP['tor'] && _AP['tor'].status === 'approved');
+        ['problem','vision','kpis'].forEach(function(sec) {
+          if (S[sec]) S[sec].approved = !!(_AP[sec] && _AP[sec].status === 'approved');
+        });
+        if (S.roadmap) {
+          const _rmApproved = !!(_AP['roadmap'] && _AP['roadmap'].status === 'approved');
+          S.roadmap.approved = _rmApproved;
+          S.roadmap.tasks_approved = _rmApproved;
+          S.roadmap.timeline_approved = _rmApproved;
+        }
+        if (S.cba) S.cba.approved = !!(_AP['cba'] && _AP['cba'].status === 'approved');
+        saveState();
+
         // Sync charter name from Supabase top-level field (source of truth)
         if (data.charter_name) {
           S.charterName = data.charter_name;
