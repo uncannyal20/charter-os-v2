@@ -959,10 +959,6 @@ function teamLogout() {
   }
 
   function onTeamLoggedIn() {
-    // Show splash immediately — before any rendering
-    const _splash = document.getElementById('splash-screen');
-    if (_splash) _splash.style.display = 'flex';
-
     // Show team name in sidebar
     const el = document.getElementById('team-label');
     if (el) el.textContent = CURRENT_TEAM.name;
@@ -986,7 +982,7 @@ function teamLogout() {
     }
 
     // Load from cloud — always authoritative, overwrites local
-    setTimeout(loadFromCloud, 100);
+    setTimeout(loadFromCloud, 500);
 
     // Hook into state changes for auto-save
     const origRenderAll = window.renderAll;
@@ -5117,7 +5113,6 @@ function clearAllData() {
 }
 
 function hideLoadingSkeleton() {
-  if (!window.CURRENT_TEAM) return; // Don't hide if not logged in yet
   const splash = document.getElementById('splash-screen');
   if (splash) {
     splash.style.opacity = '0';
@@ -5126,7 +5121,6 @@ function hideLoadingSkeleton() {
 }
 
 function renderAll() {
-  hideLoadingSkeleton();
   renderMembers();
   renderMeetings();
   renderTOR();
@@ -5290,10 +5284,5 @@ function saveInlineEdit(section) {
 }
 
 </script>
-  <!-- Splash Screen -->
-  <div id="splash-screen" style="display:none;position:fixed;inset:0;background:var(--bg1);z-index:9999;align-items:center;justify-content:center;transition:opacity 0.35s ease">
-    <div style="font-size:15px;font-weight:600;color:var(--text2);letter-spacing:0.05em">Loading...</div>
-  </div>
-
 </body>
 </html>
