@@ -982,7 +982,8 @@ function teamLogout() {
     }
 
     // Load from cloud — always authoritative, overwrites local
-    setTimeout(loadFromCloud, 500);
+    showLoadingSkeleton();
+    setTimeout(loadFromCloud, 100);
 
     // Hook into state changes for auto-save
     const origRenderAll = window.renderAll;
@@ -5112,7 +5113,21 @@ function clearAllData() {
   navigate('dashboard');
 }
 
+function showLoadingSkeleton() {
+  const splash = document.getElementById('splash-screen');
+  if (splash) splash.style.display = 'flex';
+}
+
+function hideLoadingSkeleton() {
+  const splash = document.getElementById('splash-screen');
+  if (splash) {
+    splash.style.opacity = '0';
+    setTimeout(() => { splash.style.display = 'none'; splash.style.opacity = '1'; }, 350);
+  }
+}
+
 function renderAll() {
+  hideLoadingSkeleton();
   renderMembers();
   renderMeetings();
   renderTOR();
@@ -5277,28 +5292,9 @@ function saveInlineEdit(section) {
 
 </script>
   <!-- Splash Screen -->
-  <div id="splash-screen" style="display:none;position:fixed;inset:0;background:var(--bg1);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;transition:opacity 0.3s ease">
+  <div id="splash-screen" style="display:none;position:fixed;inset:0;background:var(--bg1);z-index:9999;align-items:center;justify-content:center;transition:opacity 0.35s ease">
     <div style="font-size:15px;font-weight:600;color:var(--text2);letter-spacing:0.05em">Loading...</div>
   </div>
-
-  <script>
-    // Show splash on login, hide when renderAll fires
-    const _origShowSplash = window.showLoadingSkeleton;
-    window.showLoadingSkeleton = function() {
-      const splash = document.getElementById('splash-screen');
-      if (splash) { splash.style.display = 'flex'; splash.style.opacity = '1'; }
-      if (_origShowSplash) _origShowSplash();
-    };
-    const _origHideSplash = window.hideLoadingSkeleton;
-    window.hideLoadingSkeleton = function() {
-      const splash = document.getElementById('splash-screen');
-      if (splash) {
-        splash.style.opacity = '0';
-        setTimeout(() => { splash.style.display = 'none'; }, 300);
-      }
-      if (_origHideSplash) _origHideSplash();
-    };
-  </script>
 
 </body>
 </html>
