@@ -959,6 +959,10 @@ function teamLogout() {
   }
 
   function onTeamLoggedIn() {
+    // Show splash immediately — before any rendering
+    const _splash = document.getElementById('splash-screen');
+    if (_splash) _splash.style.display = 'flex';
+
     // Show team name in sidebar
     const el = document.getElementById('team-label');
     if (el) el.textContent = CURRENT_TEAM.name;
@@ -982,7 +986,6 @@ function teamLogout() {
     }
 
     // Load from cloud — always authoritative, overwrites local
-    showLoadingSkeleton();
     setTimeout(loadFromCloud, 100);
 
     // Hook into state changes for auto-save
@@ -5111,11 +5114,6 @@ function clearAllData() {
   renderAll();
   toast('Charter data cleared.', 'success');
   navigate('dashboard');
-}
-
-function showLoadingSkeleton() {
-  const splash = document.getElementById('splash-screen');
-  if (splash) splash.style.display = 'flex';
 }
 
 function hideLoadingSkeleton() {
