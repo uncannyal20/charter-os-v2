@@ -468,23 +468,6 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
 .ai-gen-text strong { font-size: 13.5px; display: block; margin-bottom: 2px; }
 .ai-gen-text span { font-size: 12px; color: var(--text3); }
 
-
-/* ── Skeleton loader ── */
-.skeleton-wrap { padding: 0; }
-@keyframes shimmer { 0%{background-position:-600px 0} 100%{background-position:600px 0} }
-.skel {
-  border-radius: 6px;
-  background: linear-gradient(90deg, var(--bg2) 25%, var(--surface2) 50%, var(--bg2) 75%);
-  background-size: 600px 100%;
-  animation: shimmer 1.4s infinite linear;
-}
-.skel-title  { height: 28px; width: 55%; margin-bottom: 10px; }
-.skel-sub    { height: 14px; width: 30%; margin-bottom: 28px; }
-.skel-meta   { height: 18px; width: 40%; margin-bottom: 24px; }
-.skel-grid   { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; margin-bottom: 24px; }
-.skel-card   { height: 140px; border-radius: 10px; }
-.skel-log    { height: 120px; border-radius: 10px; }
-
 /* ── Loading spinner ── */
 .spinner {
   display: inline-block;
@@ -999,16 +982,13 @@ function teamLogout() {
     }
 
     // Load from cloud — always authoritative, overwrites local
-    // Show skeleton immediately while waiting for cloud data
-    showLoadingSkeleton();
-    setTimeout(loadFromCloud, 500);
+    setTimeout(loadFromCloud, 100);
 
     // Hook into state changes for auto-save
     const origRenderAll = window.renderAll;
     if (origRenderAll) {
       window.renderAll = function() { origRenderAll(); scheduleSave(); };
     }
-    navigate('dashboard');
   }
 
   // Check auth on load
@@ -1863,7 +1843,7 @@ COSTS:
           <button class="btn btn-ghost btn-sm" onclick="copyCharter()">📋 Copy</button>
           <button class="btn btn-ghost btn-sm" onclick="exportCharter()">⬇ HTML</button>
           <button class="btn btn-ghost btn-sm" onclick="exportAsPDF()">🖨 Export PDF</button>
-          <button class="btn btn-primary btn-sm" onclick="generateSummarySlides()">🎯 Generate Summary Slides</button>
+          <button class="btn btn-primary btn-sm" onclick="generateSummarySlides()">🎯 Generate Slides</button>
         </div>
       </div>
       <div id="export-preview"></div>
@@ -4618,105 +4598,9 @@ async function generateSummarySlides() {
       }
     });
 
-    // ── Slide 9: CBA CHARTS ─────────────────────────────────────
+    // ── Slide 9: NEXT STEPS ──────────────────────────────────────
     const s9 = pptx.addSlide();
-    addHeader(s9, '05  COST BENEFIT ANALYSIS', BLUE, 'CBA Summary Charts');
-    const _p = S.cba_parsed || {};
-    const _bVals = S.cba_benefit_values || {};
-    const _kpis = S.kpis?.items || [];
-    const _benLabels = [], _benData = [];
-    _kpis.forEach((k,i) => { const v = parseFloat(_bVals[i])||0; if(v>0){_benLabels.push(k.name.length>22?k.name.slice(0,20)+'…':k.name); _benData.push(v);} });
-    const _totalBen = _p.totalBenAnnual || _benData.reduce((a,b)=>a+b,0) || 0;
-    const _totalOneOff = _p.totalOneOff || 0;
-    const _totalRec = _p.totalRecurring || 0;
-    const _y1cost = _p.totalY1 || (_totalOneOff + _totalRec);
-    const _y2net = _p.y2net || (_totalBen - _totalRec);
-    const _y3net = _p.y3net || (_totalBen - _totalRec);
-    const _payback = _p.paybackMths ? _p.paybackMths + ' months' : '—';
-    const _roi = _p.roi3yr ? _p.roi3yr + '%' : '—';
-    const cbaMetrics = [
-      ['Total Investment', _totalOneOff > 0 ? 'SGD ' + _totalOneOff.toLocaleString() : '—', RED],
-      ['Annual Benefit',   _totalBen > 0 ? 'SGD ' + _totalBen.toLocaleString() : '—', GREEN],
-      ['Payback Period',   _payback, AMBER],
-      ['3-Year ROI',       _roi, BLUE],
-    ];
-    cbaMetrics.forEach(([lbl,val,col],i) => {
-      const bx = 0.5 + i*3.2;
-      s9.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x:bx, y:1.75, w:3.0, h:1.2, fill:{color:CARD}, rectRadius:0.08, shadow:mkShadow() });
-      s9.addShape(pptx.shapes.RECTANGLE, { x:bx, y:1.75, w:3.0, h:0.05, fill:{color:col}, line:{color:col} });
-      s9.addText(lbl, { x:bx+0.12, y:1.83, w:2.76, h:0.28, fontSize:9, color:LTXT2, bold:true, fontFace:'Calibri', charSpacing:1 });
-      s9.addText(val, { x:bx+0.12, y:2.15, w:2.76, h:0.6, fontSize:18, color:col, bold:true, fontFace:'Calibri', align:'center', valign:'middle' });
-    });
-    if (chartImages.bar) {
-      s9.addImage({ data: chartImages.bar, x:0.5, y:3.1, w:6.0, h:3.3 });
-    } else {
-      s9.addText('Cost vs Benefit chart — view in CharterOS app', { x:0.5, y:3.1, w:6.0, h:3.3, fontSize:11, color:LTXT2, align:'center', valign:'middle', fontFace:'Calibri' });
-    }
-    if (chartImages.donut) {
-      s9.addImage({ data: chartImages.donut, x:6.8, y:3.1, w:5.5, h:3.3 });
-    } else if (_benData.length > 0) {
-      const _benColors = [BLUE,GREEN,AMBER,PURP,TEAL,RED];
-      s9.addText('Benefit by KPI', { x:6.8, y:3.1, w:5.5, h:0.35, fontSize:10, color:NAVY, bold:true, fontFace:'Calibri' });
-      _benLabels.slice(0,6).forEach((lbl,i) => {
-        s9.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x:6.8, y:3.55+i*0.48, w:5.5, h:0.4, fill:{color:CARD}, rectRadius:0.05 });
-        s9.addShape(pptx.shapes.RECTANGLE, { x:6.8, y:3.55+i*0.48, w:0.12, h:0.4, fill:{color:_benColors[i%6]}, line:{color:_benColors[i%6]} });
-        s9.addText(lbl, { x:7.0, y:3.58+i*0.48, w:3.5, h:0.34, fontSize:9, color:LTXT, fontFace:'Calibri' });
-        s9.addText('SGD '+(_benData[i]||0).toLocaleString(), { x:10.3, y:3.58+i*0.48, w:2.0, h:0.34, fontSize:9, color:_benColors[i%6], bold:true, fontFace:'Calibri', align:'right' });
-      });
-    }
-
-    // ── Slide 10: GANTT CHART ─────────────────────────────────────
-    const s10 = pptx.addSlide();
-    addHeader(s10, '06  PRODUCT ROADMAP', AMBER, 'Delivery Timeline');
-    const ganttPhases = (S.roadmap?.phases_data||[]);
-    const GCOLS = ['4f7cff','1fd68a','f5a623','b06cfb','2dd4bf','ff5c5c'];
-    const startDateStr = S.roadmap?.start_date || new Date().toISOString().slice(0,10);
-    const gStartDate = new Date(startDateStr);
-    const GMONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    function gParseWeeks(dur) { if(!dur) return 4; const m=String(dur).match(/(\d+)/); return m?parseInt(m[1]):4; }
-    let gTasks=[], gWeekOffset=0;
-    ganttPhases.forEach((ph,pi) => {
-      const col = GCOLS[pi%GCOLS.length];
-      (ph.tasks||[]).forEach(t => {
-        const w=gParseWeeks(t.duration);
-        gTasks.push({name:t.name||t, weeks:w, weekStart:gWeekOffset, col, isMilestone:false});
-        gWeekOffset+=w;
-      });
-      gTasks.push({name:'✦ '+(ph.milestone||''), weekStart:gWeekOffset, weeks:0, col, isMilestone:true});
-    });
-    const gTotalWeeks = gWeekOffset || 1;
-    const LABEL_W=3.2, TRACK_X=LABEL_W+0.6, TRACK_W=13.33-LABEL_W-0.6-0.3;
-    const ROW_H=0.28, START_Y=1.85;
-    let mCur=new Date(gStartDate); mCur.setDate(1);
-    const mEnd=new Date(gStartDate); mEnd.setDate(mEnd.getDate()+gTotalWeeks*7);
-    while(mCur<=mEnd) {
-      const wPos=Math.max(0,(mCur-gStartDate)/(7*24*3600*1000));
-      const xPos=TRACK_X+(wPos/gTotalWeeks)*TRACK_W;
-      if(xPos<TRACK_X+TRACK_W-0.3) {
-        s10.addText(GMONTHS[mCur.getMonth()]+" '"+String(mCur.getFullYear()).slice(2), {x:xPos,y:1.65,w:1.2,h:0.2,fontSize:7,color:LTXT2,fontFace:'Calibri'});
-        s10.addShape(pptx.shapes.LINE,{x:xPos,y:1.83,w:0,h:5.0,line:{color:'DDDDDD',width:0.5,dashType:'dash'}});
-      }
-      mCur.setMonth(mCur.getMonth()+1);
-    }
-    let visRow=0;
-    gTasks.forEach(t => {
-      const rowY=START_Y+visRow*ROW_H;
-      if(rowY>6.8) return;
-      if(t.isMilestone) {
-        s10.addText(t.name,{x:TRACK_X,y:rowY,w:TRACK_W,h:ROW_H-0.02,fontSize:7.5,color:'0A6640',bold:true,fontFace:'Calibri'});
-      } else {
-        s10.addText(t.name.length>38?t.name.slice(0,36)+'…':t.name,{x:0.4,y:rowY,w:LABEL_W-0.1,h:ROW_H-0.02,fontSize:8,color:LTXT,fontFace:'Calibri',valign:'middle'});
-        const barX=TRACK_X+(t.weekStart/gTotalWeeks)*TRACK_W;
-        const barW=Math.max((t.weeks/gTotalWeeks)*TRACK_W,0.15);
-        s10.addShape(pptx.shapes.ROUNDED_RECTANGLE,{x:barX,y:rowY+0.02,w:barW,h:ROW_H-0.06,fill:{color:t.col},rectRadius:0.03});
-        if(barW>0.4) s10.addText(t.weeks+'w',{x:barX+0.04,y:rowY+0.02,w:barW-0.06,h:ROW_H-0.06,fontSize:6.5,color:'FFFFFF',bold:true,fontFace:'Calibri',valign:'middle'});
-      }
-      visRow++;
-    });
-
-    // ── Slide 11: NEXT STEPS ──────────────────────────────────────
-    const s11 = pptx.addSlide();
-    addHeader(s11, 'NEXT STEPS', TEAL, 'What Happens Next');
+    addHeader(s9, 'NEXT STEPS', TEAL, 'What Happens Next');
     const nextSteps = [
       ['Finalise Charter',      'Complete all remaining sections and obtain final sign-off from Product Owner and stakeholders', BLUE],
       ['Secure Budget Approval','Present CBA to steering committee and obtain programme budget approval', AMBER],
@@ -4726,26 +4610,26 @@ async function generateSummarySlides() {
     ];
     nextSteps.forEach(([title,desc,col],i) => {
       const by = 1.75 + i*1.05;
-      s11.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x:0.5, y:by, w:12.3, h:0.88, fill:{color:CARD}, rectRadius:0.07, shadow:mkShadow() });
-      s11.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x:0.5, y:by+(0.88-0.88)/2, w:0.38, h:0.88, fill:{color:col}, rectRadius:0.07 });
-      s11.addText(String(i+1).padStart(2,'0'), { x:0.5, y:by, w:0.38, h:0.88, fontSize:12, color:WHITE, bold:true, align:'center', valign:'middle', fontFace:'Calibri' });
-      s11.addText(title, { x:1.05, y:by+0.08, w:4.5, h:0.35, fontSize:11, color:NAVY, bold:true, fontFace:'Calibri' });
-      s11.addText(desc,  { x:1.05, y:by+0.45, w:11.6, h:0.38, fontSize:9.5, color:LTXT2, fontFace:'Calibri', wrap:true });
+      s9.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x:0.5, y:by, w:12.3, h:0.88, fill:{color:CARD}, rectRadius:0.07, shadow:mkShadow() });
+      s9.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x:0.5, y:by+(0.88-0.88)/2, w:0.38, h:0.88, fill:{color:col}, rectRadius:0.07 });
+      s9.addText(String(i+1).padStart(2,'0'), { x:0.5, y:by, w:0.38, h:0.88, fontSize:12, color:WHITE, bold:true, align:'center', valign:'middle', fontFace:'Calibri' });
+      s9.addText(title, { x:1.05, y:by+0.08, w:4.5, h:0.35, fontSize:11, color:NAVY, bold:true, fontFace:'Calibri' });
+      s9.addText(desc,  { x:1.05, y:by+0.45, w:11.6, h:0.38, fontSize:9.5, color:LTXT2, fontFace:'Calibri', wrap:true });
     });
 
     // ── Slide 10: CLOSING ────────────────────────────────────────
-    const s12 = pptx.addSlide();
-    s12.background = { color: NAVY };
-    s12.addShape(pptx.shapes.RECTANGLE, { x:0, y:3.5, w:13.33, h:0.06, fill:{color:BLUE}, line:{color:BLUE} });
-    s12.addShape(pptx.shapes.RECTANGLE, { x:0, y:3.56, w:13.33, h:3.94, fill:{color:'162952'}, line:{color:'162952'} });
-    s12.addText('THANK YOU', { x:0.8, y:0.8, w:12, h:0.45, fontSize:11, color:'5577AA', bold:true, charSpacing:6, align:'center', fontFace:'Calibri' });
-    s12.addText(S.charter_name||'Product Charter', { x:0.8, y:1.35, w:12, h:1.6, fontSize:34, color:WHITE, bold:true, align:'center', fontFace:'Calibri', wrap:true });
-    s12.addText('Questions & Discussion', { x:0.8, y:3.0, w:12, h:0.38, fontSize:14, color:'7799BB', align:'center', italic:true, fontFace:'Calibri' });
-    s12.addText('Prepared by: ' + (S.members||[]).slice(0,4).map(m=>m.name).join('  ·  '),
+    const s10 = pptx.addSlide();
+    s10.background = { color: NAVY };
+    s10.addShape(pptx.shapes.RECTANGLE, { x:0, y:3.5, w:13.33, h:0.06, fill:{color:BLUE}, line:{color:BLUE} });
+    s10.addShape(pptx.shapes.RECTANGLE, { x:0, y:3.56, w:13.33, h:3.94, fill:{color:'162952'}, line:{color:'162952'} });
+    s10.addText('THANK YOU', { x:0.8, y:0.8, w:12, h:0.45, fontSize:11, color:'5577AA', bold:true, charSpacing:6, align:'center', fontFace:'Calibri' });
+    s10.addText(S.charter_name||'Product Charter', { x:0.8, y:1.35, w:12, h:1.6, fontSize:34, color:WHITE, bold:true, align:'center', fontFace:'Calibri', wrap:true });
+    s10.addText('Questions & Discussion', { x:0.8, y:3.0, w:12, h:0.38, fontSize:14, color:'7799BB', align:'center', italic:true, fontFace:'Calibri' });
+    s10.addText('Prepared by: ' + (S.members||[]).slice(0,4).map(m=>m.name).join('  ·  '),
       { x:0.8, y:3.75, w:12, h:0.35, fontSize:10, color:'AABBDD', align:'center', fontFace:'Calibri' });
-    s12.addText('Charter Completion: ' + Math.round(['team','problem','vision','kpis','roadmap'].reduce((s,id)=>s+getProgress(id),0)/5) + '%   ·   ' + new Date().toLocaleDateString('en-SG',{day:'numeric',month:'long',year:'numeric'}),
+    s10.addText('Charter Completion: ' + Math.round(['team','problem','vision','kpis','roadmap'].reduce((s,id)=>s+getProgress(id),0)/5) + '%   ·   ' + new Date().toLocaleDateString('en-SG',{day:'numeric',month:'long',year:'numeric'}),
       { x:0.8, y:4.2, w:12, h:0.35, fontSize:10, color:'7799BB', align:'center', fontFace:'Calibri' });
-    s12.addText('Generated by Charter OS  ·  Confidential — Internal Use Only',
+    s10.addText('Generated by Charter OS  ·  Confidential — Internal Use Only',
       { x:0.8, y:6.85, w:12, h:0.28, fontSize:8.5, color:'445577', align:'center', fontFace:'Calibri' });
 
         // Save
@@ -5228,36 +5112,7 @@ function clearAllData() {
   navigate('dashboard');
 }
 
-function showLoadingSkeleton() {
-  const grid = document.getElementById('progress-grid');
-  const notif = document.getElementById('po-notifications');
-  const activity = document.getElementById('activity-list');
-  if (!grid) return;
-  if (notif) notif.style.display = 'none';
-  if (activity) activity.style.display = 'none';
-  grid.innerHTML = `
-    <div class="skeleton-wrap">
-      <div class="skel skel-title"></div>
-      <div class="skel skel-sub"></div>
-      <div class="skel skel-meta"></div>
-      <div class="skel-grid">
-        <div class="skel skel-card"></div>
-        <div class="skel skel-card"></div>
-        <div class="skel skel-card"></div>
-        <div class="skel skel-card"></div>
-        <div class="skel skel-card"></div>
-      </div>
-      <div class="skel skel-log"></div>
-    </div>`;
-}
-
-function hideLoadingSkeleton() {
-  const activity = document.getElementById('activity-list');
-  if (activity) activity.style.display = '';
-}
-
 function renderAll() {
-  hideLoadingSkeleton();
   renderMembers();
   renderMeetings();
   renderTOR();
