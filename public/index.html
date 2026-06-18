@@ -5117,6 +5117,7 @@ function clearAllData() {
 }
 
 function hideLoadingSkeleton() {
+  if (!window.CURRENT_TEAM) return; // Don't hide if not logged in yet
   const splash = document.getElementById('splash-screen');
   if (splash) {
     splash.style.opacity = '0';
