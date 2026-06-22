@@ -109,18 +109,7 @@
     text-align: center;
     padding: 120px 48px 80px;
   }
-  .hero-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(79,124,255,0.12);
-    border: 1px solid rgba(79,124,255,0.25);
-    border-radius: 100px;
-    padding: 6px 16px; font-size: 12px; font-weight: 600;
-    color: var(--blue); letter-spacing: 0.04em; text-transform: uppercase;
-    margin-bottom: 28px;
-    animation: fadeUp 0.6s ease both;
-  }
-  .hero-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--blue); }
-  .hero-title {
+.hero-title {
     font-family: var(--font-h); font-weight: 900;
     font-size: clamp(40px, 6vw, 76px);
     line-height: 1.1; letter-spacing: -0.02em;
@@ -388,8 +377,7 @@
 
     /* Hero */
     #hero { padding: 100px 20px 60px; text-align: left; }
-    .hero-badge { font-size: 11px; }
-    .hero-title { font-size: 32px; letter-spacing: -0.01em; }
+.hero-title { font-size: 32px; letter-spacing: -0.01em; }
     .hero-sub { font-size: 15px; margin: 18px 0 28px; }
     .hero-actions { flex-direction: column; align-items: stretch; }
     .btn-primary, .btn-ghost { justify-content: center; padding: 13px 24px; }
