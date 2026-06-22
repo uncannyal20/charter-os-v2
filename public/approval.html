@@ -21,8 +21,37 @@
     --text: #e8eaf0;
     --text-dim: #8b90a8;
     --text-muted: #555a72;
+    --heading-blue: #6c8cff;
+    --badge-pending-text: #a5b4fc;
+    --danger-text: #fca5a5;
+    --reply-text: #a5b4fc;
+    --chip-bg: rgba(255,255,255,0.05);
     --font-ui: 'Inter', system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Mono', monospace;
+  }
+
+  /* Light theme — overrides the palette; UI is variable-driven so it flips cleanly */
+  body.light-mode {
+    --bg: #f4f6fb;
+    --surface: #ffffff;
+    --surface2: #f0f2f8;
+    --border: rgba(0,0,0,0.10);
+    --accent: #4f46e5;
+    --accent-dim: #c7c4f0;
+    --green: #0ea869;
+    --green-dim: rgba(14,168,105,0.12);
+    --orange: #c2750a;
+    --orange-dim: rgba(194,117,10,0.12);
+    --orange-border: rgba(194,117,10,0.35);
+    --red-comment: #dc2626;
+    --text: #14182b;
+    --text-dim: #51566f;
+    --text-muted: #7a8099;
+    --heading-blue: #2f54d8;
+    --badge-pending-text: #4338ca;
+    --danger-text: #b91c1c;
+    --reply-text: #4338ca;
+    --chip-bg: rgba(0,0,0,0.05);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -77,7 +106,7 @@
   /* status badges */
   .badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
   .badge-draft { background: rgba(139,144,168,0.15); color: var(--text-muted); }
-  .badge-pending { background: rgba(108,99,255,0.15); color: #a5b4fc; border: 1px solid rgba(108,99,255,0.3); }
+  .badge-pending { background: rgba(108,99,255,0.15); color: var(--badge-pending-text); border: 1px solid rgba(108,99,255,0.3); }
   .badge-approved { background: var(--green-dim); color: var(--green); border: 1px solid rgba(62,207,142,0.3); }
   .badge-revision { background: var(--orange-dim); color: var(--orange); border: 1px solid var(--orange-border); }
 
@@ -97,7 +126,7 @@
 
   /* ── CHARTER CONTENT ── */
   .charter-content { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 28px; margin-bottom: 20px; position: relative; }
-  .charter-content h3 { color: #4f7cff; margin: 20px 0 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .charter-content h3 { color: var(--heading-blue); margin: 20px 0 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
   .charter-content h3:first-child { margin-top: 0; }
   .charter-content h4 { margin: 14px 0 6px; font-size: 13px; color: var(--text); }
   .charter-content p { line-height: 1.75; font-size: 13.5px; color: var(--text-dim); margin-bottom: 8px; }
@@ -124,7 +153,7 @@
   .kpi-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
   .kpi-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
   .kpi-name { font-size: 13px; font-weight: 600; color: var(--text); }
-  .kpi-cat { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; background: rgba(108,99,255,0.15); color: #a5b4fc; }
+  .kpi-cat { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; background: rgba(108,99,255,0.15); color: var(--badge-pending-text); }
   .kpi-target { font-size: 12px; color: var(--green); font-weight: 500; margin-bottom: 4px; }
   .kpi-meta { font-size: 11px; color: var(--text-muted); }
 
@@ -135,7 +164,7 @@
   .phase-name { font-size: 14px; font-weight: 700; }
   .phase-label { font-size: 11px; color: var(--text-muted); }
   .phase-tasks { display: flex; flex-wrap: wrap; gap: 6px; }
-  .task-chip { font-size: 11px; padding: 3px 9px; border-radius: 4px; background: rgba(255,255,255,0.05); color: var(--text-dim); border: 1px solid var(--border); }
+  .task-chip { font-size: 11px; padding: 3px 9px; border-radius: 4px; background: var(--chip-bg); color: var(--text-dim); border: 1px solid var(--border); }
   .phase-milestone { font-size: 12px; color: var(--green); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
 
   /* ── PO COMMENT SYSTEM ── */
@@ -147,10 +176,10 @@
 
   .po-comment-bubble { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); border-left: 3px solid var(--red-comment); border-radius: 0 6px 6px 0; padding: 10px 12px; margin: 6px 0 10px 0; }
   .po-comment-bubble-header { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--red-comment); margin-bottom: 4px; }
-  .po-comment-bubble-text { font-size: 12px; color: #fca5a5; line-height: 1.6; }
+  .po-comment-bubble-text { font-size: 12px; color: var(--danger-text); line-height: 1.6; }
   .po-comment-bubble-actions { display: flex; gap: 6px; margin-top: 6px; }
   .btn-tiny { font-size: 10px; padding: 3px 8px; border-radius: 4px; border: none; cursor: pointer; font-family: var(--font-ui); font-weight: 600; }
-  .btn-tiny-danger { background: rgba(239,68,68,0.2); color: #fca5a5; }
+  .btn-tiny-danger { background: rgba(239,68,68,0.2); color: var(--danger-text); }
   .btn-tiny-danger:hover { background: rgba(239,68,68,0.35); }
 
   /* add comment button — floats near paragraphs on hover */
@@ -183,7 +212,7 @@
   .sendback-area-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
 
   /* submitted info banner */
-  .submitted-banner { background: rgba(108,99,255,0.08); border: 1px solid rgba(108,99,255,0.2); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: #a5b4fc; display: flex; align-items: center; gap: 8px; }
+  .submitted-banner { background: rgba(108,99,255,0.08); border: 1px solid rgba(108,99,255,0.2); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: var(--badge-pending-text); display: flex; align-items: center; gap: 8px; }
 
   /* ── EMPTY / DRAFT ── */
   .empty-state { text-align: center; padding: 60px 24px; color: var(--text-muted); }
@@ -238,6 +267,7 @@
     <div class="topbar-badge">Approval Portal</div>
     <div class="topbar-right">
       Signed in as <span id="po-name-display">—</span>
+      <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px;" onclick="toggleTheme()" id="theme-toggle-btn" title="Toggle light/dark mode" aria-label="Toggle light or dark mode">🌙 Dark</button>
       <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px;" onclick="doLogout()">Sign out</button>
     </div>
   </div>
@@ -420,18 +450,18 @@ function renderSection(key) {
   const replyKeys = Object.keys(teamReplies).filter(k => teamReplies[k] && teamReplies[k].trim());
   const hasReplies = replyKeys.length > 0;
   const teamRepliesHtml = hasReplies ? (() => {
-    let html = '<div style="background:rgba(79,124,255,0.08);border:1px solid rgba(79,124,255,0.2);border-left:3px solid #4f7cff;border-radius:0 8px 8px 0;padding:14px 16px;margin:0 0 16px 0">';
-    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#4f7cff;margin-bottom:10px">Team Responses to PO Comments</div>';
+    let html = '<div style="background:rgba(79,124,255,0.08);border:1px solid rgba(79,124,255,0.2);border-left:3px solid var(--heading-blue);border-radius:0 8px 8px 0;padding:14px 16px;margin:0 0 16px 0">';
+    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--heading-blue);margin-bottom:10px">Team Responses to PO Comments</div>';
     if (teamReplies['overall'] && teamReplies['overall'].trim()) {
       html += '<div style="background:rgba(79,124,255,0.1);border-radius:6px;padding:10px 12px;margin-bottom:8px">';
-      html += '<div style="font-size:11px;font-weight:700;color:#4f7cff;margin-bottom:6px">Re: Overall note</div>';
-      html += '<div style="font-size:13px;color:#a5b4fc;line-height:1.6">' + teamReplies['overall'] + '</div>';
+      html += '<div style="font-size:11px;font-weight:700;color:var(--heading-blue);margin-bottom:6px">Re: Overall note</div>';
+      html += '<div style="font-size:13px;color:var(--reply-text);line-height:1.6">' + teamReplies['overall'] + '</div>';
       html += '</div>';
     }
     replyKeys.filter(k => k !== 'overall').forEach((k, i) => {
       html += '<div style="background:rgba(79,124,255,0.1);border-radius:6px;padding:10px 12px;margin-bottom:8px">';
-      html += '<div style="font-size:11px;font-weight:700;color:#4f7cff;margin-bottom:6px">Re: Comment ' + (i + 1) + '</div>';
-      html += '<div style="font-size:13px;color:#a5b4fc;line-height:1.6">' + teamReplies[k] + '</div>';
+      html += '<div style="font-size:11px;font-weight:700;color:var(--heading-blue);margin-bottom:6px">Re: Comment ' + (i + 1) + '</div>';
+      html += '<div style="font-size:13px;color:var(--reply-text);line-height:1.6">' + teamReplies[k] + '</div>';
       html += '</div>';
     });
     html += '</div>';
@@ -441,7 +471,7 @@ function renderSection(key) {
   const poToolbar = !isApproved && isSubmitted ? `
     <div class="po-toolbar">
       <strong>PO Review Mode</strong> — hover over any paragraph and click + to add a comment
-      ${commentCount > 0 ? `<span style="margin-left:auto;background:rgba(239,68,68,0.15);color:#fca5a5;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;">${commentCount} comment${commentCount>1?'s':''}</span>` : ''}
+      ${commentCount > 0 ? `<span style="margin-left:auto;background:rgba(239,68,68,0.15);color:var(--danger-text);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;">${commentCount} comment${commentCount>1?'s':''}</span>` : ''}
     </div>` : '';
 
   const actionBar = isSubmitted ? renderActionBar(key, status, ap) : '';
@@ -793,8 +823,31 @@ function showToast(msg, type) {
   setTimeout(() => t.className = '', 3000);
 }
 
+// ── THEME (dark / light) ──────────────────────────────────────
+function updateThemeButton() {
+  const btn = document.getElementById('theme-toggle-btn');
+  if (!btn) return;
+  const isLight = document.body.classList.contains('light-mode');
+  btn.textContent = isLight ? '☀️ Light' : '🌙 Dark';
+}
+
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light-mode');
+  localStorage.setItem('charter_os_theme', isLight ? 'light' : 'dark');
+  updateThemeButton();
+}
+
+function applySavedTheme() {
+  // Shares the 'charter_os_theme' preference with the main app
+  if (localStorage.getItem('charter_os_theme') === 'light') {
+    document.body.classList.add('light-mode');
+  }
+  updateThemeButton();
+}
+
 // ── SESSION CHECK ─────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  applySavedTheme();
   const saved = sessionStorage.getItem('po_session');
   if (saved) {
     try {
