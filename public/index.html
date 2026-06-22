@@ -959,10 +959,6 @@ function teamLogout() {
   }
 
   function onTeamLoggedIn() {
-    // Show loading spinner next to charter title
-    const _spinner = document.getElementById('dash-load-spinner');
-    if (_spinner) _spinner.style.display = 'inline-block';
-
     // Show team name in sidebar
     const el = document.getElementById('team-label');
     if (el) el.textContent = CURRENT_TEAM.name;
@@ -1160,10 +1156,7 @@ function teamLogout() {
     <div class="screen active" id="screen-dashboard">
       <div class="dash-hero" id="dash-hero">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div id="dash-charter-title" style="font-family:var(--font-head);font-size:26px;font-weight:800;letter-spacing:-0.5px"></div>
-            <span id="dash-load-spinner" class="spinner" style="display:none;width:18px;height:18px;border-color:rgba(255,255,255,0.15);border-top-color:var(--accent)"></span>
-          </div>
+          <div id="dash-charter-title" style="font-family:var(--font-head);font-size:26px;font-weight:800;letter-spacing:-0.5px"></div>
           <button onclick="editCharterName()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text3);cursor:pointer;transition:all 0.2s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">✏️ Rename</button>
         </div>
         <div id="dash-charter-sub" style="color:var(--text2);font-size:14px;margin-top:2px"></div>
@@ -5119,13 +5112,8 @@ function clearAllData() {
   navigate('dashboard');
 }
 
-function hideLoadingSkeleton() {
-  const spinner = document.getElementById('dash-load-spinner');
-  if (spinner) spinner.style.display = 'none';
-}
 
 function renderAll() {
-  hideLoadingSkeleton();
   renderMembers();
   renderMeetings();
   renderTOR();
@@ -5289,5 +5277,6 @@ function saveInlineEdit(section) {
 }
 
 </script>
+
 </body>
 </html>
