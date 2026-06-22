@@ -1,7 +1,7 @@
 # CharterOS — Session Handover Document
 
 Generated: 22 June 2026
-Last updated: 17:19 220626
+Last updated: 220626 (promo hero badge removed)
 Prepared for: Claude Code session continuity
 
 ---
@@ -240,8 +240,7 @@ Team C also has a separate `Team_C_Cost_Estimates.xlsx` (one-off + recurring cos
 1. **Cost estimates Excel for Teams A, B, D, E** — Team C has one, others need to be built
 
 ### Medium Priority
-5. **Promo page video** — placeholder exists in promo.html, needs `playVideo()` wired up once recorded
-6. **Admin portal** — review current state, ensure super admin can see all team progress
+5. **Admin portal** — review current state, ensure super admin can see all team progress
 7. **Un-approve button in approval portal** — PO can currently only approve or send back; un-approve (→ pending) not yet in UI (workaround: direct SQL)
 
 ### Low Priority
@@ -250,7 +249,7 @@ Team C also has a separate `Team_C_Cost_Estimates.xlsx` (one-off + recurring cos
 
 ---
 
-## RECENTLY COMPLETED (session — 17:19 220626)
+## RECENTLY COMPLETED (session — 17:34 220626)
 
 - ✅ **Team structure org chart in TOR** — tiered org chart (Leadership → Management/Tech Lead → Delivery) in the TOR tab of index.html (`buildOrgChart()` / `renderTeamChart()`), and shown above the TOR document in the approval portal (`renderTOR()` reads `charterState.members`). Updates live as members change.
 - ✅ **Direct PDF download** — jsPDF now loaded; `exportAsPDF()` renders the charter print-HTML into an offscreen iframe and downloads a real .pdf page-by-page via new `htmlToPdfDownload()` (no new tab / print dialogue). Falls back to print-tab if libs unavailable.
@@ -259,8 +258,11 @@ Team C also has a separate `Team_C_Cost_Estimates.xlsx` (one-off + recurring cos
 - ✅ **Approval portal — Send back / Approve toolbar mirrored below content** — `renderActionBar()` split into `renderActionToolbar(key,status,ap,pos)` (rendered top + bottom) and `renderSendBackArea()` (rendered once, below content). `toggleSendBack()` now scrolls the note box into view + focuses it. Bottom bar/note only show while still actionable (hidden once approved).
 - ✅ **Approval portal — light-mode button legibility** — Send back / Approve / Confirm buttons use a new `.btn-action` class; `body.light-mode .btn-action { color:#fff }` makes their text white in light mode (dark text retained in dark mode).
 - ✅ **Hub page trimmed** — removed the Quick Links section (download links + read-only team views) and the platform/portals/teams/AI-agents/database status row from hub.html, plus their now-unused CSS.
+- ✅ **use-cases.html file counts** — updated all 5 team cards' file-chip badges from "10 files total" to "12 files total" (per request). ⚠️ The "SAMPLE INPUT FILES" section below still lists 10 files in 6 folders — verify the actual sample ZIPs and reconcile the two if the real count is now 12. *Working-tree edit — not yet committed.*
+- ✅ **Promo page video complete** — `playVideo()` replaces the placeholder with a Vimeo iframe (`https://player.vimeo.com/video/1203461014?autoplay=1`) on click. On page load, the Vimeo oEmbed API is fetched to pull the real video thumbnail as the placeholder background (with a dark overlay for legibility). Section heading changed to "Watch CharterOS in Action"; "30 sec · Product Charter Platform" label removed.
+- ✅ **Promo page hero badge removed** — removed the "Now Available — Product Office Teams" badge element and all associated `.hero-badge` / `.hero-badge::before` CSS (including responsive override).
 
-Commits: `cd5f786` (org chart) · `83c909c` (PDF + CBA capture) · `4d9272e` (theme toggle) · `339888d` (approval bottom bar + light-mode buttons) · `0d688be` (hub trim) — all pushed to origin/main.
+Commits: `cd5f786` · `83c909c` · `4d9272e` · `339888d` · `0d688be` · `a78f936` · `79a11c8` · `9a5c371` · `f0d1fd3` (hero badge element) · `3b0c832` (hero badge CSS) — all pushed to origin/main. **Uncommitted:** use-cases.html file-count edit.
 
 ---
 
