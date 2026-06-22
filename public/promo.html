@@ -519,7 +519,7 @@
 <section id="video">
   <div class="features-header reveal">
     <div class="section-eyebrow">Platform Overview</div>
-    <h2 class="section-title">See CharterOS in 30 Seconds</h2>
+    <h2 class="section-title">Watch CharterOS in Action</h2>
     <p class="section-sub">Watch how a Product Office team goes from zero to a fully structured, AI-generated charter — with governance baked in at every step.</p>
   </div>
   <div style="max-width:1100px;margin:0 auto;padding:0 48px" class="reveal video-inner">
@@ -531,7 +531,7 @@
             <path d="M8 5.5L19 12L8 18.5V5.5Z" fill="white"/>
           </svg>
         </div>
-        <p>CharterOS — 30 Second Introduction</p>
+        <p>CharterOS — Product Walkthrough</p>
         <p style="font-size:13px;color:var(--text3)">Upload your intro video to replace this placeholder</p>
       </div>
       <div class="video-label">⏱ 30 sec · Product Charter Platform</div>
@@ -842,9 +842,20 @@
 
   // ── VIDEO ───────────────────────────────────────────────────────
   function playVideo() {
-    // Replace with your actual video embed
-    // e.g. YouTube: document.getElementById('video-frame').innerHTML = '<iframe src="https://www.youtube.com/embed/YOUR_ID?autoplay=1" ...>'
-    alert('Add your video URL in the promo.html file.\n\nReplace the playVideo() function with your actual video embed (YouTube, Vimeo, or direct .mp4 link).');
+    const frame = document.getElementById('video-frame');
+    const existing = frame.querySelector('iframe, video');
+    if (existing) {
+      existing.src = 'https://player.vimeo.com/video/1203461014?autoplay=1';
+    } else {
+      const placeholder = document.getElementById('video-placeholder');
+      if (placeholder) placeholder.remove();
+      const iframe = document.createElement('iframe');
+      iframe.src = 'https://player.vimeo.com/video/1203461014?autoplay=1';
+      iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+      iframe.allowFullscreen = true;
+      iframe.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:0;';
+      frame.insertBefore(iframe, frame.firstChild);
+    }
   }
 
   // ── SCROLL REVEAL ───────────────────────────────────────────────
