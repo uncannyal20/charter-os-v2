@@ -102,5 +102,35 @@ export default async function handler(req, res) {
     return res.status(200).json(data);
   }
 
+  // ── RESET: clear all approvals for a team back to draft ──────
+  // POST /api/approvals?action=reset  { team_id }
+  if (action === 'reset') {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+    const { team_id } = req.body;
+    if (!team_id) return res.status(400).json({ error: 'team_id required' });
+
+    const sections = ['tor', 'problem', 'vision', 'kpis', 'roadmap', 'cba'];
+    const payload = {
+      status: 'draft',
+      submitted_by: null,
+      submitted_at: null,
+      reviewed_at: null,
+      comment: null,
+      annotations: [],
+      team_replies: {},
+      revision_count: 0
+    };
+
+    await Promise.all(sections.map(section =>
+      fetch(`${SUPABASE_URL}/rest/v1/approvals?team_id=eq.${team_id}&section=eq.${section}`, {
+        method: 'PATCH',
+        headers: { ...headers, 'Prefer': 'return=minimal' },
+        body: JSON.stringify(payload)
+      })
+    ));
+
+    return res.status(200).json({ success: true });
+  }
+
   return res.status(400).json({ error: 'Invalid action' });
 }

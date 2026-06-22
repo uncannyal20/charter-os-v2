@@ -606,31 +606,240 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
 </div>
 
 <script>
-  // Team credentials — password identifies the team automatically
-  const TEAMS = {
-    'teamA2026': { id: 'team-a', name: 'Digital Services Office' },
-    'teamB2026': { id: 'team-b', name: 'Estate Management Division' },
-    'teamC2026': { id: 'team-c', name: 'Smart Nation Products' },
-    'teamD2026': { id: 'team-d', name: 'Citizen Experience Group' },
-    'teamE2026': { id: 'team-e', name: 'Infrastructure & Operations' }
-  };
-
   const SESSION_KEY = 'charter_os_v2_auth';
   let CURRENT_TEAM = null;
   let SAVE_TIMEOUT = null;
 
-  function checkPassword() {
+  // ── Approval state (loaded after login) ──────────────────────────
+  window.APPROVALS = {}; // global — accessible across all script blocks
+
+  async function checkPassword() {
     const input = document.getElementById('pw-input').value.trim();
-    const team  = TEAMS[input];
-    if (team) {
-      CURRENT_TEAM = { id: team.id, name: team.name };
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify(CURRENT_TEAM));
-      document.getElementById('password-gate').style.display = 'none';
-      onTeamLoggedIn();
-    } else {
-      document.getElementById('pw-error').style.display = 'block';
+    const errEl = document.getElementById('pw-error');
+    errEl.style.display = 'none';
+    if (!input) return;
+
+    try {
+      const r = await fetch('/api/teams?action=auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: input })
+      });
+      const data = await r.json();
+      if (r.ok && data.success) {
+        CURRENT_TEAM = { id: data.team.team_id, name: data.team.department };
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(CURRENT_TEAM));
+        document.getElementById('password-gate').style.display = 'none';
+        await loadApprovals();
+        onTeamLoggedIn();
+      } else {
+        errEl.style.display = 'block';
+        document.getElementById('pw-input').value = '';
+        document.getElementById('pw-input').focus();
+      }
+    } catch(e) {
+      errEl.style.display = 'block';
       document.getElementById('pw-input').value = '';
-      document.getElementById('pw-input').focus();
+    }
+  }
+
+  async function loadApprovals() {
+    if (!CURRENT_TEAM) return;
+    try {
+      const r = await fetch('/api/approvals?action=list&team_id=' + CURRENT_TEAM.id);
+      const data = await r.json();
+      if (Array.isArray(data)) {
+        window.APPROVALS = {};
+        data.forEach(a => { window.APPROVALS[a.section] = a; });
+
+        // Sync approval statuses into S so getProgress and renderDraftArea reflect PO decisions
+        const sectionStateMap = { problem: S.problem, vision: S.vision, kpis: S.kpis, roadmap: S.roadmap };
+        let stateChanged = false;
+
+        // TOR
+        const torAP = window.APPROVALS['tor'];
+        const torApproved = torAP && torAP.status === 'approved';
+        if (!!S.tor_approved !== torApproved) { S.tor_approved = torApproved; stateChanged = true; }
+
+        // Problem, Vision, KPIs
+        ['problem','vision','kpis'].forEach(sec => {
+          const ap = window.APPROVALS[sec];
+          const isApproved = ap && ap.status === 'approved';
+          const stateObj = sectionStateMap[sec];
+          if (stateObj && !!stateObj.approved !== isApproved) {
+            stateObj.approved = isApproved;
+            stateChanged = true;
+          }
+        });
+
+        // Roadmap — PO approval sets both tasks_approved and timeline_approved
+        const rmAP = window.APPROVALS['roadmap'];
+        const rmApproved = rmAP && rmAP.status === 'approved';
+        if (rmApproved && (!S.roadmap.tasks_approved || !S.roadmap.timeline_approved)) {
+          S.roadmap.approved = true;
+          S.roadmap.tasks_approved = true;
+          S.roadmap.timeline_approved = true;
+          stateChanged = true;
+        } else if (!rmApproved && S.roadmap.approved) {
+          S.roadmap.approved = false;
+          S.roadmap.tasks_approved = false;
+          S.roadmap.timeline_approved = false;
+          stateChanged = true;
+        }
+
+        // CBA — contributes 10pts to KPI progress
+        const cbaAP = window.APPROVALS['cba'];
+        const cbaApproved = cbaAP && cbaAP.status === 'approved';
+        if (S.cba && !!S.cba.approved !== cbaApproved) {
+          S.cba.approved = cbaApproved;
+          stateChanged = true;
+        }
+
+        if (stateChanged) {
+          saveState();
+          renderDashboard();
+          // Re-render draft areas so approved/pending status shows correctly
+          if (S.problem.draft) renderDraftArea('problem', S.problem.draft);
+          if (S.vision.draft) renderDraftArea('vision', S.vision.draft);
+          if (S.kpis.items && S.kpis.items.length > 0) renderKPITable();
+          if (S.roadmap.phases_data && S.roadmap.phases_data.length > 0) { renderRoadmapPhases(); renderGantt(); }
+          renderTOR();
+        }
+      }
+    } catch(e) { console.warn('Could not load approvals:', e.message); }
+  }
+
+  async function submitForPOReview(section, sectionLabel) {
+    if (!CURRENT_TEAM) return;
+    const submittedBy = 'Product Manager';
+    try {
+      const r = await fetch('/api/approvals?action=submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_id: CURRENT_TEAM.id, section, submitted_by: submittedBy })
+      });
+      if (!r.ok) throw new Error('Submit failed');
+      window.APPROVALS[section] = { status: 'pending', submitted_by: submittedBy, submitted_at: new Date().toISOString() };
+      logActivity('<strong>' + sectionLabel + '</strong> submitted for PO review', 'var(--accent)');
+      toast(sectionLabel + ' submitted for Product Owner review ✓', 'success');
+      // Re-render the section to show pending status
+      if (section === 'tor') renderTOR();
+      else if (section === 'problem') renderDraftArea('problem', S.problem.draft);
+      else if (section === 'vision') renderDraftArea('vision', S.vision.draft);
+      else if (section === 'kpis') renderKPITable();
+      else if (section === 'roadmap') { renderRoadmapPhases(); renderGantt(); }
+      else if (section === 'cba') {
+        // Update the CBA submit button directly without re-running the expensive generateCBA()
+        const cbaActions = document.querySelector('#cba-output .draft-actions');
+        if (cbaActions) {
+          const submitBtn = cbaActions.querySelector('[onclick="approveCBA()"]');
+          if (submitBtn) submitBtn.outerHTML = '<button class="btn btn-ghost btn-sm" style="color:#a5b4fc;border-color:rgba(108,99,255,0.3);cursor:default" disabled>⏳ Awaiting PO Review</button>';
+        }
+      }
+    } catch(e) {
+      toast('Submit failed: ' + e.message, 'error');
+    }
+  }
+
+  function getApprovalStatusBadge(section) {
+    const APPROVALS = window.APPROVALS || {};
+    const ap = APPROVALS[section];
+    if (!ap) return '';
+    const statusMap = {
+      pending:  { color: '#a5b4fc', bg: 'rgba(108,99,255,0.15)', border: 'rgba(108,99,255,0.3)', label: '⏳ Pending PO Review' },
+      approved: { color: 'var(--green)', bg: 'var(--green-soft)', border: 'rgba(31,214,138,0.3)', label: '✅ Approved by PO' },
+      revision: { color: 'var(--amber)', bg: 'var(--amber-soft)', border: 'rgba(245,166,35,0.3)', label: '🟠 Needs Revision' },
+    };
+    const s = statusMap[ap.status];
+    if (!s) return '';
+    return '<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:' + s.bg + ';color:' + s.color + ';border:1px solid ' + s.border + ';margin-left:8px">' + s.label + '</span>';
+  }
+
+  function getRevisionComments(section) {
+    const APPROVALS = window.APPROVALS || {};
+    const ap = APPROVALS[section];
+    if (!ap || ap.status !== 'revision') return '';
+    if (!window._teamReplies) window._teamReplies = {};
+    if (!window._teamReplies[section]) window._teamReplies[section] = {};
+
+    let html = '<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-left:3px solid #ef4444;border-radius:0 8px 8px 0;padding:14px 16px;margin:0 0 16px 0">';
+    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#ef4444;margin-bottom:12px">PO Review — Revision Required</div>';
+
+    if (ap.comment) {
+      const overallReply = (window._teamReplies[section]['overall'] || '');
+      html += '<div style="background:rgba(239,68,68,0.08);border-radius:6px;padding:10px 12px;margin-bottom:10px">';
+      html += '<div style="font-size:11px;font-weight:700;color:#ef4444;margin-bottom:4px">Overall note from PO</div>';
+      html += '<div style="font-size:13px;color:#fca5a5;line-height:1.6;margin-bottom:8px">' + ap.comment + '</div>';
+      html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#8b90a8;margin-bottom:4px">Your response</div>';
+      html += '<textarea class="po-reply-field" data-section="' + section + '" data-key="overall" placeholder="Acknowledge or respond to this note…" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(239,68,68,0.2);border-radius:6px;padding:8px 10px;font-size:12px;color:#e8eaf0;font-family:var(--font-body);resize:vertical;min-height:56px;outline:none">' + overallReply + '</textarea>';
+      html += '</div>';
+    }
+
+    const annotations = ap.annotations || [];
+    if (annotations.length > 0) {
+      html += '<div style="font-size:11px;font-weight:600;color:#fca5a5;margin-bottom:8px">' + annotations.length + ' inline comment' + (annotations.length > 1 ? 's' : '') + '</div>';
+      annotations.forEach(function(a, i) {
+        const replyKey = 'annotation-' + i;
+        const existingReply = (window._teamReplies[section][replyKey] || '');
+        html += '<div style="background:rgba(239,68,68,0.08);border-radius:6px;padding:10px 12px;margin-bottom:8px">';
+        html += '<div style="font-size:11px;color:#fca5a5;margin-bottom:6px"><span style="color:#ef4444;font-weight:700">On: </span><em>' + (a.snippetText||'') + '…</em></div>';
+        html += '<div style="font-size:12px;color:#fca5a5;line-height:1.6;margin-bottom:8px;padding-left:8px;border-left:2px solid rgba(239,68,68,0.3)">' + a.text + '</div>';
+        html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#8b90a8;margin-bottom:4px">Your response</div>';
+        html += '<textarea class="po-reply-field" data-section="' + section + '" data-key="' + replyKey + '" placeholder="How will you address this?…" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(239,68,68,0.2);border-radius:6px;padding:8px 10px;font-size:12px;color:#e8eaf0;font-family:var(--font-body);resize:vertical;min-height:56px;outline:none">' + existingReply + '</textarea>';
+        html += '</div>';
+      });
+    }
+
+    html += '<div style="display:flex;justify-content:flex-end;margin-top:10px">';
+    html += '<button class="po-resubmit-btn" data-section="' + section + '" style="background:var(--accent);color:white;border:none;border-radius:6px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer">💬 Save responses & resubmit</button>';
+    html += '</div>';
+    html += '</div>';
+    return html;
+  }
+
+  function saveTeamReply(section, key, value) {
+    if (!window._teamReplies) window._teamReplies = {};
+    if (!window._teamReplies[section]) window._teamReplies[section] = {};
+    window._teamReplies[section][key] = value;
+  }
+
+  // Event delegation for reply textareas and resubmit button
+  document.addEventListener('change', function(e) {
+    if (e.target && e.target.classList.contains('po-reply-field')) {
+      const sec = e.target.getAttribute('data-section');
+      const key = e.target.getAttribute('data-key');
+      if (sec && key) saveTeamReply(sec, key, e.target.value);
+    }
+  });
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.classList.contains('po-resubmit-btn')) {
+      const sec = e.target.getAttribute('data-section');
+      if (sec) saveAllReplies(sec);
+    }
+  });
+
+  async function saveAllReplies(section) {
+    if (!CURRENT_TEAM) return;
+    const replies = (window._teamReplies && window._teamReplies[section]) || {};
+    try {
+      const r = await fetch('/api/approvals?action=submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_id: CURRENT_TEAM.id, section, submitted_by: 'Product Manager', team_replies: replies })
+      });
+      if (!r.ok) throw new Error('Resubmit failed');
+      window.APPROVALS[section] = { ...(window.APPROVALS[section]||{}), status: 'pending', submitted_by: 'Product Manager', submitted_at: new Date().toISOString(), team_replies: replies };
+      if (window._teamReplies) window._teamReplies[section] = {};
+      const labelMap = { tor:'Terms of Reference', problem:'Problem Statement', vision:'Vision & Strategy', kpis:'KPIs & Metrics', roadmap:'Roadmap', cba:'Cost-Benefit Analysis' };
+      logActivity('<strong>' + (labelMap[section]||section) + '</strong> revised and resubmitted to PO', 'var(--accent)');
+      toast('Responses saved — section resubmitted to PO ✓', 'success');
+      if (section === 'tor') renderTOR();
+      else if (['problem','vision'].includes(section)) renderDraftArea(section, S[section].draft);
+      else if (section === 'kpis') renderKPITable();
+      else if (section === 'roadmap') renderRoadmapPhases();
+      renderDashboard();
+    } catch(e) {
+      toast('Failed: ' + e.message, 'error');
     }
   }
 
@@ -675,6 +884,25 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
       const data = await res.json();
       if (data && data.state && typeof data.state === 'object') {
         Object.assign(S, data.state);
+
+        // ── Re-apply PO approval statuses AFTER cloud load overwrites S ──
+        // loadApprovals runs before loadFromCloud, so Object.assign above
+        // resets approved flags from Supabase charter state (which may be stale).
+        // Re-sync from window.APPROVALS (which is always fresh from approvals table).
+        const _AP = window.APPROVALS || {};
+        S.tor_approved = !!(_AP['tor'] && _AP['tor'].status === 'approved');
+        ['problem','vision','kpis'].forEach(function(sec) {
+          if (S[sec]) S[sec].approved = !!(_AP[sec] && _AP[sec].status === 'approved');
+        });
+        if (S.roadmap) {
+          const _rmApproved = !!(_AP['roadmap'] && _AP['roadmap'].status === 'approved');
+          S.roadmap.approved = _rmApproved;
+          S.roadmap.tasks_approved = _rmApproved;
+          S.roadmap.timeline_approved = _rmApproved;
+        }
+        if (S.cba) S.cba.approved = !!(_AP['cba'] && _AP['cba'].status === 'approved');
+        saveState();
+
         // Sync charter name from Supabase top-level field (source of truth)
         if (data.charter_name) {
           S.charterName = data.charter_name;
@@ -715,15 +943,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (main) main.style.marginLeft = '0';
     if (btn) { btn.style.left = '0'; btn.textContent = '▶'; btn.title = 'Show sidebar'; }
   }
+  if (localStorage.getItem('charter_os_activity_collapsed') === '1') {
+    const wrap = document.getElementById('activity-items-wrap');
+    const icon = document.getElementById('activity-toggle-icon');
+    if (wrap) wrap.style.display = 'none';
+    if (icon) icon.textContent = '▸';
+  }
 });
 
 function teamLogout() {
     if (!confirm('Sign out of CharterOS?')) return;
     sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem('approval_notif_dismissed');
     location.reload();
   }
 
   function onTeamLoggedIn() {
+    // Show splash immediately — before any rendering
+    const _splash = document.getElementById('splash-screen');
+    if (_splash) _splash.style.display = 'flex';
+
     // Show team name in sidebar
     const el = document.getElementById('team-label');
     if (el) el.textContent = CURRENT_TEAM.name;
@@ -747,7 +986,7 @@ function teamLogout() {
     }
 
     // Load from cloud — always authoritative, overwrites local
-    setTimeout(loadFromCloud, 500);
+    setTimeout(loadFromCloud, 100);
 
     // Hook into state changes for auto-save
     const origRenderAll = window.renderAll;
@@ -785,7 +1024,10 @@ function teamLogout() {
       try {
         CURRENT_TEAM = JSON.parse(savedSession);
         document.getElementById('password-gate').style.display = 'none';
-        window.addEventListener('DOMContentLoaded', onTeamLoggedIn);
+        window.addEventListener('DOMContentLoaded', async () => {
+          await loadApprovals();
+          onTeamLoggedIn();
+        });
       } catch(e) {
         document.getElementById('password-gate').style.display = 'flex';
       }
@@ -946,17 +1188,26 @@ function teamLogout() {
         <div class="ob-bar"><div class="ob-fill" id="overall-fill" style="width:0%"></div></div>
       </div>
 
+      <!-- PO Notifications Banner -->
+      <div id="po-notifications" style="display:none;margin:0 0 20px 0"></div>
+
       <div class="progress-grid" id="progress-grid">
         <!-- injected by JS -->
       </div>
 
+
       <div class="activity-list" id="activity-list">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <div class="al-title" style="margin-bottom:0">Activity Log</div>
+          <div style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="toggleActivityLog()">
+            <div class="al-title" style="margin-bottom:0">Activity Log</div>
+            <span id="activity-toggle-icon" style="font-size:11px;color:var(--text3);transition:transform 0.2s">▾</span>
+          </div>
           <button onclick="clearActivityLog()" class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 10px">🗑 Clear</button>
         </div>
+        <div id="activity-items-wrap">
         <div id="activity-items">
           <div class="empty-state"><div class="es-icon">📋</div><p>Your charter activity will appear here.<br>Start by adding your team members.</p></div>
+        </div>
         </div>
       </div>
     </div>
@@ -1217,6 +1468,41 @@ function teamLogout() {
         <p>Define how you will measure success and demonstrate value. AI recommends KPIs based on your approved Problem Statement and Vision — your team reviews and approves. Then upload your cost/benefit estimates for a full CBA.</p>
       </div>
 
+      <!-- KPI Flow Banner -->
+      <div id="kpi-flow-banner" style="display:flex;align-items:stretch;gap:0;background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:18px">
+        <!-- Step 1 -->
+        <div id="kpi-step-1" style="flex:1;padding:14px 16px;border-right:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <div id="kpi-step-1-dot" style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:rgba(139,144,168,0.2);color:var(--text3)">1</div>
+            <span style="font-size:12px;font-weight:700;color:var(--text)">Generate & Review KPIs</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.5;padding-left:30px">AI recommends KPIs from your approved Problem Statement and Vision. Review each one carefully.</div>
+          <div id="kpi-step-1-status" style="margin-top:8px;padding-left:30px;font-size:11px;font-weight:600"></div>
+        </div>
+        <!-- Arrow -->
+        <div style="display:flex;align-items:center;padding:0 6px;color:var(--text3);font-size:16px;flex-shrink:0">›</div>
+        <!-- Step 2 -->
+        <div id="kpi-step-2" style="flex:1;padding:14px 16px;border-right:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <div id="kpi-step-2-dot" style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:rgba(139,144,168,0.2);color:var(--text3)">2</div>
+            <span style="font-size:12px;font-weight:700;color:var(--text)">Submit for PO Approval</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.5;padding-left:30px">Once happy with your KPIs, submit them for Product Owner review and approval.</div>
+          <div id="kpi-step-2-status" style="margin-top:8px;padding-left:30px;font-size:11px;font-weight:600"></div>
+        </div>
+        <!-- Arrow -->
+        <div style="display:flex;align-items:center;padding:0 6px;color:var(--text3);font-size:16px;flex-shrink:0">›</div>
+        <!-- Step 3 -->
+        <div id="kpi-step-3" style="flex:1;padding:14px 16px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <div id="kpi-step-3-dot" style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:rgba(139,144,168,0.2);color:var(--text3)">3</div>
+            <span style="font-size:12px;font-weight:700;color:var(--text)">Cost-Benefit Analysis</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.5;padding-left:30px">After KPIs are approved, assign benefit values and generate a full CBA with ROI projections.</div>
+          <div id="kpi-step-3-status" style="margin-top:8px;padding-left:30px;font-size:11px;font-weight:600"></div>
+        </div>
+      </div>
+
       <div class="tabs-row">
         <button class="tab-btn active" onclick="switchTab('kpis','generate')">🤖 AI Recommend</button>
         <button class="tab-btn" onclick="switchTab('kpis','table')">📊 KPI Table</button>
@@ -1296,7 +1582,10 @@ function teamLogout() {
       <!-- KPI Table Tab -->
       <div class="tab-panel" id="kpis-tab-table">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-          <div style="font-size:13px;color:var(--text2)" id="kpi-count-label">0 KPIs defined</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="font-size:13px;color:var(--text2)" id="kpi-count-label">0 KPIs defined</div>
+            <button onclick="switchTab('kpis','generate')" title="Edit KPIs — go to AI Recommend tab" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.6;padding:0 2px;line-height:1;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✏️</button>
+          </div>
           <button class="btn btn-ghost btn-sm" onclick="openAddKPI()">+ Add KPI manually</button>
         </div>
         <div class="card" style="padding:0;overflow:hidden">
@@ -1612,6 +1901,16 @@ function saveState() {
   try { localStorage.setItem(getStorageKey(), JSON.stringify(S)); } catch(e) {}
 }
 
+function toggleActivityLog() {
+  const wrap = document.getElementById('activity-items-wrap');
+  const icon = document.getElementById('activity-toggle-icon');
+  if (!wrap) return;
+  const collapsed = wrap.style.display === 'none';
+  wrap.style.display = collapsed ? 'block' : 'none';
+  icon.textContent = collapsed ? '▾' : '▸';
+  localStorage.setItem('charter_os_activity_collapsed', collapsed ? '0' : '1');
+}
+
 function clearActivityLog() {
   S.activity = [];
   saveState();
@@ -1649,6 +1948,18 @@ function toggleTheme() {
   localStorage.setItem('charter_os_theme', isLight ? 'light' : 'dark');
 }
 
+function navigateToRevision(section) {
+  const sectionMap = {
+    tor:     () => { navigate('team');    setTimeout(() => switchTab('team','tor'), 100); },
+    problem: () => { navigate('problem'); setTimeout(() => switchTab('problem','refine'), 100); },
+    vision:  () => { navigate('vision');  setTimeout(() => switchTab('vision','refine'), 100); },
+    kpis:    () => { navigate('kpis');    setTimeout(() => switchTab('kpis','table'), 100); },
+    roadmap: () => { navigate('roadmap'); setTimeout(() => switchTab('roadmap','phases'), 100); },
+    cba:     () => { navigate('kpis');    setTimeout(() => switchTab('kpis','cba'), 100); },
+  };
+  if (sectionMap[section]) sectionMap[section]();
+}
+
 function navigate(id) {
   screens.forEach(s => {
     document.getElementById('screen-'+s).classList.toggle('active', s===id);
@@ -1659,7 +1970,7 @@ function navigate(id) {
   if (screenNameEl) screenNameEl.textContent = screenTitles[id] || id;
   document.querySelector('.main').scrollTo({top:0, behavior:'smooth'});
   if (id==='dashboard') renderDashboard();
-  if (id==='kpis') { renderKPISourceCards(); renderCBAKPITable(); }
+  if (id==='kpis') { renderKPISourceCards(); renderCBAKPITable(); renderKPIBanner(); }
   if (id==='export') renderExport();
 }
 
@@ -1720,7 +2031,8 @@ function getProgress(id) {
   }
   if (id==='roadmap') {
     let s = 0;
-    if (S.roadmap.epics) s += 20;
+    const hasRmFiles = (sectionFiles.roadmap && sectionFiles.roadmap.length > 0) || S.roadmap.file_texts;
+    if (S.roadmap.epics || hasRmFiles || (S.roadmap.phases_data && S.roadmap.phases_data.length > 0)) s += 20;
     if (S.roadmap.draft) s += 40;
     if (S.roadmap.tasks_approved) s += 20;
     if (S.roadmap.timeline_approved) s += 20;
@@ -1742,6 +2054,12 @@ function editCharterName() {
     logActivity('Charter renamed to <strong>' + name.trim() + '</strong>', 'var(--accent)');
     toast('Charter name updated!', 'success');
   }
+}
+
+function dismissApprovalNotif() {
+  sessionStorage.setItem('approval_notif_dismissed', '1');
+  const el = document.getElementById('po-notifications');
+  if (el) el.style.display = 'none';
 }
 
 function renderDashboard() {
@@ -1803,6 +2121,72 @@ function renderDashboard() {
     else { badge.textContent = '—'; badge.className = 'nav-badge empty'; }
   });
 
+  // PO Notifications Banner
+  const notifEl = document.getElementById('po-notifications');
+  if (notifEl) {
+    const sectionLabels = { tor: 'Terms of Reference', problem: 'Problem Statement', vision: 'Vision & Strategy', kpis: 'KPIs & Metrics', roadmap: 'Roadmap', cba: 'Cost-Benefit Analysis' };
+    const APPROVALS = window.APPROVALS || {};
+    const revisions = Object.entries(APPROVALS).filter(([,a]) => a.status === 'revision');
+    const pending = Object.entries(APPROVALS).filter(([,a]) => a.status === 'pending');
+
+    if (revisions.length > 0) {
+      const items = revisions.map(([key, ap]) => {
+        const commentCount = (ap.annotations || []).length;
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.3);border-radius:6px;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:16px">🟠</span>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--amber)">${sectionLabels[key] || key} — Needs Revision</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">${commentCount} inline comment${commentCount!==1?'s':''} from Product Owner${ap.comment ? ' · "' + ap.comment.substring(0,60) + (ap.comment.length>60?'…':'') + '"' : ''}</div>
+            </div>
+          </div>
+          <button onclick="navigateToRevision('${key}')" style="background:rgba(245,166,35,0.15);border:1px solid rgba(245,166,35,0.3);color:var(--amber);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer">View & Revise →</button>
+        </div>`;
+      }).join('');
+
+      notifEl.style.display = 'block';
+      notifEl.innerHTML = `
+        <div style="background:rgba(245,166,35,0.18);border:2px solid rgba(245,166,35,0.5);border-radius:10px;padding:16px 18px;box-shadow:0 0 0 4px rgba(245,166,35,0.06)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <span style="font-size:14px">🔔</span>
+            <span style="font-size:13px;font-weight:700;color:var(--amber)">Product Owner Feedback — ${revisions.length} section${revisions.length!==1?'s':''} need${revisions.length===1?'s':''} revision</span>
+          </div>
+          ${items}
+        </div>`;
+    } else if (pending.length > 0) {
+      const items = pending.map(([key]) =>
+        `<span style="font-size:11px;padding:3px 8px;background:rgba(108,99,255,0.15);color:#a5b4fc;border-radius:20px;border:1px solid rgba(108,99,255,0.3)">${sectionLabels[key]||key}</span>`
+      ).join(' ');
+      notifEl.style.display = 'block';
+      notifEl.innerHTML = `
+        <div style="background:rgba(108,99,255,0.06);border:1px solid rgba(108,99,255,0.2);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:13px">⏳</span>
+          <span style="font-size:13px;color:#a5b4fc;font-weight:600">Awaiting Product Owner review:</span>
+          ${items}
+        </div>`;
+    } else {
+      // Check for any newly approved sections
+      const approved = Object.entries(APPROVALS).filter(([,a]) => a.status === 'approved');
+      if (approved.length > 0 && !sessionStorage.getItem('approval_notif_dismissed')) {
+        const items = approved.map(([key]) =>
+          `<span style="font-size:11px;padding:3px 8px;background:rgba(31,214,138,0.15);color:var(--green);border-radius:20px;border:1px solid rgba(31,214,138,0.3)">${sectionLabels[key]||key}</span>`
+        ).join(' ');
+        notifEl.style.display = 'block';
+        notifEl.innerHTML = `
+          <div style="background:rgba(31,214,138,0.08);border:1px solid rgba(31,214,138,0.25);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:relative">
+            <span style="font-size:14px">✅</span>
+            <span style="font-size:13px;color:var(--green);font-weight:600">Approved by Product Owner:</span>
+            ${items}
+            <button onclick="dismissApprovalNotif()" style="margin-left:auto;background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:0 4px;line-height:1;flex-shrink:0" title="Dismiss">✕</button>
+          </div>`;
+      } else {
+        notifEl.style.display = 'none';
+      }
+    }
+  }
+
+
+
   // Sidebar
   document.getElementById('sidebar-charter-name').textContent = S.charter_name;
   const now = new Date();
@@ -1831,6 +2215,11 @@ function renderDashboard() {
 function renderActivity() {
   const el = document.getElementById('activity-items');
   if (!el) return;
+  const wrap = document.getElementById('activity-items-wrap');
+  const icon = document.getElementById('activity-toggle-icon');
+  const isCollapsed = localStorage.getItem('charter_os_activity_collapsed') === '1';
+  if (wrap) wrap.style.display = isCollapsed ? 'none' : 'block';
+  if (icon) icon.textContent = isCollapsed ? '▸' : '▾';
   if (!S.activity.length) {
     el.innerHTML = '<div class="empty-state"><div class="es-icon">📋</div><p>No activity yet. Start building your charter.</p></div>';
     return;
@@ -1983,26 +2372,39 @@ async function clearCharter() {
   if (!confirm('This will permanently clear ALL charter data for your team. This cannot be undone. Are you sure?')) return;
   const blank = {
     charterName: 'Untitled Charter', members: [], meetings: [], tor: null,
-    tor_approved: false,
-    problem: { notes:'', draft:'', approved:false, file_texts:'', pending_approval:false },
-    vision: { product_name:'', industry:'', users:'', notes:'', draft:'', approved:false, file_texts:'', pending_approval:false },
-    kpis: { notes:'', items:[], approved:false, pending_approval:false },
-    cba: { draft:'', approved:false, benefit_values:[], pending_approval:false },
-    roadmap: { epics:'', draft:'', approved:false, tasks_approved:false, timeline_approved:false, pending_approval:false },
+    problem: { notes:'', draft:'', approved:false, file_texts:'' },
+    vision: { product_name:'', industry:'', users:'', notes:'', draft:'', approved:false, file_texts:'' },
+    kpis: { notes:'', items:[], approved:false },
+    cba: { draft:'', approved:false, benefit_values:[] },
+    roadmap: { epics:'', draft:'', approved:false, tasks_approved:false, timeline_approved:false },
     activity: []
   };
   Object.assign(S, blank);
-  S.tor_approved = false;
   if (CURRENT_TEAM) {
     try {
       await fetch('/api/save-charter', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ team_id: CURRENT_TEAM.id, charter_name: 'Untitled Charter', state: blank,
-          progress_team:0, progress_problem:0, progress_vision:0, progress_kpis:0, progress_roadmap:0, progress_overall:0,
-          approval_tor:'', approval_problem:'', approval_vision:'', approval_kpis:'', approval_roadmap:'' })
+          progress_team:0, progress_problem:0, progress_vision:0, progress_kpis:0, progress_roadmap:0, progress_overall:0 })
       });
     } catch(e) { console.warn('Cloud clear failed:', e.message); }
   }
+  // Reset all approval statuses back to draft in Supabase
+  if (CURRENT_TEAM) {
+    try {
+      await fetch('/api/approvals?action=reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_id: CURRENT_TEAM.id })
+      });
+      // Reset local approvals state
+      window.APPROVALS = {};
+      ['tor','problem','vision','kpis','roadmap','cba'].forEach(s => {
+        window.APPROVALS[s] = { status: 'draft' };
+      });
+    } catch(e) { console.warn('Approval reset failed:', e.message); }
+  }
+
   saveState();
   if (typeof renderAll === 'function') renderAll();
   logActivity('Charter cleared and reset', 'var(--red)');
@@ -2355,6 +2757,7 @@ Do not stop before completing section 5. All 5 sections are mandatory.`;
     const result = await callClaude(prompt);
     S.tor = result;
     saveState();
+    scheduleSave();
     renderTOR();
     logActivity('TOR generated by AI for ' + S.members.length + ' members', 'var(--accent)');
     toast('TOR generated successfully!', 'success');
@@ -2369,16 +2772,27 @@ function renderTOR() {
   const el = document.getElementById('tor-output');
   if (!S.tor) { el.innerHTML=''; return; }
   const clean = cleanDraft(S.tor);
-  const isApproved = S.tor_approved || false;
+  const torAP = APPROVALS['tor'] || {};
+  const torStatus = torAP.status || 'draft';
   el.innerHTML = `<div class="draft-box">
-    <div class="draft-box-label">${isApproved ? '✅ TOR Approved' : '✓ AI-Generated TOR'} — ${new Date().toLocaleDateString()}</div>
-    <div class="tor-html-output" style="font-size:13.5px;line-height:1.8;color:var(--text2)">${clean}</div>
+    <div class="draft-box-label" style="display:flex;align-items:center;gap:8px">
+      ✓ AI-Generated TOR — ${new Date().toLocaleDateString()}
+      ${getApprovalStatusBadge('tor')}
+      <button id="tor-edit-btn" onclick="toggleInlineEdit('tor')" title="Edit TOR" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.6;padding:0 2px;line-height:1;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✏️</button>
+    </div>
+    ${getRevisionComments('tor')}
+    <div id="tor-edit-area" class="tor-html-output" style="font-size:13.5px;line-height:1.8;color:var(--text2)">${clean}</div>
     <div class="draft-actions">
       <button class="btn btn-ghost btn-sm" onclick="copyText(S.tor)">📋 Copy</button>
-      ${isApproved
-        ? `<button class="btn btn-ghost btn-sm" style="color:var(--green);border-color:var(--green);cursor:default" disabled>✅ Approved</button>`
+      <button id="tor-save-edit-btn" class="btn btn-green btn-sm" onclick="saveInlineEdit('tor')" style="display:none;color:#0f1117">💾 Save edits</button>
+      ${torStatus === 'approved'
+        ? `<div style="display:inline-flex;align-items:center;gap:8px;background:rgba(31,214,138,0.1);border:1.5px solid rgba(31,214,138,0.4);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;color:var(--green)">
+            ✅ Approved by Product Owner · ${new Date(torAP.reviewed_at||Date.now()).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'})}
+           </div>`
+        : torStatus === 'pending'
+        ? `<button class="btn btn-ghost btn-sm" style="color:#a5b4fc;border-color:rgba(108,99,255,0.3);cursor:default" disabled>⏳ Awaiting PO Review</button>`
         : `<button class="btn btn-ghost btn-sm" onclick="generateTOR()">↻ Regenerate</button>
-           <button class="btn btn-green btn-sm" onclick="approveTOR()">✓ Approve TOR</button>`
+           <button class="btn btn-accent btn-sm" onclick="approveTOR()" style="background:var(--accent);color:white;border:none">📤 Submit for PO Review</button>`
       }
     </div>
   </div>`;
@@ -2444,14 +2858,7 @@ function renderValueMilestones() {
 }
 
 function approveTOR() {
-  if (!confirm('Approve this TOR? This confirms the team structure and ways of working are agreed.')) return;
-  S.tor_approved = true;
-  saveState();
-  scheduleSave();
-  renderTOR();
-  if (typeof renderDashboard === 'function') renderDashboard();
-  logActivity('TOR approved and signed off', 'var(--green)');
-  toast('TOR approved! Team & TOR section is now complete.', 'success');
+  submitForPOReview('tor', 'Terms of Reference');
 }
 
 // ── GENERIC SECTION GENERATOR ──
@@ -2486,7 +2893,7 @@ function switchCBATab(tab) {
 
         document.getElementById('cba-output').innerHTML = `
           <div class="draft-box">
-            <div class="draft-box-label">✓ CBA Summary — ${new Date(S.cba.approved ? Date.now() : Date.now()).toLocaleDateString()}</div>
+            <div class="draft-box-label" style="display:flex;align-items:center;gap:6px">✓ CBA Summary — ${new Date().toLocaleDateString()} <button onclick="navigateToRevision('cba')" title="Edit CBA" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.6;padding:0 2px;line-height:1;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✏️</button></div>
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
               ${[['Total Investment','SGD '+(p.totalY1||0).toLocaleString(),'var(--red)'],['Annual Benefit','SGD '+totalBenAnnual.toLocaleString(),'var(--green)'],['Payback Period',paybackMths+' months','var(--amber)'],['3-Year ROI',roi3yr+'%','var(--accent)']].map(([label,val,color])=>`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">${label}</div><div style="font-family:var(--font-head);font-size:18px;font-weight:800;color:${color}">${val}</div></div>`).join('')}
             </div>
@@ -2497,7 +2904,14 @@ function switchCBATab(tab) {
             </div>
             <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:16px"><div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">3-Year Cumulative Net Position</div><div style="position:relative;height:120px"><canvas id="cba-chart-waterfall"></canvas></div></div>
             <div class="draft-actions">
-              <button class="btn btn-green btn-sm" onclick="approveCBA()">✓ Approve CBA</button>
+              ${(()=>{
+                const cbaAP = window.APPROVALS['cba']||{};
+                const st = cbaAP.status||'draft';
+                const reviewedDate = cbaAP.reviewed_at ? new Date(cbaAP.reviewed_at).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'}) : '';
+                if(st==='approved') return '<div style="display:inline-flex;align-items:center;gap:8px;background:rgba(31,214,138,0.1);border:1.5px solid rgba(31,214,138,0.4);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;color:var(--green)">✅ Approved by Product Owner' + (reviewedDate ? ' · ' + reviewedDate : '') + '</div>';
+                if(st==='pending') return '<button class="btn btn-ghost btn-sm" style="color:#a5b4fc;border-color:rgba(108,99,255,0.3);cursor:default" disabled>⏳ Awaiting PO Review</button>';
+                return '<button class="btn btn-accent btn-sm" onclick="approveCBA()" style="background:var(--accent);color:white;border:none">📤 Submit for PO Review</button>';
+              })()}
               <button class="btn btn-primary btn-sm" onclick="downloadCBAExcel()">⬇ Download Full CBA Excel</button>
               <button class="btn btn-ghost btn-sm" onclick="generateCBA()">↻ Regenerate</button>
             </div>
@@ -2984,7 +3398,14 @@ Use <strong> for all financial figures.`;
         </div>
 
         <div class="draft-actions">
-          <button class="btn btn-green btn-sm" onclick="approveCBA()">✓ Approve CBA</button>
+          ${(()=>{
+            const _cbaAP = window.APPROVALS['cba']||{};
+            const _cst = _cbaAP.status||'draft';
+            const _rev = _cbaAP.reviewed_at ? new Date(_cbaAP.reviewed_at).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'}) : '';
+            if(_cst==='approved') return '<div style="display:inline-flex;align-items:center;gap:8px;background:rgba(31,214,138,0.1);border:1.5px solid rgba(31,214,138,0.4);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;color:var(--green)">✅ Approved by PO' + (_rev ? ' · ' + _rev : '') + '</div>';
+            if(_cst==='pending') return '<button class="btn btn-ghost btn-sm" style="color:#a5b4fc;border-color:rgba(108,99,255,0.3);cursor:default" disabled>⏳ Awaiting PO Review</button>';
+            return '<button class="btn btn-accent btn-sm" onclick="approveCBA()" style="background:var(--accent);color:white;border:none">📤 Submit CBA for PO Review</button>';
+          })()}
           <button class="btn btn-primary btn-sm" onclick="downloadCBAExcel()">⬇ Download Full CBA Excel</button>
           <button class="btn btn-ghost btn-sm" onclick="generateCBA()">↻ Regenerate</button>
         </div>
@@ -3253,12 +3674,7 @@ function downloadCBAExcel() {
 }
 
 function approveCBA() {
-  if (S.cba) S.cba.approved = true;
-  scheduleSave();
-  saveState();
-  logActivity('Cost Benefit Analysis approved', 'var(--green)');
-  toast('CBA approved and saved!', 'success');
-  renderDashboard();
+  submitForPOReview('cba', 'Cost-Benefit Analysis');
 }
 
 async function generateSection(section) {
@@ -3510,36 +3926,40 @@ function renderDraftArea(section, text) {
   const isHtmlSection = ['problem','vision'].includes(section);
   const clean = isHtmlSection ? text.replace(/```html|```/g,'').trim() : text;
   el.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div class="draft-box-label" style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)">● AI Draft — ${new Date().toLocaleDateString()}</div>
-      ${approved ? '<span class="tag tag-green">✓ Approved</span>' : ''}
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:6px">
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="draft-box-label" style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)">● AI Draft — ${new Date().toLocaleDateString()}</div>
+        <button id="${section}-edit-btn" onclick="toggleInlineEdit('${section}')" title="Edit section" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.6;padding:0 2px;line-height:1;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✏️</button>
+      </div>
+      ${getApprovalStatusBadge(section)}
     </div>
+    ${getRevisionComments(section)}
     ${isHtmlSection
       ? `<div id="${section}-edit-area" class="draft-html-view" style="min-height:360px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:20px;overflow-y:auto">${clean}</div>`
       : `<textarea id="${section}-edit-area" style="width:100%;min-height:360px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:16px;font-size:13.5px;line-height:1.8;color:var(--text);font-family:var(--font-body)">${text}</textarea>`
     }
     <div class="draft-actions">
-      <button class="btn btn-green btn-sm" onclick="approveSection('${section}')">✓ Approve & Save</button>
+      ${(()=>{ const sectionAP = APPROVALS[section]||{}; const st = sectionAP.status||'draft';
+        if(st==='approved') return '<button class="btn btn-ghost btn-sm" style="color:var(--green);border-color:var(--green);cursor:default" disabled>✅ Approved by PO</button>';
+        if(st==='pending') return '<button class="btn btn-ghost btn-sm" style="color:#a5b4fc;border-color:rgba(108,99,255,0.3);cursor:default" disabled>⏳ Awaiting PO Review</button>';
+        return '<button class="btn btn-accent btn-sm" onclick="approveSection(\'' + section + '\')" style="background:var(--accent);color:white;border:none">📤 Submit for PO Review</button>';
+      })()}
       <button class="btn btn-ghost btn-sm" onclick="generateSection('${section}')">↻ Regenerate</button>
       <button class="btn btn-ghost btn-sm" onclick="copyText(document.getElementById('${section}-edit-area').innerText||document.getElementById('${section}-edit-area').value)">📋 Copy</button>
     </div>`;
 }
 
 function approveSection(section) {
-  // Always cloud-save after approval so it persists on refresh
+  // Save draft edits first
   const el = document.getElementById(section+'-edit-area');
   if (el) {
-    // textarea uses .value, div uses .innerHTML
     const newContent = el.tagName === 'TEXTAREA' ? el.value : el.innerHTML;
     if (newContent && newContent.trim()) S[section].draft = newContent;
   }
-  S[section].approved = true;
   saveState();
   scheduleSave();
-  renderDraftArea(section, S[section].draft);
-  logActivity(`<strong>${section.charAt(0).toUpperCase()+section.slice(1)}</strong> section approved`, 'var(--green)');
-  toast('Section approved and saved! ✓', 'success');
-  renderDashboard();
+  const labelMap = { problem: 'Problem Statement', vision: 'Vision & Strategy', cba: 'Cost-Benefit Analysis' };
+  submitForPOReview(section, labelMap[section] || section);
 }
 
 // ── KPIs ──
@@ -3566,6 +3986,74 @@ function deleteKPI(idx) {
   saveState();
   renderKPITable();
 }
+function renderKPIBanner() {
+  const kpiAP = (window.APPROVALS || {})['kpis'] || {};
+  const kpiStatus = kpiAP.status || 'draft';
+  const hasKPIs = S.kpis && S.kpis.items && S.kpis.items.length > 0;
+  const hasCBA = S.cba && S.cba.draft;
+
+  const dot1 = document.getElementById('kpi-step-1-dot');
+  const dot2 = document.getElementById('kpi-step-2-dot');
+  const dot3 = document.getElementById('kpi-step-3-dot');
+  const st1  = document.getElementById('kpi-step-1-status');
+  const st2  = document.getElementById('kpi-step-2-status');
+  const st3  = document.getElementById('kpi-step-3-status');
+  const s1   = document.getElementById('kpi-step-1');
+  const s2   = document.getElementById('kpi-step-2');
+  const s3   = document.getElementById('kpi-step-3');
+  if (!dot1) return;
+
+  const GREEN  = 'rgba(31,214,138,0.15)'; const GDOT = '#1fd68a';
+  const AMBER  = 'rgba(245,166,35,0.12)'; const ADOT = '#f5a623';
+  const BLUE   = 'rgba(79,124,255,0.12)'; const BDOT = '#4f7cff';
+  const GREY   = 'rgba(139,144,168,0.15)'; const GRDOT = '#8b90a8';
+
+  // Step 1 — KPIs generated
+  if (hasKPIs) {
+    dot1.style.background = GREEN; dot1.style.color = GDOT; dot1.textContent = '✓';
+    s1.style.borderLeft = '3px solid ' + GDOT;
+    st1.innerHTML = '<span style="color:' + GDOT + '">' + S.kpis.items.length + ' KPIs defined</span>';
+  } else {
+    dot1.style.background = BLUE; dot1.style.color = BDOT; dot1.textContent = '1';
+    s1.style.borderLeft = '3px solid ' + BDOT;
+    st1.innerHTML = '<span style="color:' + BDOT + '">← Start here</span>';
+  }
+
+  // Step 2 — Submit/approve
+  if (kpiStatus === 'approved') {
+    dot2.style.background = GREEN; dot2.style.color = GDOT; dot2.textContent = '✓';
+    s2.style.borderLeft = '3px solid ' + GDOT;
+    st2.innerHTML = '<span style="color:' + GDOT + '">✅ Approved by PO</span>';
+  } else if (kpiStatus === 'pending') {
+    dot2.style.background = AMBER; dot2.style.color = ADOT; dot2.textContent = '2';
+    s2.style.borderLeft = '3px solid ' + ADOT;
+    st2.innerHTML = '<span style="color:' + ADOT + '">⏳ Awaiting PO review</span>';
+  } else if (hasKPIs) {
+    dot2.style.background = BLUE; dot2.style.color = BDOT; dot2.textContent = '2';
+    s2.style.borderLeft = '3px solid ' + BDOT;
+    st2.innerHTML = '<span style="color:' + BDOT + '">← Submit when ready</span>';
+  } else {
+    dot2.style.background = GREY; dot2.style.color = GRDOT; dot2.textContent = '2';
+    s2.style.borderLeft = 'none';
+    st2.innerHTML = '<span style="color:' + GRDOT + '">Complete Step 1 first</span>';
+  }
+
+  // Step 3 — CBA
+  if (hasCBA) {
+    dot3.style.background = GREEN; dot3.style.color = GDOT; dot3.textContent = '✓';
+    s3.style.borderLeft = '3px solid ' + GDOT;
+    st3.innerHTML = '<span style="color:' + GDOT + '">CBA generated</span>';
+  } else if (kpiStatus === 'approved') {
+    dot3.style.background = BLUE; dot3.style.color = BDOT; dot3.textContent = '3';
+    s3.style.borderLeft = '3px solid ' + BDOT;
+    st3.innerHTML = '<span style="color:' + BDOT + '">← KPIs approved — start CBA</span>';
+  } else {
+    dot3.style.background = GREY; dot3.style.color = GRDOT; dot3.textContent = '3';
+    s3.style.borderLeft = 'none';
+    st3.innerHTML = '<span style="color:' + GRDOT + '">Complete Steps 1 & 2 first</span>';
+  }
+}
+
 function renderKPITable() {
   const tbody = document.getElementById('kpi-table-body');
   const empty = document.getElementById('kpi-empty');
@@ -3596,25 +4084,26 @@ function renderKPITable() {
   // approve section
   if (!S.kpis.approved && S.kpis.items.length > 0) {
     tbody.innerHTML += `<tr><td colspan="7" style="padding:12px">
-      <button class="btn btn-green btn-sm" onclick="approveKPIs()">✓ Approve KPIs</button>
+      ${(()=>{
+        const kpiAP = window.APPROVALS['kpis']||{};
+        const st = kpiAP.status||'draft';
+        const reviewedDate = kpiAP.reviewed_at ? new Date(kpiAP.reviewed_at).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'}) : '';
+        if(st==='approved') return '<div style="display:inline-flex;align-items:center;gap:8px;background:rgba(31,214,138,0.1);border:1.5px solid rgba(31,214,138,0.4);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;color:var(--green)">✅ Approved by Product Owner' + (reviewedDate ? ' · ' + reviewedDate : '') + '</div>';
+        if(st==='pending') return '<button class="btn btn-ghost btn-sm" style="color:#a5b4fc;border-color:rgba(108,99,255,0.3);cursor:default" disabled>⏳ Awaiting PO Review</button>';
+        return '<button class="btn btn-accent btn-sm" onclick="approveKPIs()" style="background:var(--accent);color:white;border:none">📤 Submit for PO Review</button>';
+      })()}
     </td></tr>`;
   }
 }
 function approveKPIs() {
-  S.kpis.approved = true;
-  scheduleSave();
-  saveState();
-  renderKPITable();
-  logActivity('KPIs approved — ' + S.kpis.items.length + ' metrics defined', 'var(--green)');
-  toast('KPIs approved!', 'success');
-  renderDashboard();
+  submitForPOReview('kpis', 'KPIs & Metrics');
 }
 
 // ── ROADMAP ──
 function renderRoadmapPhases() {
   const el = document.getElementById('rm-phases-view');
   if (!S.roadmap.phases_data || !S.roadmap.phases_data.length) return;
-  el.innerHTML = S.roadmap.phases_data.map((ph, pi) => `
+  el.innerHTML = `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)">● Roadmap Phases</span><button onclick="navigateToRevision('roadmap')" title="Edit roadmap" style="background:none;border:none;cursor:pointer;font-size:14px;opacity:0.6;padding:0 2px;line-height:1;transition:opacity 0.15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✏️</button></div>` + S.roadmap.phases_data.map((ph, pi) => `
     <div class="card" style="border-left:3px solid ${ph.color||'var(--accent)'}">
       <div class="card-title" style="color:${ph.color||'var(--accent)'}">
         Phase ${pi+1}: ${ph.name}
@@ -3634,7 +4123,14 @@ function renderRoadmapPhases() {
   `).join('') + `<div style="display:flex;gap:8px;margin-top:4px">
     ${S.roadmap.tasks_approved
       ? `<button class="btn btn-ghost btn-sm" style="color:var(--green);border-color:var(--green);cursor:default" disabled>✅ Tasks Approved — Review Gantt View next</button>`
-      : `<button class="btn btn-green btn-sm" onclick="approveRoadmapTasks()">✓ Approve Phases & Tasks</button>`
+      : `${(()=>{
+        const rmAP = window.APPROVALS['roadmap']||{};
+        const st = rmAP.status||'draft';
+        const reviewedDate = rmAP.reviewed_at ? new Date(rmAP.reviewed_at).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'}) : '';
+        if(st==='approved') return '<div style=\"display:inline-flex;align-items:center;gap:8px;background:rgba(31,214,138,0.1);border:1.5px solid rgba(31,214,138,0.4);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;color:var(--green)\">✅ Approved by Product Owner' + (reviewedDate ? ' · ' + reviewedDate : '') + '</div>';
+        if(st==='pending') return '<button class=\"btn btn-ghost btn-sm\" style=\"color:#a5b4fc;border-color:rgba(108,99,255,0.3);cursor:default\" disabled>⏳ Awaiting PO Review</button>';
+        return '<button class=\"btn btn-accent btn-sm\" onclick=\"approveRoadmapTasks()\" style=\"background:var(--accent);color:white;border:none\">📤 Submit Roadmap for PO Review</button>';
+      })()}`
     }
   </div>`;
 }
@@ -3789,7 +4285,14 @@ async function renderGantt() {
       </div>
       ${S.roadmap.timeline_approved
         ? `<button class="btn btn-ghost btn-sm" style="color:var(--green);border-color:var(--green);cursor:default" disabled>✅ Timeline Approved</button>`
-        : `<button class="btn btn-green btn-sm" onclick="approveRoadmapTimeline()">✓ Approve Timeline</button>`
+        : `${(()=>{
+        const rmAP = window.APPROVALS['roadmap']||{};
+        const st = rmAP.status||'draft';
+        const reviewedDate = rmAP.reviewed_at ? new Date(rmAP.reviewed_at).toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'}) : '';
+        if(st==='approved') return '<div style=\"display:inline-flex;align-items:center;gap:8px;background:rgba(31,214,138,0.1);border:1.5px solid rgba(31,214,138,0.4);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;color:var(--green)\">✅ Approved by Product Owner' + (reviewedDate ? ' · ' + reviewedDate : '') + '</div>';
+        if(st==='pending') return '<button class=\"btn btn-ghost btn-sm\" style=\"color:#a5b4fc;border-color:rgba(108,99,255,0.3);cursor:default\" disabled>⏳ Awaiting PO Review</button>';
+        return '<button class=\"btn btn-accent btn-sm\" onclick=\"approveRoadmapTimeline()\" style=\"background:var(--accent);color:white;border:none\">📤 Submit Timeline for PO Review</button>';
+      })()}`
       }
     </div>`;
 }
@@ -3802,33 +4305,11 @@ function hexToRgbStr(hex) {
 }
 
 function approveRoadmapTasks() {
-  if (!confirm('Approve the phases and tasks? This confirms the scope and content of the roadmap is agreed.')) return;
-  S.roadmap.tasks_approved = true;
-  S.roadmap.approved = S.roadmap.timeline_approved; // only fully approved when both done
-  saveState();
-  scheduleSave();
-  renderRoadmapPhases();
-  renderDashboard();
-  logActivity('Roadmap phases & tasks approved', 'var(--green)');
-  toast('Phases & Tasks approved! Now review the Gantt View and approve the timeline.', 'success');
-  // Auto-switch to Gantt tab
-  setTimeout(() => switchTab('roadmap', 'gantt'), 800);
+  submitForPOReview('roadmap', 'Roadmap');
 }
 
 function approveRoadmapTimeline() {
-  if (!S.roadmap.tasks_approved) {
-    toast('Please approve the Phases & Tasks first.', 'error');
-    return;
-  }
-  if (!confirm('Approve the Gantt timeline? This confirms the sequence and duration of all phases is agreed.')) return;
-  S.roadmap.timeline_approved = true;
-  S.roadmap.approved = true;
-  saveState();
-  scheduleSave();
-  renderGantt();
-  renderDashboard();
-  logActivity('Roadmap timeline approved and finalised', 'var(--green)');
-  toast('Timeline approved! Roadmap is now 100% complete.', 'success');
+  submitForPOReview('roadmap', 'Roadmap');
 }
 
 // Legacy — keep for backward compat
@@ -3912,38 +4393,27 @@ function cleanDraft(html) {
 async function generateSummarySlides() {
   toast('Generating slides... capturing charts...', 'success');
   try {
-    // Capture CBA charts as base64 images if they exist
+    // Capture CBA charts — must navigate to CBA tab first so canvases are rendered
     let chartImages = {};
-    const cbaOutput = document.getElementById('cba-output');
-    if (cbaOutput && S.cba && S.cba.draft) {
-      // Make sure CBA tab is visible to capture
-      const chartBar = document.getElementById('cba-chart-bar');
-      const chartDonut = document.getElementById('cba-chart-donut');
-      const chartWf = document.getElementById('cba-chart-waterfall');
+    if (S.cba && S.cba.draft) {
+      try {
+        // Switch to KPIs screen + CBA tab to ensure canvases are visible
+        const prevScreen = document.querySelector('.screen.active')?.id;
+        navigate('kpis');
+        switchCBATab('view');
+        await new Promise(r => setTimeout(r, 400)); // wait for charts to render
 
-      if (chartBar && typeof html2canvas !== 'undefined') {
-        try {
-          // Capture each chart canvas directly
-          const barCanvas = chartBar;
-          const donutCanvas = chartDonut;
-          const wfCanvas = chartWf;
+        const chartBar = document.getElementById('cba-chart-bar');
+        const chartDonut = document.getElementById('cba-chart-donut');
+        const chartWf = document.getElementById('cba-chart-waterfall');
+        if (chartBar && chartBar.width > 0) chartImages.bar = chartBar.toDataURL('image/png');
+        if (chartDonut && chartDonut.width > 0) chartImages.donut = chartDonut.toDataURL('image/png');
+        if (chartWf && chartWf.width > 0) chartImages.waterfall = chartWf.toDataURL('image/png');
 
-          if (barCanvas) chartImages.bar = barCanvas.toDataURL('image/png');
-          if (donutCanvas) chartImages.donut = donutCanvas.toDataURL('image/png');
-          if (wfCanvas) chartImages.waterfall = wfCanvas.toDataURL('image/png');
-
-          // Also capture the full CBA headline section
-          const headlineEl = cbaOutput.querySelector('.draft-box');
-          if (headlineEl && html2canvas) {
-            const canvas = await html2canvas(headlineEl, {
-              scale: 2, backgroundColor: '#181b22',
-              logging: false, useCORS: true
-            });
-            chartImages.headline = canvas.toDataURL('image/png');
-          }
-        } catch(e) {
-          console.warn('Chart capture failed:', e.message);
-        }
+        // Restore previous screen
+        if (prevScreen) navigate(prevScreen.replace('screen-',''));
+      } catch(e) {
+        console.warn('Chart capture failed:', e.message);
       }
     }
 
@@ -4638,11 +5108,21 @@ function clearAllData() {
   navigate('dashboard');
 }
 
+function hideLoadingSkeleton() {
+  const splash = document.getElementById('splash-screen');
+  if (splash) {
+    splash.style.opacity = '0';
+    setTimeout(() => { splash.style.display = 'none'; splash.style.opacity = '1'; }, 350);
+  }
+}
+
 function renderAll() {
+  hideLoadingSkeleton();
   renderMembers();
   renderMeetings();
   renderTOR();
   renderKPITable();
+  renderKPIBanner();
   renderDashboard();
   // Restore persisted file text indicators
   ['problem','vision','kpis','roadmap'].forEach(section => {
@@ -4726,6 +5206,85 @@ document.getElementById('rm-start-date').value = new Date().toISOString().slice(
 // Init
 renderAll();
 mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+
+// ── INLINE EDIT ───────────────────────────────────────────────
+function toggleInlineEdit(section) {
+  const areaId = section === 'tor' ? 'tor-edit-area' : section + '-edit-area';
+  const btnId = section + '-edit-btn';
+  const saveBtnId = section + '-save-edit-btn';
+  const area = document.getElementById(areaId);
+  const saveBtn = document.getElementById(saveBtnId);
+  const editBtn = document.getElementById(btnId);
+  if (!area) return;
+
+  const isEditing = area.contentEditable === 'true';
+  if (!isEditing) {
+    // Enter edit mode
+    area.contentEditable = 'true';
+    area.style.outline = '2px solid var(--accent)';
+    area.style.borderRadius = '6px';
+    area.style.padding = '12px';
+    area.focus();
+    if (saveBtn) saveBtn.style.display = 'inline-flex';
+    if (editBtn) { editBtn.textContent = '✕'; editBtn.title = 'Cancel editing'; editBtn.style.opacity = '1'; }
+    toast('Editing mode on — your changes will appear in blue for the PO to review', 'info');
+
+    // Auto-colour new typed text in blue
+    area._inputHandler = function() {
+      document.execCommand('styleWithCSS', false, true);
+      document.execCommand('foreColor', false, '#4f7cff');
+    };
+    area.addEventListener('keypress', area._inputHandler);
+  } else {
+    // Cancel edit mode — restore original
+    area.contentEditable = 'false';
+    area.style.outline = '';
+    area.style.borderRadius = '';
+    area.style.padding = '';
+    if (area._inputHandler) area.removeEventListener('keypress', area._inputHandler);
+    if (saveBtn) saveBtn.style.display = 'none';
+    if (editBtn) { editBtn.textContent = '✏️'; editBtn.title = 'Edit section'; editBtn.style.opacity = '0.6'; }
+    // Restore original content
+    if (section === 'tor') area.innerHTML = cleanDraft(S.tor);
+    else area.innerHTML = cleanDraft(S[section].draft);
+  }
+}
+
+function saveInlineEdit(section) {
+  const areaId = section === 'tor' ? 'tor-edit-area' : section + '-edit-area';
+  const btnId = section + '-edit-btn';
+  const saveBtnId = section + '-save-edit-btn';
+  const area = document.getElementById(areaId);
+  const saveBtn = document.getElementById(saveBtnId);
+  const editBtn = document.getElementById(btnId);
+  if (!area) return;
+
+  const newContent = area.innerHTML;
+  if (section === 'tor') {
+    S.tor = newContent;
+  } else {
+    S[section].draft = newContent;
+  }
+
+  // Exit edit mode
+  area.contentEditable = 'false';
+  area.style.outline = '';
+  area.style.borderRadius = '';
+  area.style.padding = '';
+  if (saveBtn) saveBtn.style.display = 'none';
+  if (editBtn) { editBtn.textContent = '✏️'; editBtn.title = 'Edit section'; editBtn.style.opacity = '0.6'; }
+
+  saveState();
+  scheduleSave();
+  logActivity('<strong>' + section.charAt(0).toUpperCase() + section.slice(1) + '</strong> edited and saved', 'var(--accent)');
+  toast('Edits saved ✓', 'success');
+}
+
 </script>
+  <!-- Splash Screen -->
+  <div id="splash-screen" style="display:none;position:fixed;inset:0;background:var(--bg1);z-index:9999;align-items:center;justify-content:center;transition:opacity 0.35s ease">
+    <div style="font-size:15px;font-weight:600;color:var(--text2);letter-spacing:0.05em">Loading...</div>
+  </div>
+
 </body>
 </html>
