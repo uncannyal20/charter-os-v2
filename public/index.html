@@ -15,6 +15,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <style>
@@ -4460,22 +4461,43 @@ function cleanDraft(html) {
 async function generateSummarySlides() {
   toast('Generating slides... capturing charts...', 'success');
   try {
-    // Capture CBA charts — must navigate to CBA tab first so canvases are rendered
+    // Capture CBA charts — navigate to the CBA tab, force a fully-drawn
+    // (un-animated) render, then grab each chart from its Chart.js instance.
     let chartImages = {};
     if (S.cba && S.cba.draft) {
       try {
-        // Switch to KPIs screen + CBA tab to ensure canvases are visible
         const prevScreen = document.querySelector('.screen.active')?.id;
         navigate('kpis');
         switchCBATab('view');
-        await new Promise(r => setTimeout(r, 400)); // wait for charts to render
+        // Wait for switchCBATab to inject the canvases into the DOM
+        await new Promise(r => setTimeout(r, 650));
 
-        const chartBar = document.getElementById('cba-chart-bar');
-        const chartDonut = document.getElementById('cba-chart-donut');
-        const chartWf = document.getElementById('cba-chart-waterfall');
-        if (chartBar && chartBar.width > 0) chartImages.bar = chartBar.toDataURL('image/png');
-        if (chartDonut && chartDonut.width > 0) chartImages.donut = chartDonut.toDataURL('image/png');
-        if (chartWf && chartWf.width > 0) chartImages.waterfall = chartWf.toDataURL('image/png');
+        if (document.getElementById('cba-chart-bar')) {
+          // Re-create the charts synchronously so they exist and are sized correctly
+          const bVals = S.cba_benefit_values || {};
+          const benefitLabels = (S.kpis.items||[]).map(k => k.name.length > 28 ? k.name.slice(0,26)+'...' : k.name);
+          const benefitData = (S.kpis.items||[]).map((k,i) => parseFloat(bVals[i])||0);
+          const totalBenAnnual = benefitData.reduce((a,b)=>a+b,0);
+          const p = S.cba_parsed || {};
+          renderCBACharts(benefitLabels, benefitData, totalBenAnnual, p.totalOneOff||800000, p.totalRecurring||170000, p.y1net||0, p.y2net||0, p.y3net||0);
+
+          // Let layout settle across two animation frames before capturing
+          await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+          // toBase64Image on the chart instance is reliable; update('none') forces
+          // a complete, static frame regardless of the entry animation state.
+          const grabChart = (id) => {
+            const canvas = document.getElementById(id);
+            if (!canvas) return null;
+            const chart = Chart.getChart(canvas);
+            if (!chart) return null;
+            try { chart.update('none'); } catch(e) {}
+            return chart.toBase64Image('image/png', 1);
+          };
+          chartImages.bar = grabChart('cba-chart-bar');
+          chartImages.donut = grabChart('cba-chart-donut');
+          chartImages.waterfall = grabChart('cba-chart-waterfall');
+        }
 
         // Restore previous screen
         if (prevScreen) navigate(prevScreen.replace('screen-',''));
@@ -4637,6 +4659,27 @@ async function generateSummarySlides() {
       s7.addText(lbl, { x:8.85, y:by+0.08, w:3.8, h:0.3, fontSize:9, color:LTXT2, fontFace:'Calibri', bold:true, charSpacing:1 });
       s7.addText(val,  { x:8.85, y:by+0.42, w:3.8, h:0.55, fontSize:20, color:col, bold:true, fontFace:'Calibri', align:'center', valign:'middle' });
     });
+
+    // ── Slide 7b: COST BENEFIT ANALYSIS — CHARTS (if captured) ───
+    if (chartImages.bar || chartImages.donut || chartImages.waterfall) {
+      const sc = pptx.addSlide();
+      addHeader(sc, '05  COST BENEFIT ANALYSIS', BLUE, 'Cost, Benefit & ROI Charts');
+      if (chartImages.bar) {
+        sc.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x:0.5, y:1.75, w:6.2, h:3.05, fill:{color:CARD}, rectRadius:0.07, shadow:mkShadow() });
+        sc.addText('Cost vs Annual Benefit', { x:0.7, y:1.85, w:5.8, h:0.3, fontSize:10, color:TEAL, bold:true, charSpacing:1, fontFace:'Calibri' });
+        sc.addImage({ data: chartImages.bar, x:0.7, y:2.22, w:5.8, h:2.45, sizing:{ type:'contain', w:5.8, h:2.45 } });
+      }
+      if (chartImages.donut) {
+        sc.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x:6.9, y:1.75, w:5.9, h:3.05, fill:{color:CARD}, rectRadius:0.07, shadow:mkShadow() });
+        sc.addText('Benefit by KPI', { x:7.1, y:1.85, w:5.5, h:0.3, fontSize:10, color:TEAL, bold:true, charSpacing:1, fontFace:'Calibri' });
+        sc.addImage({ data: chartImages.donut, x:7.1, y:2.22, w:5.5, h:2.45, sizing:{ type:'contain', w:5.5, h:2.45 } });
+      }
+      if (chartImages.waterfall) {
+        sc.addShape(pptx.shapes.ROUNDED_RECTANGLE, { x:0.5, y:4.95, w:12.3, h:2.15, fill:{color:CARD}, rectRadius:0.07, shadow:mkShadow() });
+        sc.addText('3-Year Cumulative Net Position', { x:0.7, y:5.05, w:8, h:0.3, fontSize:10, color:TEAL, bold:true, charSpacing:1, fontFace:'Calibri' });
+        sc.addImage({ data: chartImages.waterfall, x:2.8, y:5.42, w:7.7, h:1.55, sizing:{ type:'contain', w:7.7, h:1.55 } });
+      }
+    }
 
     // ── Slide 8: PRODUCT ROADMAP ─────────────────────────────────
     const s8 = pptx.addSlide();
@@ -5033,13 +5076,96 @@ ${S.cba && S.cba.draft ? `
 </body>
 </html>`;
 
-  const win = window.open('', '_blank');
-  win.document.write(pdfHtml);
-  win.document.close();
-  setTimeout(() => {
-    win.focus();
-    win.print();
-  }, 800);
+  await htmlToPdfDownload(pdfHtml, name);
+}
+
+// Render a full print-HTML document into an offscreen iframe and download it
+// as a real .pdf file (page-per-page) via jsPDF — no new tab / print dialogue.
+// Falls back to the print-tab approach if the libraries aren't available.
+async function htmlToPdfDownload(html, name) {
+  const jsPDFCtor = window.jspdf && window.jspdf.jsPDF;
+  const safeName = (name || 'Product Charter').replace(/[^\w\- ]+/g, '').trim() || 'Product Charter';
+
+  // Fallback: libraries missing → original print-tab behaviour
+  if (!jsPDFCtor || typeof html2canvas === 'undefined') {
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => { win.focus(); win.print(); }, 800);
+    return;
+  }
+
+  toast('Building PDF…', 'success');
+  const PAGE_W = 794; // A4 width @ 96dpi
+  const iframe = document.createElement('iframe');
+  iframe.setAttribute('aria-hidden', 'true');
+  iframe.style.cssText = `position:fixed;left:-10000px;top:0;width:${PAGE_W}px;height:1123px;border:0;opacity:0;`;
+  document.body.appendChild(iframe);
+
+  try {
+    const idoc = iframe.contentDocument;
+    idoc.open();
+    idoc.write(html);
+    idoc.close();
+    // Inset page content so text doesn't touch the PDF edges (border-box keeps width fixed)
+    const styleEl = idoc.createElement('style');
+    styleEl.textContent = 'body > div { padding: 52px 56px !important; }';
+    idoc.head.appendChild(styleEl);
+
+    // Wait for fonts/images, then a settle frame
+    await new Promise(res => {
+      let done = false;
+      const finish = () => { if (!done) { done = true; res(); } };
+      if (idoc.readyState === 'complete') finish(); else iframe.onload = finish;
+      setTimeout(finish, 1800);
+    });
+    if (idoc.fonts && idoc.fonts.ready) { try { await idoc.fonts.ready; } catch (e) {} }
+    await new Promise(r => setTimeout(r, 250));
+
+    const pages = Array.from(idoc.body.children).filter(n => n.nodeType === 1 && n.tagName === 'DIV');
+    const targets = pages.length ? pages : [idoc.body];
+
+    const pdf = new jsPDFCtor({ unit: 'pt', format: 'a4', orientation: 'portrait' });
+    const pw = pdf.internal.pageSize.getWidth();
+    const ph = pdf.internal.pageSize.getHeight();
+    let firstPage = true;
+
+    for (const el of targets) {
+      const canvas = await html2canvas(el, {
+        scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false,
+        windowWidth: PAGE_W, width: PAGE_W
+      });
+      if (!canvas.width || !canvas.height) continue;
+      const img = canvas.toDataURL('image/jpeg', 0.9);
+      const imgH = (canvas.height * pw) / canvas.width; // full-width fit
+      // Each page element starts on a fresh PDF page; tall content slices across pages
+      let heightLeft = imgH;
+      let position = 0;
+      if (!firstPage) pdf.addPage();
+      firstPage = false;
+      pdf.addImage(img, 'JPEG', 0, position, pw, imgH);
+      heightLeft -= ph;
+      while (heightLeft > 0) {
+        position -= ph;
+        pdf.addPage();
+        pdf.addImage(img, 'JPEG', 0, position, pw, imgH);
+        heightLeft -= ph;
+      }
+    }
+
+    pdf.save(safeName + '.pdf');
+    logActivity('Charter exported as PDF', 'var(--accent)');
+    toast('PDF downloaded!', 'success');
+  } catch (e) {
+    console.warn('PDF export failed:', e);
+    toast('Could not build PDF — opening print view instead.', 'error');
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => { win.focus(); win.print(); }, 800);
+  } finally {
+    if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+  }
 }
 
 function exportCharter() {
