@@ -959,9 +959,9 @@ function teamLogout() {
   }
 
   function onTeamLoggedIn() {
-    // Show splash immediately — before any rendering
-    const _splash = document.getElementById('splash-screen');
-    if (_splash) _splash.style.display = 'flex';
+    // Show loading spinner next to charter title
+    const _spinner = document.getElementById('dash-load-spinner');
+    if (_spinner) _spinner.style.display = 'inline-block';
 
     // Show team name in sidebar
     const el = document.getElementById('team-label');
@@ -1160,7 +1160,10 @@ function teamLogout() {
     <div class="screen active" id="screen-dashboard">
       <div class="dash-hero" id="dash-hero">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-          <div id="dash-charter-title" style="font-family:var(--font-head);font-size:26px;font-weight:800;letter-spacing:-0.5px"></div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div id="dash-charter-title" style="font-family:var(--font-head);font-size:26px;font-weight:800;letter-spacing:-0.5px"></div>
+            <span id="dash-load-spinner" class="spinner" style="display:none;width:18px;height:18px;border-color:rgba(255,255,255,0.15);border-top-color:var(--accent)"></span>
+          </div>
           <button onclick="editCharterName()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text3);cursor:pointer;transition:all 0.2s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">✏️ Rename</button>
         </div>
         <div id="dash-charter-sub" style="color:var(--text2);font-size:14px;margin-top:2px"></div>
@@ -2392,16 +2395,24 @@ async function clearCharter() {
   // Reset all approval statuses back to draft in Supabase
   if (CURRENT_TEAM) {
     try {
-      await fetch('/api/approvals?action=reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ team_id: CURRENT_TEAM.id })
-      });
+      const sections = ['tor', 'problem', 'vision', 'kpis', 'roadmap', 'cba'];
+      await Promise.all(sections.map(section =>
+        fetch('/api/approvals?action=update', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            team_id: CURRENT_TEAM.id,
+            section,
+            status: 'draft',
+            comment: '',
+            annotations: [],
+            reviewed_at: null
+          })
+        })
+      ));
       // Reset local approvals state
       window.APPROVALS = {};
-      ['tor','problem','vision','kpis','roadmap','cba'].forEach(s => {
-        window.APPROVALS[s] = { status: 'draft' };
-      });
+      sections.forEach(s => { window.APPROVALS[s] = { status: 'draft' }; });
     } catch(e) { console.warn('Approval reset failed:', e.message); }
   }
 
@@ -5109,11 +5120,8 @@ function clearAllData() {
 }
 
 function hideLoadingSkeleton() {
-  const splash = document.getElementById('splash-screen');
-  if (splash) {
-    splash.style.opacity = '0';
-    setTimeout(() => { splash.style.display = 'none'; splash.style.opacity = '1'; }, 350);
-  }
+  const spinner = document.getElementById('dash-load-spinner');
+  if (spinner) spinner.style.display = 'none';
 }
 
 function renderAll() {
@@ -5281,10 +5289,5 @@ function saveInlineEdit(section) {
 }
 
 </script>
-  <!-- Splash Screen -->
-  <div id="splash-screen" style="display:none;position:fixed;inset:0;background:var(--bg1);z-index:9999;align-items:center;justify-content:center;transition:opacity 0.35s ease">
-    <div style="font-size:15px;font-weight:600;color:var(--text2);letter-spacing:0.05em">Loading...</div>
-  </div>
-
 </body>
 </html>
