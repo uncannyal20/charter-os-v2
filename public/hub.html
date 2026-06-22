@@ -96,36 +96,6 @@
   /* SECONDARY CARDS row */
   .cards-secondary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
 
-  /* DIVIDER */
-  .hub-divider { display: flex; align-items: center; gap: 16px; margin: 40px 0 32px; }
-  .hub-divider-line { flex: 1; height: 1px; background: var(--border); }
-  .hub-divider-text { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); white-space: nowrap; }
-
-  /* QUICK LINKS */
-  .quick-links { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 48px; }
-  .ql {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: 10px; padding: 10px 16px;
-    text-decoration: none; color: var(--text2);
-    font-size: 13px; transition: all .2s;
-  }
-  .ql:hover { background: var(--bg3); border-color: rgba(255,255,255,.15); color: var(--text); }
-  .ql-dot { width: 7px; height: 7px; border-radius: 50%; }
-
-  /* STATUS ROW */
-  .status-row {
-    background: var(--bg1); border: 1px solid var(--border);
-    border-radius: 14px; padding: 20px 24px;
-    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
-  }
-  .status-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s ease infinite; }
-  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
-  .status-label { color: var(--text2); }
-  .status-val { color: var(--text); font-weight: 500; }
-  .status-divider { width: 1px; height: 20px; background: var(--border); }
-
   /* FOOTER */
   footer { position: relative; z-index: 1; border-top: 1px solid var(--border); padding: 28px 48px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
   footer p { font-size: 12px; color: var(--text3); }
@@ -134,8 +104,6 @@
   .hub-hero { animation: fadeUp .6s ease both; }
   .cards-primary { animation: fadeUp .6s .1s ease both; }
   .cards-secondary { animation: fadeUp .6s .2s ease both; }
-  .quick-links { animation: fadeUp .6s .3s ease both; }
-  .status-row { animation: fadeUp .6s .4s ease both; }
 
   @media(max-width: 768px) {
     nav { padding: 0 20px; }
@@ -273,78 +241,6 @@
       <div class="card-route">/architecture</div>
     </a>
 
-  </div>
-
-  <!-- DIVIDER -->
-  <div class="hub-divider">
-    <div class="hub-divider-line"></div>
-    <div class="hub-divider-text">Quick Links</div>
-    <div class="hub-divider-line"></div>
-  </div>
-
-  <!-- QUICK LINKS -->
-  <div class="quick-links">
-    <a href="/CharterOS_Introduction_Deck.pptx" download class="ql">
-      <div class="ql-dot" style="background:var(--blue)"></div>
-      📊 Introduction Deck (.pptx)
-    </a>
-    <a href="/CharterOS_Brochure.pdf" download class="ql">
-      <div class="ql-dot" style="background:var(--green)"></div>
-      📄 Product Brochure (.pdf)
-    </a>
-    <a href="/CharterOS_QuickStartGuide.pdf" download class="ql">
-      <div class="ql-dot" style="background:var(--teal)"></div>
-      📖 Quick Start Guide (.pdf)
-    </a>
-    <a href="/?team=team-a&readonly=true" target="_blank" class="ql">
-      <div class="ql-dot" style="background:var(--amber)"></div>
-      👁 View Team A Charter (read-only)
-    </a>
-    <a href="/?team=team-b&readonly=true" target="_blank" class="ql">
-      <div class="ql-dot" style="background:var(--amber)"></div>
-      👁 View Team B Charter (read-only)
-    </a>
-    <a href="/?team=team-c&readonly=true" target="_blank" class="ql">
-      <div class="ql-dot" style="background:var(--amber)"></div>
-      👁 View Team C Charter (read-only)
-    </a>
-    <a href="/?team=team-d&readonly=true" target="_blank" class="ql">
-      <div class="ql-dot" style="background:var(--amber)"></div>
-      👁 View Team D Charter (read-only)
-    </a>
-    <a href="/?team=team-e&readonly=true" target="_blank" class="ql">
-      <div class="ql-dot" style="background:var(--amber)"></div>
-      👁 View Team E Charter (read-only)
-    </a>
-  </div>
-
-  <!-- STATUS ROW -->
-  <div class="status-row">
-    <div class="status-item">
-      <div class="status-dot"></div>
-      <span class="status-label">Platform</span>
-      <span class="status-val">Live on Vercel</span>
-    </div>
-    <div class="status-divider"></div>
-    <div class="status-item">
-      <span class="status-label">Portals</span>
-      <span class="status-val">5 live</span>
-    </div>
-    <div class="status-divider"></div>
-    <div class="status-item">
-      <span class="status-label">Teams</span>
-      <span class="status-val">5 active</span>
-    </div>
-    <div class="status-divider"></div>
-    <div class="status-item">
-      <span class="status-label">AI Agents</span>
-      <span class="status-val">6 (claude-sonnet-4-6)</span>
-    </div>
-    <div class="status-divider"></div>
-    <div class="status-item">
-      <span class="status-label">Database</span>
-      <span class="status-val">Supabase PostgreSQL</span>
-    </div>
   </div>
 
 </main>
