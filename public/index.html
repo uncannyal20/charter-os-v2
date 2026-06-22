@@ -412,6 +412,19 @@ label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5
 }
 .member-del:hover { background: var(--red-soft); color: var(--red); }
 
+/* ── Team structure org chart ── */
+.oc-chart { display: flex; flex-direction: column; align-items: center; padding: 10px 4px 4px; }
+.oc-tier { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.oc-tier-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text3); margin-bottom: 12px; }
+.oc-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+.oc-node { display: flex; flex-direction: column; align-items: center; gap: 7px; width: 132px; padding: 14px 10px; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; text-align: center; transition: var(--transition); }
+.oc-node:hover { border-color: var(--accent); transform: translateY(-2px); }
+.oc-avatar { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-head); font-size: 15px; font-weight: 700; }
+.oc-name { font-size: 12.5px; font-weight: 600; color: var(--text); line-height: 1.25; }
+.oc-role { font-size: 10.5px; color: var(--text2); line-height: 1.3; }
+.oc-dept { font-size: 9.5px; color: var(--text3); }
+.oc-connector { width: 2px; height: 26px; background: var(--border); margin: 6px 0; }
+
 /* ── Meeting cadence ── */
 .meeting-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-bottom: 14px; }
 .meeting-chip {
@@ -1306,6 +1319,10 @@ function teamLogout() {
 
       <!-- TOR tab -->
       <div class="tab-panel" id="team-tab-tor">
+        <div class="card" id="tor-org-card" style="display:none">
+          <div class="card-title"><span class="ct-icon">🗂️</span> Team Structure</div>
+          <div id="tor-org-chart"></div>
+        </div>
         <div class="ai-gen-block">
           <div class="ai-icon">🤖</div>
           <div class="ai-gen-text">
@@ -2457,6 +2474,7 @@ function renderMembers() {
       ${m.resp ? `<div class="member-email" style="margin-top:4px;color:var(--text3)">📌 ${m.resp}</div>` : ''}
     </div>`
   ).join('');
+  renderTeamChart();
 }
 
 function addMeeting() {
@@ -2772,7 +2790,52 @@ Do not stop before completing section 5. All 5 sections are mandatory.`;
   setLoading('btn-tor', false);
 }
 
+// ── TEAM STRUCTURE ORG CHART ─────────────────────────────────────
+// Group members into role tiers and build a visual org chart.
+function buildOrgChart(members) {
+  if (!members || !members.length) return '';
+  const tierOf = (role) => {
+    const r = (role || '').toLowerCase();
+    if (r.includes('owner')) return 0;
+    if (r.includes('lead') || r.includes('manager')) return 1;
+    return 2;
+  };
+  const labels = ['Product Leadership', 'Management & Technical Lead', 'Delivery Team'];
+  const tiers = [[], [], []];
+  members.forEach(m => tiers[tierOf(m.role)].push(m));
+
+  let html = '<div class="oc-chart">';
+  let rendered = false;
+  tiers.forEach((group, i) => {
+    if (!group.length) return;
+    if (rendered) html += '<div class="oc-connector"></div>';
+    rendered = true;
+    html += `<div class="oc-tier"><div class="oc-tier-label">${labels[i]}</div><div class="oc-row">`;
+    group.forEach(m => {
+      const initials = m.initials || (m.name || '?').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      html += `<div class="oc-node">
+        <div class="oc-avatar" style="background:${m.bg || 'rgba(79,124,255,0.2)'};color:${m.color || '#4f7cff'}">${initials}</div>
+        <div class="oc-name">${m.name || ''}</div>
+        <div class="oc-role">${m.role || ''}${m.dept ? `<br><span class="oc-dept">${m.dept}</span>` : ''}</div>
+      </div>`;
+    });
+    html += '</div></div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderTeamChart() {
+  const card = document.getElementById('tor-org-card');
+  const chart = document.getElementById('tor-org-chart');
+  if (!card || !chart) return;
+  if (!S.members.length) { card.style.display = 'none'; chart.innerHTML = ''; return; }
+  chart.innerHTML = buildOrgChart(S.members);
+  card.style.display = 'block';
+}
+
 function renderTOR() {
+  renderTeamChart();
   const el = document.getElementById('tor-output');
   if (!S.tor) { el.innerHTML=''; return; }
   const clean = cleanDraft(S.tor);

@@ -105,6 +105,20 @@
   .charter-content li { margin-bottom: 5px; font-size: 13px; line-height: 1.6; color: var(--text-dim); }
   .charter-content strong { color: var(--text); }
 
+  /* ── Team structure org chart ── */
+  .oc-block { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px 24px; margin-bottom: 20px; }
+  .oc-block-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 14px; }
+  .oc-chart { display: flex; flex-direction: column; align-items: center; padding: 6px 4px 0; }
+  .oc-tier { display: flex; flex-direction: column; align-items: center; width: 100%; }
+  .oc-tier-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-muted); margin-bottom: 12px; }
+  .oc-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+  .oc-node { display: flex; flex-direction: column; align-items: center; gap: 7px; width: 132px; padding: 14px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; text-align: center; }
+  .oc-avatar { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; }
+  .oc-name { font-size: 12.5px; font-weight: 600; color: var(--text); line-height: 1.25; }
+  .oc-role { font-size: 10.5px; color: var(--text-dim); line-height: 1.3; }
+  .oc-dept { font-size: 9.5px; color: var(--text-muted); }
+  .oc-connector { width: 2px; height: 26px; background: var(--border); margin: 6px 0; }
+
   /* KPI table */
   .kpi-grid { display: grid; gap: 12px; }
   .kpi-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
@@ -477,9 +491,45 @@ function renderActionBar(key, status, ap) {
 }
 
 // ── CONTENT RENDERERS ─────────────────────────────────────────
+// Group members into role tiers and build a visual org chart.
+function buildOrgChart(members) {
+  if (!members || !members.length) return '';
+  const tierOf = (role) => {
+    const r = (role || '').toLowerCase();
+    if (r.includes('owner')) return 0;
+    if (r.includes('lead') || r.includes('manager')) return 1;
+    return 2;
+  };
+  const labels = ['Product Leadership', 'Management & Technical Lead', 'Delivery Team'];
+  const tiers = [[], [], []];
+  members.forEach(m => tiers[tierOf(m.role)].push(m));
+
+  let html = '<div class="oc-chart">';
+  let rendered = false;
+  tiers.forEach((group, i) => {
+    if (!group.length) return;
+    if (rendered) html += '<div class="oc-connector"></div>';
+    rendered = true;
+    html += `<div class="oc-tier"><div class="oc-tier-label">${labels[i]}</div><div class="oc-row">`;
+    group.forEach(m => {
+      const initials = m.initials || (m.name || '?').split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      html += `<div class="oc-node">
+        <div class="oc-avatar" style="background:${m.bg || 'rgba(79,124,255,0.2)'};color:${m.color || '#4f7cff'}">${initials}</div>
+        <div class="oc-name">${m.name || ''}</div>
+        <div class="oc-role">${m.role || ''}${m.dept ? `<br><span class="oc-dept">${m.dept}</span>` : ''}</div>
+      </div>`;
+    });
+    html += '</div></div>';
+  });
+  html += '</div>';
+  return html;
+}
+
 function renderTOR() {
   const html = charterState.tor || '';
-  return `<div class="charter-content" id="section-content-tor">${wrapParagraphs(html, 'tor')}</div>`;
+  const chart = buildOrgChart(charterState.members);
+  const chartBlock = chart ? `<div class="oc-block"><div class="oc-block-title">🗂️ Team Structure</div>${chart}</div>` : '';
+  return `${chartBlock}<div class="charter-content" id="section-content-tor">${wrapParagraphs(html, 'tor')}</div>`;
 }
 
 function renderProblem() {
