@@ -77,6 +77,8 @@
   .btn-primary { background: var(--accent); color: #fff; }
   .btn-green { background: var(--green); color: #0f1117; }
   .btn-orange { background: var(--orange); color: #0f1117; }
+  /* Send back / Approve buttons: white text in light mode for legibility */
+  body.light-mode .btn-action { color: #fff; }
   .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
   .btn-ghost:hover { color: var(--text); border-color: var(--text-dim); opacity: 1; }
   .btn-full { width: 100%; justify-content: center; }
@@ -474,7 +476,10 @@ function renderSection(key) {
       ${commentCount > 0 ? `<span style="margin-left:auto;background:rgba(239,68,68,0.15);color:var(--danger-text);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;">${commentCount} comment${commentCount>1?'s':''}</span>` : ''}
     </div>` : '';
 
-  const actionBar = isSubmitted ? renderActionBar(key, status, ap) : '';
+  const actionBarTop = isSubmitted ? renderActionToolbar(key, status, ap, 'top') : '';
+  // Mirror the toolbar below the content (only while still actionable), plus the note box
+  const actionBarBottom = (isSubmitted && !isApproved) ? renderActionToolbar(key, status, ap, 'bottom') : '';
+  const sendBackArea = (isSubmitted && !isApproved) ? renderSendBackArea(key) : '';
 
   ca.innerHTML = `
     <div class="section-panel active">
@@ -484,21 +489,25 @@ function renderSection(key) {
           <p>${sec.num} · ${currentPO.team_id.toUpperCase()}</p>
         </div>
       </div>
-      ${actionBar}
+      ${actionBarTop}
       ${submittedBanner}
       ${teamRepliesHtml}
       ${poToolbar}
       ${contentHtml}
+      ${actionBarBottom}
+      ${sendBackArea}
     </div>`;
 
   // Inject saved comments
   injectSavedComments(key);
 }
 
-function renderActionBar(key, status, ap) {
+// Status + Send back / Approve buttons. Rendered both above (pos='top') and
+// below (pos='bottom') the section content for convenience on long sections.
+function renderActionToolbar(key, status, ap, pos) {
   const isApproved = status === 'approved';
   return `
-    <div class="action-bar" id="action-bar-${key}">
+    <div class="action-bar" id="action-bar-${key}-${pos}">
       <div class="action-bar-status">
         <span class="action-bar-label">Status:</span>
         <span class="badge badge-${status}">${status}</span>
@@ -506,16 +515,21 @@ function renderActionBar(key, status, ap) {
       </div>
       ${!isApproved ? `
       <div class="action-bar-btns">
-        <button class="btn btn-orange" onclick="toggleSendBack('${key}')" style="color:#0f1117;">↩ Send back</button>
-        <button class="btn btn-green" onclick="approveSection('${key}')" style="color:#0f1117;">✓ Approve</button>
+        <button class="btn btn-orange btn-action" onclick="toggleSendBack('${key}')">↩ Send back</button>
+        <button class="btn btn-green btn-action" onclick="approveSection('${key}')">✓ Approve</button>
       </div>` : `<span style="font-size:13px;color:var(--green);font-weight:600;">✓ Approved</span>`}
-    </div>
+    </div>`;
+}
+
+// The send-back note textarea — rendered once per section (below the content).
+function renderSendBackArea(key) {
+  return `
     <div class="sendback-area" id="sendback-${key}">
       <p style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">Add an overall note for the team (optional — inline comments above will also be sent):</p>
       <textarea id="sendback-note-${key}" placeholder="e.g. Please revisit the KPI targets — they feel too conservative given the problem scale. See inline comments for specifics."></textarea>
       <div class="sendback-area-actions">
         <button class="btn btn-ghost" onclick="toggleSendBack('${key}')">Cancel</button>
-        <button class="btn btn-orange" onclick="sendBackSection('${key}')" style="color:#0f1117;">↩ Confirm send back</button>
+        <button class="btn btn-orange btn-action" onclick="sendBackSection('${key}')">↩ Confirm send back</button>
       </div>
     </div>`;
 }
@@ -716,7 +730,13 @@ function removeComment(sectionKey, id) {
 // ── SEND BACK / APPROVE ───────────────────────────────────────
 function toggleSendBack(key) {
   const el = document.getElementById(`sendback-${key}`);
-  el.classList.toggle('open');
+  if (!el) return;
+  const opened = el.classList.toggle('open');
+  if (opened) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const ta = document.getElementById(`sendback-note-${key}`);
+    if (ta) setTimeout(() => ta.focus(), 300);
+  }
 }
 
 async function sendBackSection(key) {
