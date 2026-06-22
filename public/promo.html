@@ -198,7 +198,16 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 20px;
     background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    background-size: cover; background-position: center;
+    position: relative;
   }
+  .video-placeholder::before {
+    content: ''; position: absolute; inset: 0;
+    background: rgba(0,0,0,0.45);
+    pointer-events: none;
+  }
+  .video-placeholder .play-btn,
+  .video-placeholder p { position: relative; z-index: 1; }
   .play-btn {
     width: 72px; height: 72px;
     background: linear-gradient(135deg, var(--blue), var(--blue2));
@@ -209,13 +218,6 @@
   .play-btn:hover { transform: scale(1.1); box-shadow: 0 12px 48px rgba(79,124,255,0.6); }
   .play-btn svg { margin-left: 4px; }
   .video-placeholder p { font-size: 15px; color: var(--text2); }
-  .video-label {
-    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: rgba(13,15,20,0.85); backdrop-filter: blur(8px);
-    border: 1px solid var(--border); border-radius: 100px;
-    padding: 6px 18px; font-size: 12px; color: var(--text2);
-    white-space: nowrap;
-  }
 
   /* ── DOWNLOAD SECTION ────────────────────────────────────────── */
   #download {
@@ -532,9 +534,7 @@
           </svg>
         </div>
         <p>CharterOS — Product Walkthrough</p>
-        <p style="font-size:13px;color:var(--text3)">Upload your intro video to replace this placeholder</p>
       </div>
-      <div class="video-label">⏱ 30 sec · Product Charter Platform</div>
     </div>
   </div>
 </section>
@@ -857,6 +857,15 @@
       frame.insertBefore(iframe, frame.firstChild);
     }
   }
+
+  // ── VIDEO THUMBNAIL ─────────────────────────────────────────────
+  fetch('https://vimeo.com/api/oembed.json?url=https://vimeo.com/1203461014')
+    .then(r => r.json())
+    .then(d => {
+      const ph = document.getElementById('video-placeholder');
+      if (ph && d.thumbnail_url) ph.style.backgroundImage = `url(${d.thumbnail_url})`;
+    })
+    .catch(() => {});
 
   // ── SCROLL REVEAL ───────────────────────────────────────────────
   const observer = new IntersectionObserver(entries => {
