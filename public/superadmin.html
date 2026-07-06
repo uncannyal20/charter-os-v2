@@ -1694,8 +1694,7 @@ function downloadTxt(f) {
   triggerDownload(blob, f.name + '.txt');
 }
 
-function downloadDocx(f) {
-  // Build a minimal DOCX using raw XML (no external library needed for simple docs)
+async function buildDocxBlob(f) {
   const c = f.content;
   const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
@@ -1714,24 +1713,20 @@ function downloadDocx(f) {
 <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Strategic Pillars</w:t></w:r></w:p>
 ${c.pillars.map(p => `<w:p><w:r><w:t>• ${escXml(p)}</w:t></w:r></w:p>`).join('')}
 </w:body></w:document>`;
-
   const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
 </Relationships>`;
-
   const wordRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
 </Relationships>`;
-
   const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
 <w:style w:type="paragraph" w:styleId="Normal"><w:name w:val="Normal"/></w:style>
 <w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:rPr><w:b/><w:sz w:val="52"/><w:color w:val="1F4E79"/></w:rPr></w:style>
 <w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:rPr><w:b/><w:sz w:val="32"/><w:color w:val="2F5496"/></w:rPr></w:style>
 </w:styles>`;
-
   const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
 <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
@@ -1739,24 +1734,22 @@ ${c.pillars.map(p => `<w:p><w:r><w:t>• ${escXml(p)}</w:t></w:r></w:p>`).join('
 <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
 <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
 </Types>`;
-
-  if (typeof JSZip === 'undefined') {
-    showToast('Loading DOCX library…', 'success');
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', () => buildAndDownloadDocx(f.name, docXml, relsXml, wordRelsXml, stylesXml, contentTypes));
-  } else {
-    buildAndDownloadDocx(f.name, docXml, relsXml, wordRelsXml, stylesXml, contentTypes);
-  }
-}
-
-async function buildAndDownloadDocx(name, docXml, relsXml, wordRelsXml, stylesXml, contentTypes) {
   const zip = new JSZip();
   zip.file('[Content_Types].xml', contentTypes);
   zip.file('_rels/.rels', relsXml);
   zip.file('word/document.xml', docXml);
   zip.file('word/_rels/document.xml.rels', wordRelsXml);
   zip.file('word/styles.xml', stylesXml);
-  const blob = await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-  triggerDownload(blob, name + '.docx');
+  return zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+}
+
+function downloadDocx(f) {
+  if (typeof JSZip === 'undefined') {
+    showToast('Loading DOCX library…', 'success');
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', () => buildDocxBlob(f).then(blob => triggerDownload(blob, f.name + '.docx')));
+  } else {
+    buildDocxBlob(f).then(blob => triggerDownload(blob, f.name + '.docx'));
+  }
 }
 
 function escXml(s) {
@@ -1772,7 +1765,7 @@ function downloadPptx(f) {
   }
 }
 
-function buildPptx(f) {
+function buildPptxObj(f) {
   const pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_WIDE';
   const DARK = '0f1117'; const ACCENT = '6c63ff'; const WHITE = 'FFFFFF'; const DIM = '8b90a8';
@@ -1789,14 +1782,12 @@ function buildPptx(f) {
   s1.addText(c.dept, { x: 0.5, y: 3.3, w: 12, h: 0.4, fontSize: 14, color: DIM });
 
   if (isVision) {
-    // Slide 2: Vision statement
     const s2 = pptx.addSlide();
     s2.background = { color: DARK };
     s2.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: 0.08, fill: { color: ACCENT } });
     s2.addText('OUR VISION', { x: 0.5, y: 0.4, w: 12, h: 0.4, fontSize: 11, color: ACCENT, bold: true });
     s2.addText(c.vision, { x: 0.8, y: 1.0, w: 11.4, h: 2.5, fontSize: 22, color: WHITE, italic: true, align: 'center', valign: 'middle' });
 
-    // Slide 3: Strategic pillars
     const s3 = pptx.addSlide();
     s3.background = { color: DARK };
     s3.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: 0.08, fill: { color: ACCENT } });
@@ -1810,7 +1801,6 @@ function buildPptx(f) {
       if (parts[1]) s3.addText(parts[1].trim(), { x: xPos+0.15, y: 2.35, w: 3.7, h: 1.2, fontSize: 11, color: DIM });
     });
 
-    // Slide 4: KPIs
     const s4 = pptx.addSlide();
     s4.background = { color: DARK };
     s4.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: 0.08, fill: { color: ACCENT } });
@@ -1822,7 +1812,6 @@ function buildPptx(f) {
       s4.addText(`${k.baseline} → ${k.target} ${k.unit}`, { x: 0.7, y: yPos+0.4, w: 8, h: 0.25, fontSize: 10, color: DIM });
     });
   } else {
-    // Roadmap slides
     const s2 = pptx.addSlide();
     s2.background = { color: DARK };
     s2.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: 0.08, fill: { color: ACCENT } });
@@ -1835,7 +1824,6 @@ function buildPptx(f) {
       s2.addText(e.description, { x: 0.7, y: yPos+0.42, w: 11, h: 0.3, fontSize: 10, color: DIM });
     });
 
-    // Gantt-style timeline slide
     const s3 = pptx.addSlide();
     s3.background = { color: DARK };
     s3.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: 0.08, fill: { color: ACCENT } });
@@ -1851,7 +1839,11 @@ function buildPptx(f) {
     });
   }
 
-  pptx.writeFile({ fileName: f.name + '.pptx' });
+  return pptx;
+}
+
+function buildPptx(f) {
+  buildPptxObj(f).writeFile({ fileName: f.name + '.pptx' });
 }
 
 function downloadXlsx(f) {
@@ -1862,12 +1854,11 @@ function downloadXlsx(f) {
   }
 }
 
-function buildXlsx(f) {
+function buildXlsxWb(f) {
   const wb = XLSX.utils.book_new();
   const c = f.content;
 
   if (c.cost_items) {
-    // CBA workbook — two tabs
     const costRows = [
       ['Cost Item', 'Category', 'Year 1 (SGD)', 'Year 2 (SGD)', 'Year 3 (SGD)', '3-Year Total (SGD)'],
       ...c.cost_items.map(i => [i.item, i.category, i.year1, i.year2, i.year3, i.year1+i.year2+i.year3]),
@@ -1900,9 +1891,7 @@ function buildXlsx(f) {
     const wsB = XLSX.utils.aoa_to_sheet(benRows);
     wsB['!cols'] = [{wch:45},{wch:20},{wch:16},{wch:16},{wch:16},{wch:18}];
     XLSX.utils.book_append_sheet(wb, wsB, 'Benefits & KPIs');
-
   } else {
-    // Roadmap epic breakdown
     const epicRows = [
       ['Epic', 'Description', 'Duration (weeks)', 'Est. Start Week', 'Est. End Week'],
       ...c.epics.map((e,i) => {
@@ -1916,7 +1905,6 @@ function buildXlsx(f) {
     ws['!cols'] = [{wch:30},{wch:50},{wch:18},{wch:18},{wch:18}];
     XLSX.utils.book_append_sheet(wb, ws, 'Epic Breakdown');
 
-    // Sprint plan tab
     const sprintRows = [['Sprint', 'Epic', 'Focus Area', 'Deliverable']];
     let sprintNum = 1;
     c.epics.forEach(e => {
@@ -1931,7 +1919,11 @@ function buildXlsx(f) {
     XLSX.utils.book_append_sheet(wb, ws2, 'Sprint Plan');
   }
 
-  XLSX.writeFile(wb, f.name + '.xlsx');
+  return wb;
+}
+
+function buildXlsx(f) {
+  XLSX.writeFile(buildXlsxWb(f), f.name + '.xlsx');
 }
 
 function triggerDownload(blob, filename) {
@@ -1949,18 +1941,49 @@ function loadScript(src, cb) {
   document.head.appendChild(s);
 }
 
+function ensureScript(src, globalName) {
+  if (window[globalName]) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function getFileBlobForZip(f) {
+  if (f.ext === 'txt') return new Blob([f.content], { type: 'text/plain' });
+  if (f.ext === 'docx') return buildDocxBlob(f);
+  if (f.ext === 'pptx') return buildPptxObj(f).write({ outputType: 'blob' });
+  if (f.ext === 'xlsx') {
+    const buf = XLSX.write(buildXlsxWb(f), { bookType: 'xlsx', type: 'array' });
+    return new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
+}
+
 async function downloadAllFiles() {
-  if (typeof JSZip === 'undefined') {
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', () => setTimeout(downloadAllFiles, 500));
-    return;
+  if (!generatedFiles.length) return;
+  const btn = document.querySelector('button[onclick="downloadAllFiles()"]');
+  btn.disabled = true;
+  btn.textContent = '⏳ Building ZIP…';
+  try {
+    await ensureScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', 'JSZip');
+    if (generatedFiles.some(f => f.ext === 'pptx')) await ensureScript('https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js', 'PptxGenJS');
+    if (generatedFiles.some(f => f.ext === 'xlsx')) await ensureScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js', 'XLSX');
+    const zip = new JSZip();
+    for (const f of generatedFiles) {
+      const blob = await getFileBlobForZip(f);
+      zip.file(`${f.section}/${f.name}.${f.ext}`, blob);
+    }
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    triggerDownload(zipBlob, 'charter_use_case.zip');
+    showToast('ZIP downloaded — ' + generatedFiles.length + ' files.', 'success');
+  } catch(e) {
+    showToast('ZIP failed: ' + e.message, 'error');
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⬇ Download all files';
   }
-  showToast('Preparing ZIP — this may take a moment…', 'success');
-  // Download each file individually (ZIP of mixed binary types is complex client-side)
-  for (let i = 0; i < generatedFiles.length; i++) {
-    await new Promise(r => setTimeout(r, 300));
-    await downloadFile(i);
-  }
-  showToast('All files downloaded.', 'success');
 }
 
 
