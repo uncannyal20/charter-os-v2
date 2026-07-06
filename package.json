@@ -1,8 +1,5 @@
 {
   "name": "charter-os-v2",
   "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "otplib": "^12.0.1"
-  }
+  "private": true
 }
