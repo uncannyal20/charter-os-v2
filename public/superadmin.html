@@ -337,6 +337,8 @@
 
 <!-- ── LOGIN ──────────────────────────────────────────────────── -->
 <div id="login-screen">
+
+  <!-- VERIFY SCREEN (default) -->
   <div class="login-box" id="screen-verify">
     <div class="logo">
       <div class="logo-icon">C</div>
@@ -345,19 +347,41 @@
         <div class="logo-sub">Super Admin</div>
       </div>
     </div>
-    <h2>Sign in</h2>
-    <p>Enter your admin credentials to continue.</p>
+    <h2>Enter your code</h2>
+    <p>Open your authenticator app and enter the 6-digit code for CharterOS.</p>
     <div class="field">
-      <label>Username</label>
-      <input type="text" id="login-username" placeholder="superadmin" autocomplete="username"/>
+      <label>6-digit code</label>
+      <input type="text" id="totp-code" placeholder="000000" maxlength="6" autocomplete="one-time-code" inputmode="numeric" style="font-size:24px;letter-spacing:8px;text-align:center;font-family:var(--font-mono);"/>
     </div>
-    <div class="field">
-      <label>Password</label>
-      <input type="password" id="login-password" placeholder="••••••" autocomplete="current-password"/>
-    </div>
-    <button class="btn btn-primary btn-full" id="verify-btn" onclick="doVerify()">Sign in</button>
+    <button class="btn btn-primary btn-full" id="verify-btn" onclick="doVerify()">Verify</button>
     <div class="error-msg" id="verify-error"></div>
+    <p style="margin-top:16px;font-size:12px;color:var(--text-muted);text-align:center;">
+      First time? <a href="#" onclick="showSetup()" style="color:var(--accent);">Set up authenticator</a>
+    </p>
   </div>
+
+  <!-- SETUP SCREEN -->
+  <div class="login-box" id="screen-setup" style="display:none;width:420px;">
+    <div class="logo">
+      <div class="logo-icon">C</div>
+      <div>
+        <div class="logo-text">CharterOS</div>
+        <div class="logo-sub">Authenticator Setup</div>
+      </div>
+    </div>
+    <h2>Set up authenticator</h2>
+    <p>Scan this QR code with Google Authenticator, Authy, or any TOTP app. You only need to do this once.</p>
+    <div id="qr-container" style="text-align:center;margin:20px 0;min-height:180px;display:flex;align-items:center;justify-content:center;">
+      <div class="loading"><div class="spinner"></div> Generating QR code…</div>
+    </div>
+    <div id="setup-manual" style="display:none;margin-bottom:16px;">
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Or enter this code manually in your app:</p>
+      <div id="setup-manual-code" style="font-family:var(--font-mono);font-size:13px;color:var(--accent);background:rgba(108,99,255,0.1);padding:8px 12px;border-radius:6px;word-break:break-all;"></div>
+    </div>
+    <div class="error-msg" id="setup-error"></div>
+    <button class="btn btn-ghost btn-full" onclick="showVerify()" style="margin-top:8px;">← Back to sign in</button>
+  </div>
+
 </div>
 
 <!-- ── APP ────────────────────────────────────────────────────── -->
@@ -635,40 +659,85 @@ let teamsData = [];
 let posData = [];
 let adminsData = [];
 
-// ── LOGIN AUTH ────────────────────────────────────────────────
-async function doVerify() {
-  const username = document.getElementById('login-username').value.trim();
-  const password = document.getElementById('login-password').value;
-  const errEl = document.getElementById('verify-error');
-  const btn = document.getElementById('verify-btn');
+// ── TOTP AUTH ─────────────────────────────────────────────────
+function showSetup() {
+  document.getElementById('screen-verify').style.display = 'none';
+  document.getElementById('screen-setup').style.display = 'block';
+  loadSetupQR();
+}
+
+function showVerify() {
+  document.getElementById('screen-setup').style.display = 'none';
+  document.getElementById('screen-verify').style.display = 'block';
+}
+
+async function loadSetupQR() {
+  const container = document.getElementById('qr-container');
+  const errEl = document.getElementById('setup-error');
   errEl.style.display = 'none';
-  if (!username || !password) {
-    errEl.textContent = 'Please enter your username and password.';
-    errEl.style.display = 'block';
-    return;
-  }
-  btn.disabled = true;
-  btn.textContent = 'Signing in…';
+  container.innerHTML = '<div class="loading"><div class="spinner"></div> Generating QR code…</div>';
   try {
     const r = await fetch('/api/superadmin-auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ action: 'setup' })
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.error || 'Invalid credentials');
+    if (!r.ok) {
+      if (data.error && data.error.includes('already configured')) {
+        container.innerHTML = '<p style="color:var(--text-dim);font-size:13px;text-align:center;">Authenticator already set up.<br>Use your existing app to sign in.</p>';
+      } else {
+        throw new Error(data.error);
+      }
+      return;
+    }
+    const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(data.otpauthUri);
+    container.innerHTML = '<img src="' + qrUrl + '" width="180" height="180" style="border-radius:8px;background:#fff;padding:8px;" />';
+    const match = data.otpauthUri.match(/secret=([A-Z2-7]+)/i);
+    if (match) {
+      document.getElementById('setup-manual').style.display = 'block';
+      document.getElementById('setup-manual-code').textContent = match[1];
+    }
+  } catch(e) {
+    container.innerHTML = '';
+    errEl.textContent = 'Setup failed: ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+async function doVerify() {
+  const code = document.getElementById('totp-code').value.trim();
+  const errEl = document.getElementById('verify-error');
+  const btn = document.getElementById('verify-btn');
+  errEl.style.display = 'none';
+  if (!code || code.length !== 6) {
+    errEl.textContent = 'Enter the 6-digit code from your authenticator app.';
+    errEl.style.display = 'block';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Verifying…';
+  try {
+    const r = await fetch('/api/superadmin-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'verify', code })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Invalid code');
     sessionStorage.setItem('sa_session', data.sessionToken);
     currentAdmin = { name: 'Super Admin' };
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     document.getElementById('admin-name-display').textContent = 'Super Admin';
+    document.getElementById('totp-code').value = '';
     loadAll();
   } catch(e) {
     errEl.textContent = e.message;
     errEl.style.display = 'block';
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Sign in';
+    btn.textContent = 'Verify';
   }
 }
 
@@ -677,8 +746,8 @@ function doLogout() {
   sessionStorage.removeItem('sa_session');
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
-  document.getElementById('login-username').value = '';
-  document.getElementById('login-password').value = '';
+  document.getElementById('totp-code').value = '';
+  showVerify();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -690,10 +759,16 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('admin-name-display').textContent = 'Super Admin';
     loadAll();
   }
+  if (new URLSearchParams(window.location.search).get('setup') === 'true') {
+    showSetup();
+  }
 });
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter') doVerify();
+  if (e.key === 'Enter') {
+    const verify = document.getElementById('screen-verify');
+    if (verify && verify.style.display !== 'none') doVerify();
+  }
 });
 const API_BASE = '/api';
 
