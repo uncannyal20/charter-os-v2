@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%236c63ff'/><text x='16' y='23' font-family='Arial' font-weight='900' font-size='20' fill='white' text-anchor='middle'>C</text></svg>">
+<title>CharterOS — Locked</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #0f1117;
+    color: #e8eaf0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card {
+    width: 360px;
+    background: #1a1d27;
+    border: 1px solid #2e3248;
+    border-radius: 14px;
+    padding: 44px 36px 40px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 32px;
+  }
+
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: #6c63ff;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 900; color: #fff;
+    letter-spacing: -1px;
+  }
+
+  .logo-name {
+    font-size: 16px; font-weight: 700; color: #e8eaf0;
+    letter-spacing: -0.2px;
+  }
+
+  .logo-sub {
+    font-size: 10px; color: #555a72;
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-top: 1px;
+  }
+
+  h2 {
+    font-size: 21px; font-weight: 700;
+    margin-bottom: 6px; letter-spacing: -0.3px;
+  }
+
+  .subtitle {
+    font-size: 13px; color: #8b90a8;
+    margin-bottom: 28px; line-height: 1.5;
+  }
+
+  .lock-icon {
+    display: block;
+    margin: 0 auto 20px;
+    color: #3d3878;
+  }
+
+  .field { margin-bottom: 16px; }
+
+  .field label {
+    display: block;
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    color: #8b90a8; margin-bottom: 7px;
+  }
+
+  .field input {
+    width: 100%;
+    padding: 11px 14px;
+    background: #0f1117;
+    border: 1px solid #2e3248;
+    border-radius: 7px;
+    color: #e8eaf0;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+    letter-spacing: 2px;
+  }
+
+  .field input:focus { border-color: #6c63ff; }
+  .field input::placeholder { letter-spacing: 0; color: #555a72; }
+
+  .btn {
+    width: 100%;
+    padding: 11px;
+    background: #6c63ff;
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-size: 14px; font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+  }
+
+  .btn:hover { opacity: 0.88; }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+  .error {
+    background: rgba(224,82,82,0.1);
+    border: 1px solid rgba(224,82,82,0.3);
+    color: #e05252;
+    padding: 10px 13px;
+    border-radius: 7px;
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+  }
+
+  .footer {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 11px;
+    color: #555a72;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">C</div>
+    <div>
+      <div class="logo-name">CharterOS</div>
+      <div class="logo-sub">Restricted Access</div>
+    </div>
+  </div>
+
+  <svg class="lock-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2"/>
+    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </svg>
+
+  <h2>Enter password</h2>
+  <p class="subtitle">This workspace is password protected. Enter the access code to continue.</p>
+
+  <div class="field">
+    <label>Password</label>
+    <input type="password" id="pw" placeholder="Enter password" autocomplete="current-password" autofocus/>
+  </div>
+
+  <button class="btn" id="unlock-btn" onclick="unlock()">
+    <span id="btn-text">Unlock</span>
+  </button>
+
+  <div class="error" id="error-msg">Incorrect password. Try again.</div>
+
+  <div class="footer">CharterOS &mdash; Product Charter Intelligence Platform</div>
+</div>
+
+<script>
+async function unlock() {
+  const pw = document.getElementById('pw').value;
+  const btn = document.getElementById('unlock-btn');
+  const err = document.getElementById('error-msg');
+  const txt = document.getElementById('btn-text');
+
+  if (!pw) return;
+
+  err.style.display = 'none';
+  btn.disabled = true;
+  txt.textContent = 'Verifying…';
+
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw })
+    });
+    const data = await r.json();
+    if (r.ok && data.success) {
+      const redirect = new URLSearchParams(window.location.search).get('from') || '/';
+      window.location.href = redirect;
+    } else {
+      err.textContent = data.error || 'Incorrect password. Try again.';
+      err.style.display = 'block';
+      document.getElementById('pw').value = '';
+      document.getElementById('pw').focus();
+    }
+  } catch {
+    err.textContent = 'Something went wrong. Please try again.';
+    err.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    txt.textContent = 'Unlock';
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') unlock();
+});
+</script>
+</body>
+</html>
