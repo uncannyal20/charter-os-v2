@@ -61,8 +61,8 @@ function requireAuth(req, res, next) {
 
 // ── Middleware ────────────────────────────────────────────────
 app.use(express.json());
-app.use(express.static(join(__dirname, 'public')));
 app.use(requireAuth);
+app.use(express.static(join(__dirname, 'public')));
 
 // ── Auth + API routes ─────────────────────────────────────────
 app.post('/api/auth',            (req, res) => authHandler(req, res));
