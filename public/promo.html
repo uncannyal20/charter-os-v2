@@ -837,7 +837,7 @@
       const placeholder = document.getElementById('video-placeholder');
       if (placeholder) placeholder.remove();
       const iframe = document.createElement('iframe');
-      iframe.src = 'https://player.vimeo.com/video/1203461014?autoplay=1';
+      iframe.src = 'https://player.vimeo.com/video/1203728627?autoplay=1';
       iframe.allow = 'autoplay; fullscreen; picture-in-picture';
       iframe.allowFullscreen = true;
       iframe.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:0;';
@@ -846,7 +846,7 @@
   }
 
   // ── VIDEO THUMBNAIL ─────────────────────────────────────────────
-  fetch('https://vimeo.com/api/oembed.json?url=https://vimeo.com/1203461014')
+  fetch('https://vimeo.com/api/oembed.json?url=https://vimeo.com/1203728627')
     .then(r => r.json())
     .then(d => {
       const ph = document.getElementById('video-placeholder');
